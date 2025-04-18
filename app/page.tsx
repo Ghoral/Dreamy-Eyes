@@ -8,7 +8,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import Autoplay from "embla-carousel-autoplay";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import Image from "next/image";
+
 const Homepage = () => {
+  const plugin = React.useRef(
+    Autoplay({ delay: 2000, stopOnInteraction: true })
+  );
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -149,20 +161,19 @@ const Homepage = () => {
                       <Menu className="h-4 w-4 mr-2" />
                       <span className="text-sm">Best Gadget & Fashion</span>
                     </div>
-                    <h1 className="text-2xl font-bold mb-2">
-                      <span className="text-gray-900">30% Off </span>
-                      <span className="text-red-400">Winter Sale</span>
+                    <h1 className="text-5xl font-bold mb-2">
+                      <span className="text-gray-900 text">30% Off </span>
+                      <span className="text-red-400 font-black">
+                        Winter Sale
+                      </span>
                     </h1>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900">
                       Promo Code
                     </h2>
-                    <button className="bg-red-400 text-white px-6 py-2 rounded-full hover:bg-red-500 transition-colors">
-                      Shop Now
-                    </button>
                   </div>
 
                   {/* Right Column */}
-                  <div className="p-6 flex flex-col justify-center">
+                  <div className="p-6 flex flex-col justify-center w-full md:w-[300px] md:ml-auto">
                     <p className="text-gray-700 mb-4">
                       This year, our new summer collection will shelter you from
                       the harsh elements of a world that.
@@ -176,63 +187,37 @@ const Homepage = () => {
             </div>
           </section>
 
-          <div className="container mx-auto px-4 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Baby & Kids Section - Block 2 */}
-              <div className="bg-white rounded-lg shadow-sm h-full">
-                <div className="flex flex-col md:flex-row h-full">
-                  <div className="p-6 flex flex-col justify-center md:w-1/2">
-                    <h3 className="text-2xl font-bold text-gray-900">
-                      Baby & Kids
-                    </h3>
-                    <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                      Clothings
-                    </h2>
-                    <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors w-32">
-                      Shop Now
-                    </button>
-                  </div>
-                  <div className="md:w-1/2 flex items-center justify-center p-4">
-                    <img
-                      src="/api/placeholder/280/280"
-                      alt="Kid wearing colorful clothing"
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-6">
-                {/* Mid Summer Sale - Block 3 */}
-                <div className="bg-white rounded-lg shadow-sm">
-                  <div className="flex items-center justify-center p-6">
-                    <div className="flex items-center">
-                      <div>
-                        <h3 className="text-red-400 font-medium">Mid Summer</h3>
-                        <div className="flex items-center">
-                          <h2 className="text-6xl font-bold text-blue-900">
-                            30
-                          </h2>
-                          <div className="ml-2 text-left">
-                            <p className="text-sm font-bold text-blue-900">
-                              UP TO
-                            </p>
-                            <p className="text-sm font-bold text-blue-900">
-                              % OFF
-                            </p>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-700 mt-1">
-                          Instore & Outlets
-                        </p>
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-6">
+              <Carousel
+                plugins={[plugin.current]}
+                className="w-full overflow-hidden rounded-sm"
+                onMouseEnter={plugin.current.stop}
+                onMouseLeave={plugin.current.reset}
+              >
+                <CarouselContent>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <CarouselItem key={index} className="p-0">
+                      <div className="w-full h-90 overflow-hidden rounded-sm">
+                        {" "}
+                        {/* Wrapper radius */}
+                        <Image
+                          src="/images/slider.jpg"
+                          alt="banner"
+                          className="w-full h-full object-cover"
+                          width={1920}
+                          height={90}
+                        />
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Kids Bag Section - Block 4 */}
-                <div className="bg-white rounded-lg shadow-sm flex-grow">
-                  <div className="flex flex-col h-full">
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
+              {/* Right Column - Blocks 3 and 4 stacked */}
+              <div className="flex flex-col gap-6 h-90">
+                {/* Block 3 - Kids Bag */}
+                <div className="bg-white rounded-sm shadow-sm flex-grow h-90">
+                  <div className="flex flex-col h-90">
                     <div className="p-6 text-center">
                       <p className="text-gray-700">Feel Amazing</p>
                       <h2 className="text-4xl font-bold text-gray-900">
@@ -245,25 +230,33 @@ const Homepage = () => {
                     </div>
                     <div className="bg-pink-100 p-4 flex-grow flex items-center justify-center">
                       <div className="grid grid-cols-2 gap-2">
-                        <img
-                          src="/api/placeholder/120/120"
-                          alt="Blue backpack"
-                          className="rounded-lg"
+                        <Image
+                          src="/images/lens1.png"
+                          alt="banner"
+                          className="w-full h-full object-cover"
+                          width={50}
+                          height={50}
                         />
-                        <img
-                          src="/api/placeholder/120/120"
-                          alt="Purple backpack"
-                          className="rounded-lg"
+                        <Image
+                          src="/images/lens1.png"
+                          alt="banner"
+                          className="w-full h-full object-cover"
+                          width={50}
+                          height={50}
                         />
-                        <img
-                          src="/api/placeholder/120/120"
-                          alt="Pink backpack"
-                          className="rounded-lg"
+                        <Image
+                          src="/images/lens1.png"
+                          alt="banner"
+                          className="w-full h-full object-cover"
+                          width={50}
+                          height={50}
                         />
-                        <img
-                          src="/api/placeholder/120/120"
-                          alt="Light blue backpack"
-                          className="rounded-lg"
+                        <Image
+                          src="/images/lens1.png"
+                          alt="banner"
+                          className="w-full h-full object-cover"
+                          width={50}
+                          height={50}
                         />
                       </div>
                     </div>

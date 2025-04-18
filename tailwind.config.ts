@@ -1,21 +1,10 @@
-// tailwind.config.ts
-import type { Config } from "tailwindcss";
-
-const config: Config = {
-  content: [
-    "./app/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./pages/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
+// tailwind.config.js
+module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        mazzard: ["Mazzard Font", "sans-serif"],
       },
     },
   },
-  plugins: [],
 };
-
-export default config;

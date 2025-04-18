@@ -1,6 +1,26 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Head from "next/head";
+
+import localFont from "next/font/local";
+
+const myFont = localFont({
+  src: [
+    {
+      path: "../public/fonts/MazzardH-Regular.otf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/MazzardH-Bold.otf",
+      weight: "600",
+      style: "normal",
+    },
+  ],
+  variable: "--font-myfont",
+  display: "swap",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,7 +43,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={myFont.variable}>
+      <Head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Mazzard+Font:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
+      </Head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
