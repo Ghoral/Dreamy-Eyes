@@ -149,7 +149,7 @@ const Homepage = () => {
 
       {/* Main Content */}
       <main className="flex-grow">
-        <div className="bg-pink-50 m-3">
+        <div className="m-3" style={{ backgroundColor: "#fff7f5" }}>
           {/* Hero Section with Winter Sale - Block 1 */}
           <section className="py-2">
             <div className="container mx-auto px-4">
@@ -159,7 +159,9 @@ const Homepage = () => {
                   <div className="p-6">
                     <div className="flex items-center text-red-500 mb-4">
                       <Menu className="h-4 w-4 mr-2" />
-                      <span className="text-sm">Best Gadget & Fashion</span>
+                      <span className="text-sm font-bold">
+                        Best Lens & Fashion
+                      </span>
                     </div>
                     <h1 className="text-5xl font-bold mb-2">
                       <span className="text-gray-900 text">30% Off </span>
@@ -223,7 +225,7 @@ const Homepage = () => {
                       <h2 className="text-4xl font-bold text-gray-900">
                         EVERYDAY
                       </h2>
-                      <p className="text-gray-700 mb-4">Kids Bag</p>
+                      <p className="text-gray-700 mb-4">Lens</p>
                       <button className="bg-black text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors">
                         Shop Now
                       </button>
