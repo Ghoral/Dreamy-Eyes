@@ -34,11 +34,13 @@ const Homepage = () => {
               <div className="bg-red-300 rounded-md p-1 mr-1">
                 <ShoppingCart className="h-5 w-5 text-red-500" />
               </div>
-              <span className="text-xl font-bold text-gray-800">PioMart</span>
+              <span className="text-xl font-bold text-gray-800">
+                Dreamy Eyes
+              </span>
             </div>
 
             {/* Navigation Links with Dropdown */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden md:flex items-center space-x-6 font-semibold text-xs">
               <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center text-red-500 focus:outline-none">
                   <Menu className="h-4 w-4 mr-2" />
@@ -96,7 +98,9 @@ const Homepage = () => {
                 <User className="h-5 w-5 text-gray-600 mr-1" />
                 <div className="flex flex-col text-xs">
                   <span className="text-gray-500">Hello,</span>
-                  <span className="font-medium">Login/Sign Up</span>
+                  <span className="font-medium font-semibold">
+                    Login/Sign Up
+                  </span>
                 </div>
               </div>
             </div>
@@ -230,7 +234,10 @@ const Homepage = () => {
                         Shop Now
                       </button>
                     </div>
-                    <div className="bg-pink-100 p-4 flex-grow flex items-center justify-center">
+                    <div
+                      className="p-4 flex-grow flex items-center justify-center"
+                      style={{ backgroundColor: "#fff7f5" }}
+                    >
                       <div className="grid grid-cols-2 gap-2">
                         <Image
                           src="/images/lens1.png"
