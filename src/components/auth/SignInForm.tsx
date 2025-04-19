@@ -6,13 +6,16 @@ import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { supabaseClient } from "../../service/supabase";
+import { Loader2 } from "lucide-react";
 
 export default function SignInForm() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Define Formik configuration
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -27,10 +30,23 @@ export default function SignInForm() {
         .required("Password is required"),
     }),
     onSubmit: (values) => {
-      console.log("Form submitted with values:", values);
-      // Handle form submission logic here
+      onSubmit(values);
     },
   });
+
+  const onSubmit = async (values: any) => {
+    try {
+      setLoading(true);
+      const res = await supabaseClient.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+      setLoading(false);
+      navigate("/dashboard");
+    } catch (error) {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -176,11 +192,11 @@ export default function SignInForm() {
                 {/* Submit Button */}
                 <div>
                   <Button
-                    className="w-full"
-                    size="sm"
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
                     disabled={formik.isSubmitting}
                   >
-                    Sign In
+                    {loading && <Loader2 className="animate-spin" />}
+                    Sign Up
                   </Button>
                 </div>
               </div>

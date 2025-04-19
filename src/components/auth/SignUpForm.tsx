@@ -4,12 +4,18 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
+import { supabaseClient } from "../../service/supabase";
+import Button from "../ui/button/Button";
+import { Loader2 } from "lucide-react";
+
 // import { supabaseBrowserClient } from "../../utils";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const formik = useFormik({
     initialValues: {
       fname: "",
@@ -28,22 +34,55 @@ export default function SignUpForm() {
         .required("Password is required"),
     }),
     onSubmit: async (values) => {
-      // console.log("Form submitted with values:", values);
-      // const res = await supabaseBrowserClient.auth.signUp({
-      //   email: values.email.toLowerCase(),
-      //   password: values.password,
-      // });
-      // await supabaseBrowserClient
-      //   .from("profiles")
-      //   .update({
-      //     email: values.email.toLowerCase(),
-      //     first_name: values.fname.toLowerCase(),
-      //     last_name: values.lname.toLowerCase(),
-      //   })
-      //   .eq("id", res.data?.user?.id ?? "");
+      onSubmit(values);
     },
   });
 
+  const onSubmit = async (values: any) => {
+    try {
+      setLoading(true);
+      const res = await supabaseClient.auth.signUp({
+        email: values.email.toLowerCase(),
+        password: values.password,
+      });
+      if (res.error) {
+        throw res.error;
+      }
+      console.log("res", res);
+
+      const res1 = await supabaseClient
+        .from("profiles")
+        .update({
+          email: values.email.toLowerCase(),
+          first_name: values.fname.toLowerCase(),
+          last_name: values.lname.toLowerCase(),
+        })
+        .eq("id", res.data?.user?.id ?? "");
+
+      if (res1.error) {
+        throw res1.error;
+      }
+
+      navigate(-1);
+      setLoading(false);
+    } catch (error: any) {
+      toast.custom((id) => (
+        <div
+          onClick={() => toast.dismiss(id)}
+          className="bg-red-600 text-white w-full max-w-xl rounded-md shadow-md flex items-center justify-between px-6"
+        >
+          <div className="py-3">
+            <p className="font-medium text-base">Error</p>
+            <p className="text-sm">
+              {error.message ?? "Something went wrong!"}
+            </p>
+          </div>
+          <button className="ml-4 text-white hover:text-gray-200">✖</button>
+        </div>
+      ));
+      setLoading(false);
+    }
+  };
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
@@ -160,12 +199,23 @@ export default function SignUpForm() {
                 </div>
                 {/* Button */}
                 <div>
-                  <button
+                  <Button
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
+                    disabled={formik.isSubmitting}
+                  >
+                    {loading && <Loader2 className="animate-spin" />}
+                    Sign Up
+                  </Button>
+                  {/* <button
                     type="submit"
                     className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
                   >
+                    <svg
+                      className="mr-3 size-5 animate-spin ..."
+                      viewBox="0 0 24 24"
+                    ></svg>
                     Sign Up
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </form>
