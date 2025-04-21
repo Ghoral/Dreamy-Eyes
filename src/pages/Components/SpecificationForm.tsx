@@ -18,10 +18,7 @@ const SpecificationsForm = () => {
   // Initialize formik
   const formik: any = useFormik({
     initialValues: {
-      specifications: [
-        { label: "Replacement Schedule", value: "Monthly" },
-        { label: "Water Content", value: "42%" },
-      ],
+      specifications: [],
     },
     validationSchema,
     onSubmit: (values) => {
