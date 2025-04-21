@@ -21,6 +21,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { supabaseClient } from "./service/supabase";
 import LandingForm from "./pages/Forms/Landing";
+import ProductForm from "./pages/Forms/Product";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -88,14 +89,12 @@ export default function App() {
           <Route path="/profile" element={<UserProfiles />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/blank" element={<Blank />} />
-
           {/* Forms */}
           <Route path="/form-elements" element={<FormElements />} />
           <Route path="/form/landing" element={<LandingForm />} />
-
+          <Route path="/form/product" element={<ProductForm />} />
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
-
           {/* UI Elements */}
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/avatars" element={<Avatars />} />
@@ -103,7 +102,6 @@ export default function App() {
           <Route path="/buttons" element={<Buttons />} />
           <Route path="/images" element={<Images />} />
           <Route path="/videos" element={<Videos />} />
-
           {/* Charts */}
           <Route path="/line-chart" element={<LineChart />} />
           <Route path="/bar-chart" element={<BarChart />} />
