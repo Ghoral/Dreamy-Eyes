@@ -20,6 +20,7 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { supabaseClient } from "./service/supabase";
+import LandingForm from "./pages/Forms/Landing";
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -28,6 +29,8 @@ export default function App() {
   useEffect(() => {
     const checkSession = async () => {
       const { data, error }: any = await supabaseClient.auth.getSession();
+      console.log("data", data);
+
       if (error) {
         console.error("Error checking session", error);
       }
@@ -88,6 +91,7 @@ export default function App() {
 
           {/* Forms */}
           <Route path="/form-elements" element={<FormElements />} />
+          <Route path="/form/landing" element={<LandingForm />} />
 
           {/* Tables */}
           <Route path="/basic-tables" element={<BasicTables />} />
