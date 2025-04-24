@@ -1,5 +1,6 @@
 import { useDropzone } from "react-dropzone";
 import { useEffect, useState } from "react";
+import { supabaseClient } from "../../../service/supabase";
 
 const DropzoneComponent = ({
   title = "",
@@ -8,7 +9,7 @@ const DropzoneComponent = ({
   multiple = false,
 }: {
   title?: string;
-  file?: File | string | null | (File | string)[];
+  file?: any;
   setFile?: any;
   multiple?: boolean;
 }) => {
@@ -17,18 +18,15 @@ const DropzoneComponent = ({
   >([]);
 
   useEffect(() => {
-    // Clean up previous preview URLs
     previews.forEach((preview) => {
       if (preview.file instanceof File && preview.url.startsWith("blob:")) {
         URL.revokeObjectURL(preview.url);
       }
     });
 
-    // Reset previews
     let newPreviews: { id: string; url: string; file: File | string }[] = [];
 
     if (multiple && Array.isArray(file)) {
-      // Handle multiple files
       newPreviews = file.map((f) => {
         if (f instanceof File) {
           const previewUrl = URL.createObjectURL(f);
@@ -45,31 +43,28 @@ const DropzoneComponent = ({
           };
         }
       });
-    } else if (!multiple && file && !Array.isArray(file)) {
-      // Handle single file (original behavior)
-      if (file instanceof File) {
-        const previewUrl = URL.createObjectURL(file);
-        newPreviews = [
-          {
-            id: `${file.name}-${Date.now()}`,
+    } else if (!multiple && Array.isArray(file)) {
+      // Fixed: Check if file is an array before mapping
+      newPreviews = file.map((f: any) => {
+        if (f instanceof File) {
+          const previewUrl = URL.createObjectURL(f);
+          return {
+            id: `${f.name}-${Date.now() * Math.random()}`,
             url: previewUrl,
-            file,
-          },
-        ];
-      } else if (typeof file === "string") {
-        newPreviews = [
-          {
-            id: `${file}-${Date.now()}`,
-            url: file,
-            file,
-          },
-        ];
-      }
+            file: f,
+          };
+        } else {
+          return {
+            id: `${f}-${Date.now() * Math.random()}`,
+            url: f as string,
+            file: f,
+          };
+        }
+      });
     }
 
     setPreviews(newPreviews);
 
-    // Cleanup function
     return () => {
       newPreviews.forEach((preview) => {
         if (preview.file instanceof File && preview.url.startsWith("blob:")) {
@@ -81,27 +76,46 @@ const DropzoneComponent = ({
 
   const onDrop = (acceptedFiles: File[]) => {
     if (multiple) {
-      // Add new files to existing files
       const currentFiles = Array.isArray(file) ? file : [];
       setFile?.([...currentFiles, ...acceptedFiles]);
     } else {
-      // Original behavior - just use the first file
-      const selectedFile = acceptedFiles[0];
-      setFile?.(selectedFile);
+      // For single file mode, we still need to use an array
+      setFile?.([acceptedFiles[0]]);
     }
   };
 
-  const removeFile = (indexToRemove: number) => {
+  const removeFile = async (indexToRemove: number) => {
     if (multiple && Array.isArray(file)) {
       const newFiles = [...file];
       newFiles.splice(indexToRemove, 1);
       setFile?.(newFiles);
-    } else {
-      // Original behavior for single file
-      if (previews[0]?.url.startsWith("blob:")) {
-        URL.revokeObjectURL(previews[0].url);
+    } else if (!multiple && Array.isArray(file)) {
+      // Handle single file case - Check if preview exists first
+      if (previews[indexToRemove]?.url.startsWith("blob:")) {
+        URL.revokeObjectURL(previews[indexToRemove].url);
       }
-      setFile?.(null);
+
+      // Check if it's a stored file that needs to be removed from storage
+      const fileToRemove = file[indexToRemove];
+      if (
+        typeof fileToRemove === "string" &&
+        fileToRemove.includes("logo.png")
+      ) {
+        try {
+          const { data, error } = await supabaseClient.storage
+            .from("config")
+            .remove(["logo.png"]);
+
+          if (error) {
+            console.error("Error removing file from storage:", error);
+          }
+        } catch (err) {
+          console.error("Failed to remove file from storage:", err);
+        }
+      }
+
+      // Always clear the file state
+      setFile?.([]);
     }
   };
 
@@ -109,14 +123,10 @@ const DropzoneComponent = ({
     onDrop,
     accept: {
       "image/png": [],
-      "image/jpeg": [],
-      "image/webp": [],
-      "image/svg+xml": [],
     },
     multiple,
   });
 
-  // Determine the UI to show based on mode and whether files exist
   const showDropzone = multiple || previews.length === 0;
   const showSinglePreview = !multiple && previews.length > 0;
   const showMultiplePreviews = multiple && previews.length > 0;
