@@ -44,7 +44,6 @@ const DropzoneComponent = ({
         }
       });
     } else if (!multiple && Array.isArray(file)) {
-      // Fixed: Check if file is an array before mapping
       newPreviews = file.map((f: any) => {
         if (f instanceof File) {
           const previewUrl = URL.createObjectURL(f);
@@ -79,7 +78,6 @@ const DropzoneComponent = ({
       const currentFiles = Array.isArray(file) ? file : [];
       setFile?.([...currentFiles, ...acceptedFiles]);
     } else {
-      // For single file mode, we still need to use an array
       setFile?.([acceptedFiles[0]]);
     }
   };
@@ -90,12 +88,10 @@ const DropzoneComponent = ({
       newFiles.splice(indexToRemove, 1);
       setFile?.(newFiles);
     } else if (!multiple && Array.isArray(file)) {
-      // Handle single file case - Check if preview exists first
       if (previews[indexToRemove]?.url.startsWith("blob:")) {
         URL.revokeObjectURL(previews[indexToRemove].url);
       }
 
-      // Check if it's a stored file that needs to be removed from storage
       const fileToRemove = file[indexToRemove];
       if (
         typeof fileToRemove === "string" &&
@@ -114,7 +110,6 @@ const DropzoneComponent = ({
         }
       }
 
-      // Always clear the file state
       setFile?.([]);
     }
   };

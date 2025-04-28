@@ -1,11 +1,15 @@
 import { useFormik, FieldArray, FormikProvider } from "formik";
 import * as Yup from "yup";
+import { useEffect } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
 
-const SpecificationsForm = () => {
-  // Define validation schema
+const SpecificationsForm = ({
+  setSpecifications,
+}: {
+  setSpecifications: any;
+}) => {
   const validationSchema = Yup.object({
     specifications: Yup.array().of(
       Yup.object({
@@ -15,16 +19,31 @@ const SpecificationsForm = () => {
     ),
   });
 
-  // Initialize formik
   const formik: any = useFormik({
     initialValues: {
       specifications: [],
     },
     validationSchema,
     onSubmit: (values) => {
-      console.log("Form submitted with values:", values);
+      setSpecifications(values);
     },
   });
+
+  useEffect(() => {
+    const keyValuePairs = formik.values.specifications.reduce(
+      (acc: any, item: any) => {
+        if (item.label) {
+          acc[item.label] = item.value;
+        }
+        return acc;
+      },
+      {}
+    );
+
+    setSpecifications({
+      keyValuePairs,
+    });
+  }, [formik.values.specifications, setSpecifications]);
 
   return (
     <FormikProvider value={formik}>

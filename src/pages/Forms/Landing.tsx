@@ -76,14 +76,12 @@ const LandingForm = () => {
     const fileToUpload = files[0];
 
     try {
-      // Check if the file is named logo.png
       if (fileToUpload.name !== "logo.png") {
         console.error("File must be named logo.png");
         alert("Please upload a file named logo.png");
         return;
       }
 
-      // Upload the file
       const { data, error } = await supabaseClient.storage
         .from("config")
         .upload("logo.png", fileToUpload, { upsert: true });
@@ -93,7 +91,6 @@ const LandingForm = () => {
         return;
       }
 
-      // Get the public URL of the uploaded file
       const { data: urlData } = supabaseClient.storage
         .from("config")
         .getPublicUrl("logo.png");
@@ -113,14 +110,12 @@ const LandingForm = () => {
     const fileToUpload = files[0];
 
     try {
-      // Check if the file is named banner.png
       if (fileToUpload.name !== "banner.png") {
         console.error("File must be named banner.png");
         alert("Please upload a file named banner.png");
         return;
       }
 
-      // Upload the file
       const { data, error } = await supabaseClient.storage
         .from("config")
         .upload("banner.png", fileToUpload, { upsert: true });
@@ -130,7 +125,6 @@ const LandingForm = () => {
         return;
       }
 
-      // Get the public URL of the uploaded file
       const { data: urlData } = supabaseClient.storage
         .from("config")
         .getPublicUrl("banner.png");

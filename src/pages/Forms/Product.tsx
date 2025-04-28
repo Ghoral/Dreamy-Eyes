@@ -1,36 +1,46 @@
 import { useFormik } from "formik";
-import * as Yup from "yup";
 import ComponentCard from "../../components/common/ComponentCard";
 import DropzoneComponent from "../../components/form/form-elements/DropZone";
 import Label from "../../components/form/Label";
 import Input from "../../components/form/input/InputField";
-import TextArea from "../../components/form/input/TextArea";
 import { Editor } from "@tinymce/tinymce-react";
 import SpecificationsForm from "../Components/SpecificationForm";
+import { IProduct } from "../../interface/product";
+import { productValidationSchema } from "../../validation/product";
+import { useState } from "react";
+import { supabaseClient } from "../../service/supabase";
 
 const ProductForm = () => {
-  // Define validation schema
-  const validationSchema = Yup.object({
-    title: Yup.string().required("Title is required"),
-    description: Yup.string().required("Description is required"),
-    images: Yup.array().min(1, "At least one image is required"),
-  });
-
-  // Initialize formik
+  const [specifications, setSpecifications] = useState<any>({});
   const formik = useFormik({
     initialValues: {
       title: "",
+      sub_title: "",
       description: "",
       images: [],
+      price: undefined,
+      quantity: undefined,
+      power: undefined,
     },
-    validationSchema,
-    onSubmit: (values) => {
-      console.log("Form submitted with values:", values);
-      // Here you would typically send the data to your API
+    validationSchema: productValidationSchema,
+    onSubmit: (values: IProduct) => {
+      onSubmit(values);
     },
   });
 
-  // Handle image updates and sync with formik
+  const onSubmit = async (values: IProduct) => {
+    const images = values.images?.map((item) => item.name).join(",");
+    const body = {
+      ...values,
+      images,
+      specifications: specifications.keyValuePairs,
+    };
+    console.log("1111", body);
+
+    const res = await supabaseClient.from("lens").insert(body);
+    console.log("res", res);
+  };
+
   const handleImageChange = (files: any) => {
     formik.setFieldValue("images", files);
   };
@@ -71,7 +81,21 @@ const ProductForm = () => {
             </div>
           )}
         </div>
-
+        <div className="mb-6">
+          <Label htmlFor="title">Sub Title</Label>
+          <Input
+            type="text"
+            id="sub_title"
+            name="sub_title"
+            value={formik.values.sub_title}
+            onChange={formik.handleChange}
+          />
+          {formik.touched.sub_title && formik.errors.sub_title && (
+            <div className="text-red-500 text-sm mt-1">
+              {formik.errors.sub_title}
+            </div>
+          )}
+        </div>
         <div className="mb-6">
           <Label htmlFor="description">Description</Label>
           <Editor
@@ -119,33 +143,24 @@ const ProductForm = () => {
         </div>
 
         <div className="mb-6">
-          <Label htmlFor="sub-description">Sub Description</Label>
-          <TextArea
-            value={formik.values.description}
-            onChange={(e: any) =>
-              formik.setFieldValue("description", e.target.value)
-            }
-            rows={6}
+          <Label htmlFor="sub-description">Description Preview</Label>
+          <div
+            className="border p-4 rounded min-h-[150px]"
+            dangerouslySetInnerHTML={{ __html: formik.values.description }}
           />
-          {formik.touched.description && formik.errors.description && (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.description}
-            </div>
-          )}
         </div>
-
         <div className="mb-6">
           <Label htmlFor="price">Price</Label>
           <Input
             type="number"
             id="price"
             name="price"
-            value={formik.values.title}
+            value={formik.values.price}
             onChange={formik.handleChange}
           />
-          {formik.touched.title && formik.errors.title && (
+          {formik.touched.price && formik.errors.price && (
             <div className="text-red-500 text-sm mt-1">
-              {formik.errors.title}
+              {formik.errors.price}
             </div>
           )}
         </div>
@@ -155,12 +170,12 @@ const ProductForm = () => {
             type="number"
             id="power"
             name="power"
-            value={formik.values.title}
+            value={formik.values.power}
             onChange={formik.handleChange}
           />
-          {formik.touched.title && formik.errors.title && (
+          {formik.touched.power && formik.errors.power && (
             <div className="text-red-500 text-sm mt-1">
-              {formik.errors.title}
+              {formik.errors.power}
             </div>
           )}
         </div>
@@ -170,18 +185,18 @@ const ProductForm = () => {
             type="number"
             id="quantity"
             name="quantity"
-            value={formik.values.title}
+            value={formik.values.quantity}
             onChange={formik.handleChange}
           />
-          {formik.touched.title && formik.errors.title && (
+          {formik.touched.quantity && formik.errors.quantity && (
             <div className="text-red-500 text-sm mt-1">
-              {formik.errors.title}
+              {formik.errors.quantity}
             </div>
           )}
         </div>
         <div className="mb-6">
           <Label htmlFor="quantity">Specification</Label>
-          <SpecificationsForm />
+          <SpecificationsForm setSpecifications={setSpecifications} />
           {formik.touched.title && formik.errors.title && (
             <div className="text-red-500 text-sm mt-1">
               {formik.errors.title}
