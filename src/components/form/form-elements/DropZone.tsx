@@ -7,11 +7,13 @@ const DropzoneComponent = ({
   file,
   setFile,
   multiple = false,
+  onReorder,
 }: {
   title?: string;
   file?: any;
   setFile?: any;
   multiple?: boolean;
+  onReorder?: (files: any[]) => void;
 }) => {
   const [previews, setPreviews] = useState<
     { id: string; url: string; file: File | string }[]
@@ -122,6 +124,20 @@ const DropzoneComponent = ({
     multiple,
   });
 
+  const reorderPreviews = (startIndex: number, endIndex: number) => {
+    const result = Array.from(previews);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+
+    setPreviews(result); // update UI
+
+    if (onReorder) {
+      // send back reordered actual files (not previews)
+      const reorderedFiles = result.map((preview) => preview.file);
+      onReorder(reorderedFiles);
+    }
+  };
+
   const showDropzone = multiple || previews.length === 0;
   const showSinglePreview = !multiple && previews.length > 0;
   const showMultiplePreviews = multiple && previews.length > 0;
@@ -190,12 +206,25 @@ const DropzoneComponent = ({
         </div>
       )}
 
-      {/* Multiple file preview grid */}
       {showMultiplePreviews && (
         <div className="p-5 border-t border-gray-300 dark:border-gray-700">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {previews.map((preview, index) => (
-              <div key={preview.id} className="relative group">
+              <div
+                key={preview.id}
+                className="relative group"
+                draggable
+                onDragStart={(e) =>
+                  e.dataTransfer.setData("text/plain", index.toString())
+                }
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  const startIndex = Number(
+                    e.dataTransfer.getData("text/plain")
+                  );
+                  reorderPreviews(startIndex, index);
+                }}
+              >
                 <button
                   onClick={() => removeFile(index)}
                   className="absolute top-2 right-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white rounded-full w-7 h-7 flex items-center justify-center shadow hover:bg-red-500 hover:text-white transition"

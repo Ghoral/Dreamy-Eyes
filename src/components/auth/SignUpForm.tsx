@@ -5,10 +5,10 @@ import Input from "../form/input/InputField";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link, useNavigate } from "react-router";
-import { toast } from "sonner";
 import { supabaseClient } from "../../service/supabase";
 import Button from "../ui/button/Button";
 import { Loader2 } from "lucide-react";
+import { showCustomToastError } from "../../utils/toast";
 
 // import { supabaseBrowserClient } from "../../utils";
 
@@ -48,7 +48,6 @@ export default function SignUpForm() {
       if (res.error) {
         throw res.error;
       }
-      console.log("res", res);
 
       const res1 = await supabaseClient
         .from("profiles")
@@ -66,20 +65,7 @@ export default function SignUpForm() {
       navigate(-1);
       setLoading(false);
     } catch (error: any) {
-      toast.custom((id) => (
-        <div
-          onClick={() => toast.dismiss(id)}
-          className="bg-red-600 text-white w-full max-w-xl rounded-md shadow-md flex items-center justify-between px-6"
-        >
-          <div className="py-3">
-            <p className="font-medium text-base">Error</p>
-            <p className="text-sm">
-              {error.message ?? "Something went wrong!"}
-            </p>
-          </div>
-          <button className="ml-4 text-white hover:text-gray-200">✖</button>
-        </div>
-      ));
+      showCustomToastError(error);
       setLoading(false);
     }
   };

@@ -9,6 +9,7 @@ import { IProduct } from "../../interface/product";
 import { productValidationSchema } from "../../validation/product";
 import { useState } from "react";
 import { supabaseClient } from "../../service/supabase";
+import { showCustomToastError } from "../../utils/toast";
 
 const ProductForm = () => {
   const [specifications, setSpecifications] = useState<any>({});
@@ -29,20 +30,33 @@ const ProductForm = () => {
   });
 
   const onSubmit = async (values: IProduct) => {
-    const images = values.images?.map((item) => item.name).join(",");
+    const images = values.images
+      ?.map((item) => `lens-images/${item.name}`)
+      .join(",");
     const body = {
       ...values,
       images,
       specifications: specifications.keyValuePairs,
     };
-    console.log("1111", body);
 
-    const res = await supabaseClient.from("lens").insert(body);
-    console.log("res", res);
+    await supabaseClient.from("lens").insert(body);
   };
 
-  const handleImageChange = (files: any) => {
+  const handleImageChange = async (files: any) => {
     formik.setFieldValue("images", files);
+
+    try {
+      const fileToUpload = files[files.length - 1];
+      const { error } = await supabaseClient.storage
+        .from("lens-images")
+        .upload(fileToUpload.name, fileToUpload, { upsert: true });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      showCustomToastError(error);
+    }
   };
 
   const handleEditorChange = (content: any) => {
@@ -58,6 +72,9 @@ const ProductForm = () => {
             setFile={handleImageChange}
             title="Product Images"
             multiple
+            onReorder={(items) => {
+              formik.setFieldValue("images", items);
+            }}
           />
           {formik.touched.images && formik.errors.images && (
             <div className="text-red-500 text-sm mt-1">
@@ -216,6 +233,7 @@ const ProductForm = () => {
             id="hs-color-input"
             value="#2563eb"
             title="Choose your color"
+            onChange={(e) => formik.setFieldValue("color", e.target.value)}
           ></input>
         </div>
 
