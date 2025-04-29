@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { supabaseClient } from "../../../service/supabase";
 
 const DropzoneComponent = ({
+  bucket = "config",
   title = "",
   file,
   setFile,
   multiple = false,
   onReorder,
 }: {
+  bucket?: string;
   title?: string;
   file?: any;
   setFile?: any;
@@ -33,7 +35,7 @@ const DropzoneComponent = ({
         if (f instanceof File) {
           const previewUrl = URL.createObjectURL(f);
           return {
-            id: `${f.name}-${Date.now() * Math.random()}`,
+            id: `${f?.name}-${Date.now() * Math.random()}`,
             url: previewUrl,
             file: f,
           };
@@ -50,7 +52,7 @@ const DropzoneComponent = ({
         if (f instanceof File) {
           const previewUrl = URL.createObjectURL(f);
           return {
-            id: `${f.name}-${Date.now() * Math.random()}`,
+            id: `${f?.name}-${Date.now() * Math.random()}`,
             url: previewUrl,
             file: f,
           };
@@ -85,35 +87,23 @@ const DropzoneComponent = ({
   };
 
   const removeFile = async (indexToRemove: number) => {
-    if (multiple && Array.isArray(file)) {
-      const newFiles = [...file];
-      newFiles.splice(indexToRemove, 1);
-      setFile?.(newFiles);
-    } else if (!multiple && Array.isArray(file)) {
-      if (previews[indexToRemove]?.url.startsWith("blob:")) {
-        URL.revokeObjectURL(previews[indexToRemove].url);
+    const fileToRemove = file[indexToRemove];
+
+    try {
+      const { data, error } = await supabaseClient.storage
+        .from(bucket)
+        .remove([fileToRemove.name]);
+
+      if (error) {
+        console.error("Error removing file from storage:", error);
       }
-
-      const fileToRemove = file[indexToRemove];
-      if (
-        typeof fileToRemove === "string" &&
-        fileToRemove.includes("logo.png")
-      ) {
-        try {
-          const { data, error } = await supabaseClient.storage
-            .from("config")
-            .remove(["logo.png"]);
-
-          if (error) {
-            console.error("Error removing file from storage:", error);
-          }
-        } catch (err) {
-          console.error("Failed to remove file from storage:", err);
-        }
-      }
-
-      setFile?.([]);
+    } catch (err) {
+      console.error("Failed to remove file from storage:", err);
     }
+
+    const newFiles = [...file];
+    newFiles.splice(indexToRemove, 1);
+    setFile?.(newFiles);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

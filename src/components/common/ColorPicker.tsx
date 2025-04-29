@@ -1,13 +1,16 @@
 import { useState } from "react";
+import Button from "./Button";
 
 interface MultiColorSelectorProps {
   values: string[];
+  disabled: boolean;
   onChange: (colors: string[]) => void;
   label?: string;
 }
 
 const MultiColorSelector = ({
   values = [],
+  disabled,
   onChange,
   label = "Colors",
 }: MultiColorSelectorProps) => {
@@ -42,13 +45,7 @@ const MultiColorSelector = ({
             title="Choose a color"
             onChange={(e) => setCurrentColor(e.target.value)}
           />
-          <button
-            type="button"
-            onClick={handleAddColor}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Add Color
-          </button>
+          <Button disabled={disabled} onClick={handleAddColor} />
         </div>
 
         {/* Color chips display */}

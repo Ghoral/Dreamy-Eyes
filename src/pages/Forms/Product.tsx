@@ -40,22 +40,24 @@ const ProductForm = () => {
       color,
       specifications: specifications.keyValuePairs,
     };
-    console.log("data -> ", body);
 
     await supabaseClient.from("lens").insert(body);
   };
 
   const handleImageChange = async (files: any) => {
     formik.setFieldValue("images", files);
+    console.log("files -> ", files);
 
     try {
-      const fileToUpload = files[files.length - 1];
-      const { error } = await supabaseClient.storage
-        .from("lens-images")
-        .upload(fileToUpload.name, fileToUpload, { upsert: true });
+      if (files?.length) {
+        const fileToUpload = files[files.length - 1];
+        const { error } = await supabaseClient.storage
+          .from("lens-images")
+          .upload(fileToUpload.name, fileToUpload, { upsert: true });
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
       }
     } catch (error) {
       showCustomToastError(error);
@@ -78,6 +80,7 @@ const ProductForm = () => {
             onReorder={(items) => {
               formik.setFieldValue("images", items);
             }}
+            bucket="lens-images"
           />
           {formik.touched.images && formik.errors.images && (
             <div className="text-red-500 text-sm mt-1">
@@ -221,10 +224,31 @@ const ProductForm = () => {
             </div>
           )}
         </div>
-        <MultiColorSelector
-          onChange={(colors) => formik.setFieldValue("color", colors)}
-          values={formik.values.color}
-        />
+        <div className="mb-6">
+          <DropzoneComponent
+            file={formik.values.images}
+            setFile={handleImageChange}
+            title="Product Images"
+            multiple
+            onReorder={(items) => {
+              formik.setFieldValue("images", items);
+            }}
+          />
+          {formik.touched.images && formik.errors.images && (
+            <div className="text-red-500 text-sm mt-1">
+              {formik.errors.images}
+            </div>
+          )}
+          <MultiColorSelector
+            disabled={
+              !!!formik?.values?.images?.length ||
+              formik.values.color.length === formik.values.images.length
+            }
+            onChange={(colors) => formik.setFieldValue("color", colors)}
+            values={formik.values.color}
+          />
+        </div>
+
         <div className="mt-8">
           <button
             type="submit"
