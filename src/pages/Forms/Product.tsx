@@ -46,7 +46,6 @@ const ProductForm = () => {
 
   const handleImageChange = async (files: any) => {
     formik.setFieldValue("images", files);
-    console.log("files -> ", files);
 
     try {
       if (files?.length) {
