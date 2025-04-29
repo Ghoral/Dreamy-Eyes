@@ -10,6 +10,7 @@ import { productValidationSchema } from "../../validation/product";
 import { useState } from "react";
 import { supabaseClient } from "../../service/supabase";
 import { showCustomToastError } from "../../utils/toast";
+import MultiColorSelector from "../../components/common/ColorPicker";
 
 const ProductForm = () => {
   const [specifications, setSpecifications] = useState<any>({});
@@ -22,6 +23,7 @@ const ProductForm = () => {
       price: undefined,
       quantity: undefined,
       power: undefined,
+      color: [],
     },
     validationSchema: productValidationSchema,
     onSubmit: (values: IProduct) => {
@@ -30,14 +32,15 @@ const ProductForm = () => {
   });
 
   const onSubmit = async (values: IProduct) => {
-    const images = values.images
-      ?.map((item) => `lens-images/${item.name}`)
-      .join(",");
+    const images = values.images?.map((item) => `${item.name}`).join(",");
+    const color = values.color?.join(",");
     const body = {
       ...values,
       images,
+      color,
       specifications: specifications.keyValuePairs,
     };
+    console.log("data -> ", body);
 
     await supabaseClient.from("lens").insert(body);
   };
@@ -82,7 +85,6 @@ const ProductForm = () => {
             </div>
           )}
         </div>
-
         <div className="mb-6">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -158,7 +160,6 @@ const ProductForm = () => {
             </div>
           )}
         </div>
-
         <div className="mb-6">
           <Label htmlFor="sub-description">Description Preview</Label>
           <div
@@ -220,23 +221,10 @@ const ProductForm = () => {
             </div>
           )}
         </div>
-        <div className="mb-6">
-          <label
-            htmlFor="hs-color-input"
-            className="block text-sm font-medium mb-2 dark:text-white"
-          >
-            Color
-          </label>
-          <input
-            type="color"
-            className="p-1 h-10 w-14 block bg-white border border-gray-200 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700"
-            id="hs-color-input"
-            value="#2563eb"
-            title="Choose your color"
-            onChange={(e) => formik.setFieldValue("color", e.target.value)}
-          ></input>
-        </div>
-
+        <MultiColorSelector
+          onChange={(colors) => formik.setFieldValue("color", colors)}
+          values={formik.values.color}
+        />
         <div className="mt-8">
           <button
             type="submit"

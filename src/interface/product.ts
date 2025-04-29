@@ -7,6 +7,7 @@ export interface IProduct {
   quantity?: number;
   power?: number;
   specifications?: Specifications;
+  color: string[];
 }
 
 export interface IImage {
