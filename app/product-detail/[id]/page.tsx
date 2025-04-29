@@ -23,7 +23,7 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 // This would come from your actual data source
 const getProductById = (id: string) => {
@@ -85,8 +85,11 @@ const getProductById = (id: string) => {
 };
 
 export default function ProductDetail() {
+  const params = useParams();
+  const productId = params?.id as string;
+
   const router = useRouter();
-  const product = getProductById("1" as string);
+  const product = getProductById(productId);
 
   // Handle case where product isn't found or page is still loading
   if (!product) {
