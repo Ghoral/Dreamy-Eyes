@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
+import ImageSlider from "./image-slider";
 
 export default function ProductGrid() {
   const [data, setData] = useState<IProductList[]>([]);
@@ -33,38 +34,35 @@ export default function ProductGrid() {
 }
 
 function ProductCard({ product }: { product: IProductList }) {
+  const [selectedImages, setSelectedImges] = useState([]);
+  const [colors, setColors] = useState<any>([]);
+
   const [selectedColor, setSelectedColor] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const colors = product.color?.split(",") ?? [];
   const images = product.images?.split(",");
   const thumbnail = images[0];
+
+  useEffect(() => {
+    const json = JSON.parse(product.images);
+    const selectedColor = Object.keys(json);
+
+    setColors(selectedColor);
+    setSelectedColor(selectedColor[0]);
+    setSelectedImges(json[selectedColor[0]]);
+  }, [product]);
+
+  const onColorSelected = (color: string) => {
+    const json = JSON.parse(product.images);
+
+    setSelectedColor(color);
+    setSelectedImges(json[color]);
+  };
 
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg max-w-xs mx-auto">
       {/* Product Image - Fixed to properly fill container */}
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={process.env.NEXT_PUBLIC_IMAGE_URL + "/" + thumbnail}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-        />
-        {/* {product.badge && (
-          <Badge className="absolute top-3 right-3 bg-blue-600 hover:bg-blue-700">
-            {product.badge}
-          </Badge>
-        )} */}
-        <button
-          onClick={() => setIsFavorite(!isFavorite)}
-          className="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center transition-colors hover:bg-white"
-        >
-          <Heart
-            size={18}
-            className={
-              isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"
-            }
-          />
-        </button>
-      </div>
+      <ImageSlider selectedImages={selectedImages} />
 
       <CardContent className="p-4">
         <h2 className="font-semibold text-lg">{product.title}</h2>
@@ -77,7 +75,7 @@ function ProductCard({ product }: { product: IProductList }) {
             {colors.map((color: any, index: number) => (
               <button
                 key={index.toString()}
-                onClick={() => setSelectedColor(color)}
+                onClick={() => onColorSelected(color)}
                 className={`w-6 h-6 rounded-full transition-all duration-200 ${
                   color === selectedColor
                     ? "ring-2 ring-offset-2 ring-blue-500"
