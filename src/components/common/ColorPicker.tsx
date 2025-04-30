@@ -6,12 +6,16 @@ interface MultiColorSelectorProps {
   disabled: boolean;
   onChange: (colors: string[]) => void;
   label?: string;
+  setSelectedColor: any;
+  selectedColor?: string | null;
 }
 
 const MultiColorSelector = ({
+  selectedColor,
   values = [],
   disabled,
   onChange,
+  setSelectedColor,
   label = "Colors",
 }: MultiColorSelectorProps) => {
   const [currentColor, setCurrentColor] = useState<string>("#2563eb");
@@ -29,6 +33,8 @@ const MultiColorSelector = ({
     onChange(newColors);
   };
 
+  console.log("selectedColor", selectedColor);
+
   return (
     <div className="mb-6">
       <label className="block text-sm font-medium mb-2 dark:text-white">
@@ -45,42 +51,52 @@ const MultiColorSelector = ({
             title="Choose a color"
             onChange={(e) => setCurrentColor(e.target.value)}
           />
-          <Button disabled={disabled} onClick={handleAddColor} />
+          <Button onClick={handleAddColor} />
         </div>
 
         {/* Color chips display */}
         {values.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {values.map((color, index) => (
-              <div key={`${color}-${index}`} className="relative inline-block">
+            {values.map((color, index) => {
+              const isSelected = selectedColor === color;
+
+              return (
                 <div
-                  className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700"
-                  style={{ backgroundColor: color }}
-                  title={color}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveColor(index)}
-                  className="absolute -top-1 -right-1 bg-white dark:bg-gray-800 rounded-full w-4 h-4 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
-                  aria-label="Remove color"
+                  key={`${color}-${index}`}
+                  className={`relative inline-block rounded-full p-[2px] ${
+                    isSelected ? "ring-2 ring-blue-500" : ""
+                  }`}
+                  onClick={() => setSelectedColor(color)}
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-3 w-3 text-gray-500 hover:text-red-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                  <div
+                    className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700"
+                    style={{ backgroundColor: color }}
+                    title={color}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveColor(index)}
+                    className="absolute -top-1 -right-1 bg-white dark:bg-gray-800 rounded-full w-4 h-4 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
+                    aria-label="Remove color"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ))}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-3 w-3 text-gray-500 hover:text-red-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

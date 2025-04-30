@@ -2,7 +2,7 @@ const Button = ({
   disabled,
   onClick,
 }: {
-  disabled: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }) => {
   return (

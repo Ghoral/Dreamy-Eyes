@@ -11,9 +11,13 @@ import { useState } from "react";
 import { supabaseClient } from "../../service/supabase";
 import { showCustomToastError } from "../../utils/toast";
 import MultiColorSelector from "../../components/common/ColorPicker";
+import { getColorFileNameMap } from "../../utils";
 
 const ProductForm = () => {
   const [specifications, setSpecifications] = useState<any>({});
+  const [colorImageMap, setColorImageMap] = useState<any>({});
+  const [selectedColor, setSelectedColor] = useState<string>("#2563eb");
+
   const formik = useFormik({
     initialValues: {
       title: "",
@@ -32,19 +36,17 @@ const ProductForm = () => {
   });
 
   const onSubmit = async (values: IProduct) => {
-    const images = values.images?.map((item) => `${item.name}`).join(",");
-    const color = values.color?.join(",");
+    const { color, ...rest } = values;
     const body = {
-      ...values,
-      images,
-      color,
+      ...rest,
+      images: getColorFileNameMap(colorImageMap),
       specifications: specifications.keyValuePairs,
     };
 
     await supabaseClient.from("lens").insert(body);
   };
 
-  const handleImageChange = async (files: any) => {
+  const handleImageChange = async (files: File[]) => {
     formik.setFieldValue("images", files);
 
     try {
@@ -57,6 +59,32 @@ const ProductForm = () => {
         if (error) {
           throw error;
         }
+      }
+    } catch (error) {
+      showCustomToastError(error);
+    }
+  };
+
+  const handleImageChangeColor = async (files: File[]) => {
+    try {
+      await handleImageChange(files);
+      if (selectedColor) {
+        setColorImageMap((prev: any) => {
+          const existingFiles: File[] = prev[selectedColor] || [];
+
+          const existingFileNames = new Set(
+            existingFiles.map((file) => file.name)
+          );
+
+          const newUniqueFiles = files.filter(
+            (file) => !existingFileNames.has(file.name)
+          );
+
+          return {
+            ...prev,
+            [selectedColor]: [...existingFiles, ...newUniqueFiles],
+          };
+        });
       }
     } catch (error) {
       showCustomToastError(error);
@@ -225,11 +253,12 @@ const ProductForm = () => {
         </div>
         <div className="mb-6">
           <DropzoneComponent
-            file={formik.values.images}
-            setFile={handleImageChange}
+            bucket="lens-images"
+            file={colorImageMap[selectedColor]}
+            setFile={handleImageChangeColor}
             title="Product Images"
             multiple
-            onReorder={(items) => {
+            onReorder={(items: any) => {
               formik.setFieldValue("images", items);
             }}
           />
@@ -243,8 +272,14 @@ const ProductForm = () => {
               !!!formik?.values?.images?.length ||
               formik.values.color.length === formik.values.images.length
             }
-            onChange={(colors) => formik.setFieldValue("color", colors)}
+            onChange={(colors) => {
+              formik.setFieldValue("color", colors);
+              console.log("colors", colors);
+              setSelectedColor(colors[colors.length - 1]);
+            }}
             values={formik.values.color}
+            selectedColor={selectedColor}
+            setSelectedColor={setSelectedColor}
           />
         </div>
 
