@@ -8,8 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import Autoplay from "embla-carousel-autoplay";
-
 import { LandingComponent } from "@/components/custom/landing/landing";
 import ProductGrid from "@/components/custom/product/product-grid";
 

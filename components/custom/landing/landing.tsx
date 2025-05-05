@@ -9,7 +9,6 @@ import {
 import Image from "next/image";
 import Autoplay from "embla-carousel-autoplay";
 import { TikTokEmbed } from "react-social-media-embed";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export const LandingComponent = () => {
   const plugin = React.useRef(

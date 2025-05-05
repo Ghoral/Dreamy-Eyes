@@ -9,13 +9,9 @@ import ImageSlider from "./image-slider";
 
 const ProductCard = ({ product }: { product: IProductList }) => {
   const [selectedImages, setSelectedImges] = useState([]);
-  const [colors, setColors] = useState<any>([]);
+  const [colors, setColors] = useState<any[]>([]);
 
   const [selectedColor, setSelectedColor] = useState("");
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const images = product.images?.split(",");
-  const thumbnail = images[0];
 
   useEffect(() => {
     const json = JSON.parse(product.images);
