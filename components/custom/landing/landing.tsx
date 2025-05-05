@@ -29,7 +29,7 @@ export const LandingComponent = () => {
               <CarouselItem key={index} className="p-0">
                 <div className="w-full h-96 overflow-hidden px-12">
                   <Image
-                    src="/images/slider.jpg"
+                    src={`${process.env.NEXT_PUBLIC_IMAGE_URL}/config/banner.png`}
                     alt="banner"
                     className="w-full h-full object-cover"
                     width={1920}

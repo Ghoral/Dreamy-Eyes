@@ -20,7 +20,7 @@ export default function ImageSlider({ selectedImages = [], product }: any) {
           {selectedImages.map((image: any, index: any) => (
             <CarouselItem key={index} className="relative h-full w-full">
               <img
-                src={`${process.env.NEXT_PUBLIC_IMAGE_URL}/${image}`}
+                src={`${process.env.NEXT_PUBLIC_IMAGE_URL}/lens-images/${image}`}
                 alt={`Product image ${index + 1}`}
                 className="w-full h-full object-cover"
               />
