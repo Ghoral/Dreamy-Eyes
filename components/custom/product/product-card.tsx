@@ -32,6 +32,7 @@ const ProductCard = ({ product }: { product: IProductList }) => {
     setSelectedColor(color);
     setSelectedImges(json[color]);
   };
+
   return (
     <Card className="overflow-hidden transition-shadow duration-300 hover:shadow-lg max-w-sm mx-auto rounded-2xl border border-gray-200">
       {/* Product Image Slider */}
