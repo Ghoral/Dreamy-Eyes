@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["example.com", "localhost", "your-image-cdn.com"],
+    domains: ["https://whimsical-medovik-06e67e.netlify.app/", "localhost"],
   },
 };
 
