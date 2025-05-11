@@ -30,7 +30,12 @@ const ProductCard = ({ product }: { product: IProductList }) => {
   return (
     <Card className="overflow-hidden transition-shadow duration-300 hover:shadow-md max-w-xs mx-auto rounded-lg border border-gray-200">
       <div className="h-48 overflow-hidden">
-        <ImageSlider selectedImages={selectedImages} />
+        <img
+          src={`${process.env.NEXT_PUBLIC_IMAGE_URL}/lens-images/${selectedImages[0]}`}
+          alt={`Product image`}
+          className="w-full max-h-48 object-contain mx-auto"
+          style={{ height: 270, width: 270 }}
+        />
       </div>
       <Separator />
       <CardContent className="p-3">

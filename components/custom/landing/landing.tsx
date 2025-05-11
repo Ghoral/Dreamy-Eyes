@@ -18,7 +18,7 @@ export const LandingComponent = () => {
 
   return (
     <main className="flex-grow overflow-x-hidden">
-      <div className="relative w-full mt-4">
+      <div className="relative w-full mt-4 px-4">
         <Carousel
           plugins={[plugin.current]}
           className="w-full"

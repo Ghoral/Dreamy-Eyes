@@ -14,7 +14,7 @@ export default function ImageSlider({ selectedImages = [], product }: any) {
   const [isFavorite, setIsFavorite] = useState(false);
 
   return (
-    <Carousel className="h-full w-full" style={{ width: 270 }}>
+    <Carousel className="h-full w-full" style={{ width: 250 }}>
       <CarouselContent className="h-full">
         {selectedImages.map((image: any, index: any) => (
           <CarouselItem key={index} className="relative h-full w-full">
@@ -22,6 +22,7 @@ export default function ImageSlider({ selectedImages = [], product }: any) {
               src={`${process.env.NEXT_PUBLIC_IMAGE_URL}/lens-images/${image}`}
               alt={`Product image ${index + 1}`}
               className="w-full max-h-48 object-contain mx-auto"
+              style={{ height: 170, width: 170 }}
             />
           </CarouselItem>
         ))}

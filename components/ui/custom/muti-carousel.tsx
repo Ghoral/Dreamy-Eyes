@@ -29,23 +29,12 @@ export function MultiCarousel() {
           {data.map((_, index) => (
             <CarouselItem
               key={index}
-              className="pl-4 w-full sm:basis-full md:basis-1/2 lg:basis-1/3 flex justify-center"
+              className="w-full sm:basis-full md:basis-1/2 lg:basis-1/3 flex justify-center"
             >
-              <div className="overflow-hidden rounded-2xl  h-full w-full max-w-sm">
-                <div
-                  className="relative overflow-hidden p-4 flex items-center justify-center"
-                  style={{
-                    minHeight: 500,
-                  }}
-                >
-                  <div className="w-full flex justify-center">
-                    <TikTokEmbed
-                      url="https://www.tiktok.com/@scout2015/video/6718335390845095173"
-                      width="100%"
-                    />
-                  </div>
-                </div>
-              </div>
+              <TikTokEmbed
+                url="https://www.tiktok.com/@scout2015/video/6718335390845095173"
+                width="100%"
+              />
             </CarouselItem>
           ))}
         </CarouselContent>
