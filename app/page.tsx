@@ -36,7 +36,7 @@ export default function Home() {
         <nav id="header-nav" className="navbar navbar-expand-lg py-3">
           <div className="container">
             <a className="navbar-brand" href="index.html">
-              <img src="images/main-logo.png" className="logo" />
+              Dreamy Eyes
             </a>
             <button
               className="navbar-toggler d-flex d-lg-none order-3 p-2"
@@ -714,11 +714,7 @@ export default function Home() {
               <div className="row d-flex flex-wrap justify-content-between">
                 <div className="col-lg-3 col-sm-6 pb-3">
                   <div className="footer-menu">
-                    <img
-                      src="images/main-logo.png"
-                      alt="logo"
-                      className="img-fluid mb-2"
-                    />
+                    Dreamy Eyes
                     <p>
                       Nisi, purus vitae, ultrices nunc. Sit ac sit suscipit
                       hendrerit. Gravida massa volutpat aenean odio erat nullam
