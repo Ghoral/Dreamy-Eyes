@@ -46,6 +46,9 @@
 
 /* 2.1 General Styles
 /*----------------------------------------------*/
+* {
+  font-family: "Nunito", sans-serif;
+}
 *,
 *::before,
 *::after {

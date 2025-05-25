@@ -1,8 +1,9 @@
 "use client";
 
+import TikTokCarousel from "./components/landing/BestSelling";
 import BestSellingItems from "./components/landing/BestSelling";
-import CustomerReviewsSection from "./components/landing/CustomerReview";
-import BillboardCarousel from "./components/landing/Swiper";
+import ItemListing from "./components/landing/ItemListing";
+import ProductItems from "./components/landing/ProductItems";
 
 export default function Home() {
   return (
@@ -13,15 +14,12 @@ export default function Home() {
             <div className="row g-0">
               <div className="col-md-4">
                 <p className="fs-6 my-2 text-center">
-                  Need any help? Call us <a href="#">112233344455</a>
+                  Need any help? Call us <span>112233344455</span>
                 </p>
               </div>
               <div className="col-md-4 border-start border-end">
                 <p className="fs-6 my-2 text-center">
-                  Summer sale discount off 60% off!{" "}
-                  <a className="text-decoration-underline" href="index.html">
-                    Shop Now
-                  </a>
+                  Summer sale discount off 60% off! Shop Now
                 </p>
               </div>
               <div className="col-md-4">
@@ -430,7 +428,7 @@ export default function Home() {
                         <svg className="cart">
                           <use xlinkHref="#cart"></use>
                         </svg>
-                        <span className="fs-6 fw-light">(02)</span>
+                        {/* <span className="fs-6 fw-light">(02)</span> */}
                       </a>
                       <div className="dropdown-menu animate slide dropdown-menu-start dropdown-menu-lg-end p-3">
                         <h4 className="d-flex justify-content-between align-items-center mb-3">
@@ -449,7 +447,7 @@ export default function Home() {
                               </h5>
                               <small>High quality in good price.</small>
                             </div>
-                            <span className="text-primary">$870</span>
+                            <span>$870</span>
                           </li>
                           <li className="list-group-item bg-transparent d-flex justify-content-between lh-sm">
                             <div>
@@ -494,8 +492,7 @@ export default function Home() {
           </div>
         </nav>
       </header>
-
-      <BillboardCarousel />
+      <TikTokCarousel />
       <section id="company-services" className="padding-large pb-0">
         <div className="container">
           <div className="row">
@@ -562,10 +559,10 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       <BestSellingItems />
-
-      <section
+      <ItemListing />
+      <ProductItems />
+      {/* <section
         id="limited-offer"
         className="padding-large"
         style={{
@@ -619,504 +616,8 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
-
-      <section id="items-listing" className="padding-large">
-        <div className="container">
-          <div className="row">
-            <div className="col-md-6 mb-4 mb-lg-0 col-lg-3">
-              <div className="featured border rounded-3 p-4">
-                <div className="section-title overflow-hidden mb-5 mt-2">
-                  <h3 className="d-flex flex-column mb-0">Featured</h3>
-                </div>
-                <div className="items-lists">
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item2.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Echoes of the Ancients</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr className="gray-400" />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item1.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">The Midnight Garden</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item3.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Shadow of the Serpent</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6 mb-4 mb-lg-0 col-lg-3">
-              <div className="latest-items border rounded-3 p-4">
-                <div className="section-title overflow-hidden mb-5 mt-2">
-                  <h3 className="d-flex flex-column mb-0">Latest items</h3>
-                </div>
-                <div className="items-lists">
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item4.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Whispering Winds</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr className="gray-400" />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item5.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">The Forgotten Realm</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item6.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Moonlit Secrets</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6 mb-4 mb-lg-0 col-lg-3">
-              <div className="best-reviewed border rounded-3 p-4">
-                <div className="section-title overflow-hidden mb-5 mt-2">
-                  <h3 className="d-flex flex-column mb-0">Best reviewed</h3>
-                </div>
-                <div className="items-lists">
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item7.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">The Crystal Key</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr className="gray-400" />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item8.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Windswept Shores</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item9.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Lost Horizons</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6 mb-4 mb-lg-0 col-lg-3">
-              <div className="top-sellers border rounded-3 p-4">
-                <div className="section-title overflow-hidden mb-5 mt-2">
-                  <h3 className="d-flex flex-column mb-0">Top sellers</h3>
-                </div>
-                <div className="items-lists">
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item10.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Sunset Dreams</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr className="gray-400" />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item11.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Emerald Horizon</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                  <hr />
-                  <div className="item d-flex">
-                    <img
-                      src="images/product-item12.png"
-                      className="img-fluid shadow-sm"
-                      alt="product item"
-                    />
-                    <div className="item-content ms-3">
-                      <h6 className="mb-0 fw-bold">
-                        <a href="index.html">Crimson Echo</a>
-                      </h6>
-                      <div className="review-content d-flex">
-                        <p className="my-2 me-2 fs-6 text-black-50">
-                          Lauren Asher
-                        </p>
-                        <div className="rating text-warning d-flex align-items-center">
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                          <svg className="star star-fill">
-                            <use xlinkHref="#star-fill"></use>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="price text-primary fw-bold mb-2 fs-5">
-                        $870
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="categories" className="padding-large pt-0">
+      </section> */}
+      {/* <section id="categories" className="padding-large pt-0">
         <div className="container">
           <div className="section-title overflow-hidden mb-4">
             <h3 className="d-flex align-items-center">Categories</h3>
@@ -1169,128 +670,10 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      <CustomerReviewsSection />
-      <section id="latest-posts" className="padding-large">
-        <div className="container">
-          <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
-            <h3 className="d-flex align-items-center">Latest posts</h3>
-            <a href="index.html" className="btn">
-              View All
-            </a>
-          </div>
-          <div className="row">
-            <div className="col-md-3 posts mb-4">
-              <img
-                src="images/post-item1.jpg"
-                alt="post image"
-                className="img-fluid rounded-3"
-              />
-              <a href="blog.html" className="fs-6 text-primary">
-                Books
-              </a>
-              <h4 className="card-title mb-2 text-capitalize text-dark">
-                <a href="index.html">
-                  10 Must-Read Books of the Year: Our Top Picks!
-                </a>
-              </h4>
-              <p className="mb-2">
-                Dive into the world of cutting-edge technology with our latest
-                blog post, where we highlight five essential gadge.
-                <span>
-                  <a
-                    className="text-decoration-underline text-black-50"
-                    href="index.html"
-                  >
-                    Read More
-                  </a>
-                </span>
-              </p>
-            </div>
-            <div className="col-md-3 posts mb-4">
-              <img
-                src="images/post-item2.jpg"
-                alt="post image"
-                className="img-fluid rounded-3"
-              />
-              <a href="blog.html" className="fs-6 text-primary">
-                Books
-              </a>
-              <h4 className="card-title mb-2 text-capitalize text-dark">
-                <a href="index.html">
-                  The Fascinating Realm of Science Fiction
-                </a>
-              </h4>
-              <p className="mb-2">
-                Explore the intersection of technology and sustainability in our
-                latest blog post. Learn about the innovative
-                <span>
-                  <a
-                    className="text-decoration-underline text-black-50"
-                    href="index.html"
-                  >
-                    Read More
-                  </a>
-                </span>
-              </p>
-            </div>
-            <div className="col-md-3 posts mb-4">
-              <img
-                src="images/post-item3.jpg"
-                alt="post image"
-                className="img-fluid rounded-3"
-              />
-              <a href="blog.html" className="fs-6 text-primary">
-                Books
-              </a>
-              <h4 className="card-title mb-2 text-capitalize text-dark">
-                <a href="index.html">Finding Love in the Pages of a Book</a>
-              </h4>
-              <p className="mb-2">
-                Stay ahead of the curve with our insightful look into the
-                rapidly evolving landscape of wearable technology.
-                <span>
-                  <a
-                    className="text-decoration-underline text-black-50"
-                    href="index.html"
-                  >
-                    Read More
-                  </a>
-                </span>
-              </p>
-            </div>
-            <div className="col-md-3 posts mb-4">
-              <img
-                src="images/post-item4.jpg"
-                alt="post image"
-                className="img-fluid rounded-3"
-              />
-              <a href="blog.html" className="fs-6 text-primary">
-                Books
-              </a>
-              <h4 className="card-title mb-2 text-capitalize text-dark">
-                <a href="index.html">
-                  Reading for Mental Health: How Books Can Heal and Inspire
-                </a>
-              </h4>
-              <p className="mb-2">
-                In today's remote work environment, productivity is key.
-                Discover the top apps and tools that can help you stay
-                <span>
-                  <a
-                    className="text-decoration-underline text-black-50"
-                    href="index.html"
-                  >
-                    Read More
-                  </a>
-                </span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* <CustomerReviewsSection /> */}
+      <br />
       <section id="instagram">
         <div className="container">
           <div className="text-center mb-4">
@@ -1429,34 +812,9 @@ export default function Home() {
       <div id="footer-bottom" className="mb-2">
         <div className="container">
           <div className="d-flex flex-wrap justify-content-between">
-            <div className="ship-and-payment d-flex gap-md-5 flex-wrap">
-              <div className="shipping d-flex">
-                <p>We ship with:</p>
-                <div className="card-wrap ps-2">
-                  <img src="images/dhl.png" alt="DHL" />
-                  <img src="images/shippingcard.png" alt="Shipping Card" />
-                </div>
-              </div>
-              <div className="payment-method d-flex">
-                <p>Payment options:</p>
-                <div className="card-wrap ps-2">
-                  <img src="images/visa.jpg" alt="Visa" />
-                  <img src="images/mastercard.jpg" alt="MasterCard" />
-                  <img src="images/paypal.jpg" alt="PayPal" />
-                </div>
-              </div>
-            </div>
+            <div className="ship-and-payment d-flex gap-md-5 flex-wrap"></div>
             <div className="copyright">
-              <p>
-                © Copyright 2024 Bookly. HTML Template by{" "}
-                <a
-                  href="https://templatesjungle.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  TemplatesJungle
-                </a>
-              </p>
+              <p>© Copyright {new Date().getFullYear()} Dreamy Eyes.</p>
             </div>
           </div>
         </div>

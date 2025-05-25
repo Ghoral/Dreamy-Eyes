@@ -2,9 +2,10 @@
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
+import { TikTokEmbed } from "react-social-media-embed";
 import "swiper/css/bundle";
 
-export default function BestSellingItems() {
+export default function TikTokCarousel() {
   return (
     <section
       id="best-selling-items"
@@ -12,7 +13,7 @@ export default function BestSellingItems() {
     >
       <div className="container">
         <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
-          <h3 className="d-flex align-items-center">Best selling items</h3>
+          <h3 className="d-flex align-items-center">Watch our TikToks</h3>
           <a href="index.html" className="btn">
             View All
           </a>
@@ -38,7 +39,6 @@ export default function BestSellingItems() {
           </svg>
         </div>
 
-        {/* Swiper Component */}
         <Swiper
           modules={[Navigation]}
           navigation={{
@@ -52,51 +52,50 @@ export default function BestSellingItems() {
             992: { slidesPerView: 3 },
             1200: { slidesPerView: 4 },
           }}
-          className="product-swiper"
+          width={1600}
+          height={500}
         >
           {[
             {
               image: "/images/product-item1.png",
               title: "House of Sky Breath",
               author: "Lauren Asher",
-              price: "$870",
+              price: "870",
               discount: "10% off",
             },
             {
               image: "/images/product-item2.png",
               title: "Heartland Stars",
               author: "Lauren Asher",
-              price: "$870",
+              price: "870",
             },
             {
               image: "/images/product-item3.png",
               title: "Heavenly Bodies",
               author: "Lauren Asher",
-              price: "$870",
+              price: "870",
             },
             {
               image: "/images/product-item4.png",
               title: "His Saving Grace",
               author: "Lauren Asher",
-              price: "$870",
+              price: "870",
               discount: "10% off",
             },
             {
               image: "/images/product-item5.png",
               title: "My Dearest Darkest",
               author: "Lauren Asher",
-              price: "$870",
-            },
-            {
-              image: "/images/product-item6.png",
-              title: "The Story of Success",
-              author: "Lauren Asher",
-              price: "$870",
+              price: "870",
             },
           ].map((item, index) => (
             <SwiperSlide key={index}>
               <div className="card position-relative p-4 border rounded-3">
-                {item.discount && (
+                <TikTokEmbed
+                  url="https://www.tiktok.com/@epicgardening/video/7055411162212633903"
+                  height={500}
+                />
+                {/* {item.discount && (
                   <div className="position-absolute">
                     <p className="bg-primary py-1 px-3 fs-6 text-white rounded-2">
                       {item.discount}
@@ -108,9 +107,7 @@ export default function BestSellingItems() {
                   className="img-fluid shadow-sm"
                   alt="product item"
                 />
-                <h6 className="mt-4 mb-0 fw-bold">
-                  <a href="index.html">{item.title}</a>
-                </h6>
+                <h6 className="mt-4 mb-0 fw-bold">{item.title}</h6>
                 <div className="review-content d-flex">
                   <p className="my-2 me-2 fs-6 text-black-50">{item.author}</p>
                   <div className="rating text-warning d-flex align-items-center">
@@ -121,8 +118,11 @@ export default function BestSellingItems() {
                     ))}
                   </div>
                 </div>
-                <span className="price text-primary fw-bold mb-2 fs-5">
-                  {item.price}
+                <span
+                  className="price fw-bold mb-2 fs-5"
+                  style={{ color: "rgb(248, 109, 114)" }}
+                >
+                  Rs. {item.price}
                 </span>
                 <div className="card-concern position-absolute start-0 end-0 d-flex gap-2">
                   <button
@@ -141,7 +141,7 @@ export default function BestSellingItems() {
                       <use xlinkHref="#heart" />
                     </svg>
                   </a>
-                </div>
+                </div> */}
               </div>
             </SwiperSlide>
           ))}
