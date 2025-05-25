@@ -37,7 +37,7 @@ const posts = [
 
 const ProductItems = () => {
   return (
-    <section id="latest-posts" className="padding-large">
+    <section id="latest-posts">
       <div className="container">
         <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
           <h3 className="d-flex align-items-center">Latest products</h3>

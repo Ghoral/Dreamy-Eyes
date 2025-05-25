@@ -9,10 +9,11 @@ export default function TikTokCarousel() {
   return (
     <section
       id="best-selling-items"
-      className="position-relative padding-large"
+      className="position-relative"
+      style={{ marginTop: 32 }}
     >
       <div className="container">
-        <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
+        <div className="section-title d-md-flex justify-content-between align-items-center ">
           <h3 className="d-flex align-items-center">Watch our TikToks</h3>
           <a href="index.html" className="btn">
             View All

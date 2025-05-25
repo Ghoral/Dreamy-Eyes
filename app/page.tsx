@@ -2,8 +2,10 @@
 
 import TikTokCarousel from "./components/landing/BestSelling";
 import BestSellingItems from "./components/landing/BestSelling";
+import CustomerReviewsSection from "./components/landing/CustomerReview";
 import ItemListing from "./components/landing/ItemListing";
 import ProductItems from "./components/landing/ProductItems";
+import BillboardCarousel from "./components/landing/Swiper";
 
 export default function Home() {
   return (
@@ -492,7 +494,7 @@ export default function Home() {
           </div>
         </nav>
       </header>
-      <TikTokCarousel />
+      <BillboardCarousel />
       <section id="company-services" className="padding-large pb-0">
         <div className="container">
           <div className="row">
@@ -559,7 +561,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <BestSellingItems />
+      <TikTokCarousel />
       <ItemListing />
       <ProductItems />
       {/* <section
