@@ -64,7 +64,7 @@ const ProductItems = () => {
     >
       <div className="container">
         <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
-          <h3 className="d-flex align-items-center">Best selling items</h3>
+          <h3 className="d-flex align-items-center">Our Products</h3>
           <a href="index.html" className="btn">
             View All
           </a>
@@ -85,14 +85,13 @@ const ProductItems = () => {
                   src={product.image}
                   className="img-fluid shadow-sm"
                   style={{
-                    maxHeight: "250px",
+                    height: "180px",
                     objectFit: "contain",
                     width: "100%",
                   }}
                   alt={product.title}
                 />
 
-                {/* Title */}
                 <h6 className="mt-4 mb-0 fw-bold">
                   <a
                     href="index.html"

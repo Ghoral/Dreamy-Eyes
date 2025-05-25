@@ -99,54 +99,47 @@ const sections = [
 
 const ItemListing = () => {
   return (
-    <section id="items-listing">
+    <section id="items-listing" className="py-5 bg-light">
       <div className="container">
-        <div className="row">
+        <div className="row g-4">
           {sections.map((section, idx) => (
-            <div key={idx} className="col-md-6 mb-4 mb-lg-0 col-lg-3">
-              <div className={`${section.className} border rounded-3 p-4`}>
-                <div className="section-title overflow-hidden mb-5 mt-2">
-                  <h3 className="d-flex flex-column mb-0">{section.title}</h3>
-                </div>
-                <div className="items-lists">
-                  {section.products.map((product, pIdx) => (
-                    <div key={pIdx}>
-                      <div className="item d-flex">
+            <div key={idx} className="col-sm-6 col-lg-3 d-flex">
+              <div className="card shadow-sm w-100 h-100 border-0">
+                <div className="card-body d-flex flex-column">
+                  <h5 className="card-title mb-4 text-primary">
+                    {section.title}
+                  </h5>
+                  <div className="d-flex flex-column gap-3">
+                    {section.products.map((product, pIdx) => (
+                      <div
+                        key={pIdx}
+                        className="d-flex align-items-start gap-2"
+                      >
                         <img
                           src={product.image}
-                          className="img-fluid shadow-sm"
-                          style={{ objectFit: "contain" }}
+                          className="rounded"
                           alt={product.title}
+                          style={{
+                            width: "48px",
+                            height: "64px",
+                            objectFit: "cover",
+                            flexShrink: 0,
+                          }}
                         />
-                        <div className="item-content ms-3">
-                          <h6 className="mb-0 fw-bold">{product.title}</h6>
-                          <div className="review-content d-flex">
-                            <p className="my-2 me-2 fs-6 text-black-50">
-                              {product.author}
-                            </p>
-                            <div className="rating text-warning d-flex align-items-center">
-                              {Array(5)
-                                .fill(0)
-                                .map((_, i) => (
-                                  <svg key={i} className="star star-fill">
-                                    <use xlinkHref="#star-fill"></use>
-                                  </svg>
-                                ))}
-                            </div>
-                          </div>
-                          <span
-                            className="price fw-bold mb-2 fs-5"
-                            style={{ color: "rgb(248, 109, 114)" }}
-                          >
+                        <div className="flex-grow-1">
+                          <h6 className="mb-1 text-dark fw-semibold fs-6">
+                            {product.title}
+                          </h6>
+                          <p className="mb-0 text-muted small">
+                            {product.author}
+                          </p>
+                          <span className="text-danger fw-bold small">
                             Rs. {product.price}
                           </span>
                         </div>
                       </div>
-                      {pIdx < section.products.length - 1 && (
-                        <hr className={pIdx % 2 === 0 ? "gray-400" : ""} />
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
