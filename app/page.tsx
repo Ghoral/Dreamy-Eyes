@@ -4,6 +4,7 @@ import TikTokCarousel from "./components/landing/TikTokCarousel";
 import ItemListing from "./components/landing/ItemListing";
 import ProductItems from "./components/landing/ProductItems";
 import BillboardCarousel from "./components/landing/Swiper";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -55,7 +56,11 @@ export default function Home() {
             >
               <div className="offcanvas-header px-4 pb-0">
                 <a className="navbar-brand" href="index.html">
-                  <img src="images/main-logo.png" className="logo" />
+                  <Image
+                    src="images/main-logo.png"
+                    className="logo"
+                    alt="main-logo"
+                  />
                 </a>
                 <button
                   type="button"
@@ -778,7 +783,7 @@ export default function Home() {
                         <use xlinkHref="#instagram"></use>
                       </svg>
                     </div>
-                    <img
+                    <Image
                       src={`images/insta-item${num}.jpg`}
                       alt="instagram"
                       className="img-fluid rounded-3 insta-image"

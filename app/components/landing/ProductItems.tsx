@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React, { useState } from "react";
 
 const products = [
@@ -58,7 +59,7 @@ const products = [
 const ProductItems = () => {
   const [hoveredItem, setHoveredItem] = useState<any>(null);
 
-  const handleProductClick = (product: any, index: number) => {
+  const handleProductClick = (product: any) => {
     console.log("Clicked product:", product.title);
     // Add your click handler logic here
   };
@@ -98,7 +99,7 @@ const ProductItems = () => {
                   }}
                   onMouseEnter={() => setHoveredItem(index)}
                   onMouseLeave={() => setHoveredItem(null)}
-                  onClick={() => handleProductClick(product, index)}
+                  onClick={() => handleProductClick(product)}
                 >
                   {product.discount && (
                     <div className="position-absolute top-0 end-0 z-3 m-3">
@@ -116,7 +117,7 @@ const ProductItems = () => {
                   )}
 
                   <div className="position-relative overflow-hidden rounded-2 mb-3">
-                    <img
+                    <Image
                       src={product.image}
                       className="img-fluid"
                       style={{

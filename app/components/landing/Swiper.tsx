@@ -3,6 +3,7 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css/bundle";
+import Image from "next/image";
 
 const slides = [
   {
@@ -94,7 +95,7 @@ export default function BillboardCarousel() {
                 </div>
                 <div className="col-md-6 text-center">
                   <div className="image-holder">
-                    <img
+                    <Image
                       src={slide.imageSrc}
                       className="img-fluid"
                       alt="banner"

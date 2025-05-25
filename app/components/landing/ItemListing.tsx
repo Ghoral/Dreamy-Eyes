@@ -1,3 +1,4 @@
+import Image from "next/image";
 import React, { useState } from "react";
 
 const sections = [
@@ -159,7 +160,7 @@ const ItemListing = () => {
                           onClick={() => handleItemClick(idx, pIdx, product)}
                         >
                           <div className="position-relative">
-                            <img
+                            <Image
                               src={product.image}
                               className="rounded"
                               alt={product.title}
