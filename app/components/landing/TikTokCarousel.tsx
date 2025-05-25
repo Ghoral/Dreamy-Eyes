@@ -10,10 +10,10 @@ export default function TikTokCarousel() {
     <section
       id="best-selling-items"
       className="position-relative"
-      style={{ marginTop: 32 }}
+      style={{ marginTop: 48 }}
     >
       <div className="container">
-        <div className="section-title d-md-flex justify-content-between align-items-center ">
+        <div className="section-title d-md-flex justify-content-between align-items-center">
           <h3 className="d-flex align-items-center mb-4">Watch our TikToks</h3>
           <a href="index.html" className="btn">
             View All
@@ -21,7 +21,7 @@ export default function TikTokCarousel() {
         </div>
 
         {/* Swiper navigation buttons */}
-        <div className="position-absolute top-50 end-0 pe-0 pe-xxl-5 me-0 me-xxl-5 swiper-button-next product-slider-button-next">
+        <div className="position-absolute top-50 end-0 pe-4 pe-xxl-5 me-0 me-xxl-5 swiper-button-next product-slider-button-next">
           <svg
             className="chevron-forward-circle d-flex justify-content-center align-items-center p-2"
             width="80"
@@ -46,12 +46,12 @@ export default function TikTokCarousel() {
             nextEl: ".product-slider-button-next",
             prevEl: ".product-slider-button-prev",
           }}
-          spaceBetween={30}
+          spaceBetween={16}
           slidesPerView={1}
           breakpoints={{
-            576: { slidesPerView: 2 },
-            992: { slidesPerView: 3 },
-            1200: { slidesPerView: 4 },
+            576: { slidesPerView: 2, spaceBetween: 20 },
+            992: { slidesPerView: 3, spaceBetween: 30 },
+            1200: { slidesPerView: 4, spaceBetween: 30 },
           }}
           width={1600}
           height={500}
@@ -89,12 +89,16 @@ export default function TikTokCarousel() {
               author: "Lauren Asher",
               price: "870",
             },
-          ].map((item, index) => (
-            <SwiperSlide key={index}>
-              <div className="card position-relative p-4 border rounded-3">
+          ].map((item, index: number) => (
+            <SwiperSlide key={index.toString()}>
+              <div
+                className="card position-relative p-4 border rounded-3"
+                style={{ width: 350 }}
+              >
                 <TikTokEmbed
                   url="https://www.tiktok.com/@epicgardening/video/7055411162212633903"
                   height={500}
+                  width={300}
                 />
                 {/* {item.discount && (
                   <div className="position-absolute">

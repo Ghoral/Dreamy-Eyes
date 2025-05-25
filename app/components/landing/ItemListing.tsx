@@ -99,7 +99,7 @@ const sections = [
 
 const ItemListing = () => {
   return (
-    <section id="items-listing" className="padding-large">
+    <section id="items-listing">
       <div className="container">
         <div className="row">
           {sections.map((section, idx) => (

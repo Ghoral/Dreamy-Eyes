@@ -21,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={nunito.variable}>{children}</body>
+      <body className={nunito.variable} style={{ margin: 0, padding: 0 }}>
+        {children}
+      </body>
     </html>
   );
 }

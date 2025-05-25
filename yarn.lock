@@ -2164,11 +2164,6 @@ react-sub-unsub@^2.2.1:
   resolved "https://registry.yarnpkg.com/react-sub-unsub/-/react-sub-unsub-2.2.8.tgz#35319c9bf1d1d25429b164c94c9ecb6c6f83699a"
   integrity sha512-o3tmiOOZPdQUCmRhkdCHXRFLOHnCwdz/N3QZ1JQ14fQGA2HysKMF0kWu56ERnQUCK7wYVCQzI8pFbnivAYNQ+A==
 
-react-tiktok-embed@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/react-tiktok-embed/-/react-tiktok-embed-1.0.0.tgz#d3e82ebb85023223d2ef18c0ad414b5664e671ca"
-  integrity sha512-Q3ixX6vBF3KTZTntlah1v2b5qCDpfx0NnwMuImJPUHJkH+k/YDqPx72nKybLRIw+LsQqnBXLNG2y6Rjl1/oxYg==
-
 react-twitter-embed@^4.0.4:
   version "4.0.4"
   resolved "https://registry.yarnpkg.com/react-twitter-embed/-/react-twitter-embed-4.0.4.tgz#4a6b8354acc266876ff1110b9f648518ea20db6d"

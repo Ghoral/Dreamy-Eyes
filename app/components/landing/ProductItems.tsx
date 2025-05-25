@@ -59,7 +59,8 @@ const ProductItems = () => {
   return (
     <section
       id="best-selling-items"
-      className="position-relative padding-large"
+      className="position-relative"
+      style={{ marginTop: 48 }}
     >
       <div className="container">
         <div className="section-title d-md-flex justify-content-between align-items-center mb-4">

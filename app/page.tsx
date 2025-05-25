@@ -1,8 +1,6 @@
 "use client";
 
-import TikTokCarousel from "./components/landing/BestSelling";
-import BestSellingItems from "./components/landing/BestSelling";
-import CustomerReviewsSection from "./components/landing/CustomerReview";
+import TikTokCarousel from "./components/landing/TikTokCarousel";
 import ItemListing from "./components/landing/ItemListing";
 import ProductItems from "./components/landing/ProductItems";
 import BillboardCarousel from "./components/landing/Swiper";
@@ -38,7 +36,7 @@ export default function Home() {
             <a className="navbar-brand" href="index.html">
               Dreamy Eyes
             </a>
-            <button
+            {/* <button
               className="navbar-toggler d-flex d-lg-none order-3 p-2"
               type="button"
               data-bs-toggle="offcanvas"
@@ -50,7 +48,7 @@ export default function Home() {
               <svg className="navbar-icon">
                 <use xlinkHref="#navbar-icon"></use>
               </svg>
-            </button>
+            </button> */}
             <div
               className="offcanvas offcanvas-end"
               tabIndex={-1}
@@ -495,7 +493,7 @@ export default function Home() {
         </nav>
       </header>
       <BillboardCarousel />
-      <section id="company-services" className="padding-large pb-0">
+      <section id="company-services" className="pb-0" style={{ marginTop: 48 }}>
         <div className="container">
           <div className="row">
             <div className="col-lg-3 col-md-6 pb-3 pb-lg-0">

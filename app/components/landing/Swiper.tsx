@@ -41,8 +41,7 @@ export default function BillboardCarousel() {
         height: "800px",
       }}
     >
-      {/* Navigation Buttons */}
-      <div className="position-absolute end-0 pe-0 pe-xxl-5 me-0 me-xxl-5 swiper-button-next main-slider-button-next text-black">
+      <div className="position-absolute end-0 pe-0 pe-xxl-5 me-0 me-xxl-5 swiper-button-next main-slider-button-next text-black d-none d-md-block">
         <svg
           className="chevron-forward-circle d-flex justify-content-center align-items-center p-2"
           width="80"
@@ -51,7 +50,8 @@ export default function BillboardCarousel() {
           <use xlinkHref="#alt-arrow-right-outline"></use>
         </svg>
       </div>
-      <div className="position-absolute start-0 ps-0 ps-xxl-5 ms-0 ms-xxl-5 swiper-button-prev main-slider-button-prev text-black">
+
+      <div className="position-absolute start-0 ps-0 ps-xxl-5 ms-0 ms-xxl-5 swiper-button-prev main-slider-button-prev text-black d-none d-md-block">
         <svg
           className="chevron-back-circle d-flex justify-content-center align-items-center p-2"
           width="80"
