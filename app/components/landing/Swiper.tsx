@@ -79,7 +79,15 @@ export default function BillboardCarousel() {
                   <div className="banner-content">
                     <h2 style={{ fontSize: 52 }}>{slide.title}</h2>
                     <p style={{ fontSize: 18 }}>{slide.subtitle}</p>
-                    <a href={slide.buttonLink} className="btn mt-3">
+                    <a
+                      href={slide.buttonLink}
+                      className="btn mt-3"
+                      style={{
+                        backgroundColor: "#F86D72",
+                        borderRadius: 200,
+                        padding: "1.125rem 2.625rem",
+                      }}
+                    >
                       {slide.buttonText}
                     </a>
                   </div>

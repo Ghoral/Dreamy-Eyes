@@ -36,19 +36,17 @@ export default function Home() {
             <a className="navbar-brand" href="index.html">
               Dreamy Eyes
             </a>
-            {/* <button
-              className="navbar-toggler d-flex d-lg-none order-3 p-2"
+            <button
+              className="navbar-toggler"
               type="button"
-              data-bs-toggle="offcanvas"
-              data-bs-target="#bdNavbar"
-              aria-controls="bdNavbar"
+              data-toggle="collapse"
+              data-target="#navbarToggleExternalContent"
+              aria-controls="navbarToggleExternalContent"
               aria-expanded="false"
               aria-label="Toggle navigation"
             >
-              <svg className="navbar-icon">
-                <use xlinkHref="#navbar-icon"></use>
-              </svg>
-            </button> */}
+              <span className="navbar-toggler-icon"></span>
+            </button>
             <div
               className="offcanvas offcanvas-end"
               tabIndex={-1}
