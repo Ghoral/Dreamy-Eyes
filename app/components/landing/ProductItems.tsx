@@ -1,75 +1,150 @@
 import React from "react";
 
-const posts = [
+const products = [
   {
-    image: "images/post-item1.jpg",
-    category: "Books",
-    title: "10 Must-Read Books of the Year: Our Top Picks!",
-    description:
-      "Dive into the world of cutting-edge technology with our latest blog post, where we highlight five essential gadge.",
-    link: "index.html",
+    title: "House of Sky Breath",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item1.png",
+    discount: "10% off",
   },
   {
-    image: "images/post-item2.jpg",
-    category: "Books",
-    title: "The Fascinating Realm of Science Fiction",
-    description:
-      "Explore the intersection of technology and sustainability in our latest blog post. Learn about the innovative",
-    link: "index.html",
+    title: "Heartland Stars",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item2.png",
   },
   {
-    image: "images/post-item3.jpg",
-    category: "Books",
-    title: "Finding Love in the Pages of a Book",
-    description:
-      "Stay ahead of the curve with our insightful look into the rapidly evolving landscape of wearable technology.",
-    link: "index.html",
+    title: "Heavenly Bodies",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item3.png",
   },
   {
-    image: "images/post-item4.jpg",
-    category: "Books",
-    title: "Reading for Mental Health: How Books Can Heal and Inspire",
-    description:
-      "In today's remote work environment, productivity is key. Discover the top apps and tools that can help you stay",
-    link: "index.html",
+    title: "His Saving Grace",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item4.png",
+    discount: "10% off",
+  },
+  {
+    title: "House of Sky Breath",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item1.png",
+    discount: "10% off",
+  },
+  {
+    title: "Heartland Stars",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item2.png",
+  },
+  {
+    title: "Heavenly Bodies",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item3.png",
+  },
+  {
+    title: "His Saving Grace",
+    author: "Lauren Asher",
+    price: "$870",
+    image: "images/product-item4.png",
+    discount: "10% off",
   },
 ];
 
 const ProductItems = () => {
   return (
-    <section id="latest-posts">
+    <section id="best-selling-items" className="position-relative ">
       <div className="container">
         <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
-          <h3 className="d-flex align-items-center">Latest products</h3>
+          <h3 className="d-flex align-items-center">Best selling items</h3>
           <a href="index.html" className="btn">
             View All
           </a>
         </div>
-        <div className="row">
-          {posts.map((post, index) => (
-            <div className="col-md-3 posts mb-4" key={index}>
-              <img
-                src={post.image}
-                alt="post image"
-                className="img-fluid rounded-3"
-              />
-              {/* <a href="blog.html" className="fs-6 text-primary">
-                {post.category}
-              </a> */}
-              <h4 className="card-title mb-2 text-capitalize text-dark">
-                {post.title}
-              </h4>
-              <p className="mb-2">
-                {post.description}
-                <span>
+
+        {/* Grid Layout with 4 Cards */}
+        <div className="row g-4">
+          {products.map((product, index) => (
+            <div key={index} className="col-12 col-sm-6 col-md-4 col-lg-3">
+              <div className="card position-relative p-4 border rounded-3 h-100">
+                {/* Discount badge */}
+                {product.discount && (
+                  <div className="position-absolute top-0 end-0 z-1">
+                    <p className="bg-primary py-1 px-3 fs-6 text-white rounded-2 mb-0">
+                      {product.discount}
+                    </p>
+                  </div>
+                )}
+
+                {/* Image */}
+                <img
+                  src={product.image}
+                  className="img-fluid shadow-sm"
+                  style={{
+                    maxHeight: "250px",
+                    objectFit: "cover",
+                    width: "100%",
+                  }}
+                  alt={product.title}
+                />
+
+                {/* Title */}
+                <h6 className="mt-4 mb-0 fw-bold">
                   <a
-                    className="text-decoration-underline text-black-50"
-                    href={post.link}
+                    href="index.html"
+                    className="text-decoration-none text-dark"
                   >
-                    Read More
+                    {product.title}
                   </a>
+                </h6>
+
+                {/* Author & Rating */}
+                <div className="review-content d-flex align-items-center mt-2">
+                  <p className="my-2 me-2 fs-6 text-black-50 mb-0">
+                    {product.author}
+                  </p>
+                  <div className="rating text-warning d-flex align-items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={i}
+                        className="star star-fill"
+                        style={{ width: "16px", height: "16px" }}
+                      >
+                        <use xlinkHref="#star-fill"></use>
+                      </svg>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Price */}
+                <span className="price text-primary fw-bold mb-2 fs-5">
+                  {product.price}
                 </span>
-              </p>
+
+                {/* Action buttons (hidden by default) */}
+                <div className="card-concern position-absolute start-0 end-0 d-flex justify-content-center gap-2 opacity-0 transition-opacity">
+                  <button
+                    type="button"
+                    className="btn btn-dark"
+                    title="Add to cart"
+                  >
+                    <svg className="cart">
+                      <use xlinkHref="#cart"></use>
+                    </svg>
+                  </button>
+                  <a href="#" className="btn btn-dark">
+                    <span>
+                      <svg className="wishlist">
+                        <use xlinkHref="#heart"></use>
+                      </svg>
+                    </span>
+                  </a>
+                </div>
+              </div>
             </div>
           ))}
         </div>
