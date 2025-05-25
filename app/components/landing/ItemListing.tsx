@@ -8,19 +8,19 @@ const sections = [
     products: [
       {
         title: "Echoes of the Ancients",
-        image: "images/product-item2.png",
+        image: "/images/product-item2.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "The Midnight Garden",
-        image: "images/product-item1.png",
+        image: "/images/product-item1.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "Shadow of the Serpent",
-        image: "images/product-item3.png",
+        image: "/images/product-item3.png",
         author: "Lauren Asher",
         price: 870,
       },
@@ -32,19 +32,19 @@ const sections = [
     products: [
       {
         title: "Whispering Winds",
-        image: "images/product-item4.png",
+        image: "/images/product-item4.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "The Forgotten Realm",
-        image: "images/product-item5.png",
+        image: "/images/product-item5.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "Moonlit Secrets",
-        image: "images/product-item6.png",
+        image: "/images/product-item6.png",
         author: "Lauren Asher",
         price: 870,
       },
@@ -56,19 +56,19 @@ const sections = [
     products: [
       {
         title: "The Crystal Key",
-        image: "images/product-item7.png",
+        image: "/images/product-item7.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "Windswept Shores",
-        image: "images/product-item8.png",
+        image: "/images/product-item8.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "Lost Horizons",
-        image: "images/product-item9.png",
+        image: "/images/product-item9.png",
         author: "Lauren Asher",
         price: 870,
       },
@@ -80,19 +80,19 @@ const sections = [
     products: [
       {
         title: "Sunset Dreams",
-        image: "images/product-item10.png",
+        image: "/images/product-item10.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "Emerald Horizon",
-        image: "images/product-item11.png",
+        image: "/images/product-item11.png",
         author: "Lauren Asher",
         price: 870,
       },
       {
         title: "Crimson Echo",
-        image: "images/product-item12.png",
+        image: "/images/product-item12.png",
         author: "Lauren Asher",
         price: 870,
       },
@@ -164,9 +164,9 @@ const ItemListing = () => {
                               src={product.image}
                               className="rounded"
                               alt={product.title}
+                              width={80}
+                              height={80}
                               style={{
-                                width: "52px",
-                                height: "68px",
                                 objectFit: "cover",
                                 flexShrink: 0,
                                 transition: "transform 0.2s ease-in-out",

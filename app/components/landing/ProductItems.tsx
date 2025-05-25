@@ -6,52 +6,52 @@ const products = [
     title: "House of Sky Breath",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item1.png",
+    image: "/images/product-item1.png",
     discount: "10% off",
   },
   {
     title: "Heartland Stars",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item2.png",
+    image: "/images/product-item2.png",
   },
   {
     title: "Heavenly Bodies",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item3.png",
+    image: "/images/product-item3.png",
   },
   {
     title: "His Saving Grace",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item4.png",
+    image: "/images/product-item4.png",
     discount: "10% off",
   },
   {
     title: "House of Sky Breath",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item1.png",
+    image: "/images/product-item1.png",
     discount: "10% off",
   },
   {
     title: "Heartland Stars",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item2.png",
+    image: "/images/product-item2.png",
   },
   {
     title: "Heavenly Bodies",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item3.png",
+    image: "/images/product-item3.png",
   },
   {
     title: "His Saving Grace",
     author: "Lauren Asher",
     price: "$870",
-    image: "images/product-item4.png",
+    image: "/images/product-item4.png",
     discount: "10% off",
   },
 ];
@@ -116,14 +116,14 @@ const ProductItems = () => {
                     </div>
                   )}
 
-                  <div className="position-relative overflow-hidden rounded-2 mb-3">
+                  <div className="position-relative overflow-hidden rounded-2 mb-3 d-flex justify-content-center align-items-center">
                     <Image
                       src={product.image}
                       className="img-fluid"
+                      height={150}
+                      width={150}
                       style={{
-                        height: "180px",
                         objectFit: "contain",
-                        width: "100%",
                         transition: "transform 0.3s ease-in-out",
                         transform: isHovered ? "scale(1.05)" : "scale(1)",
                       }}
