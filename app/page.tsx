@@ -57,9 +57,11 @@ export default function Home() {
               <div className="offcanvas-header px-4 pb-0">
                 <a className="navbar-brand" href="index.html">
                   <Image
-                    src="images/main-logo.png"
+                    src="/images/main-logo.png"
                     className="logo"
                     alt="main-logo"
+                    width={500}
+                    height={500}
                   />
                 </a>
                 <button
@@ -507,11 +509,11 @@ export default function Home() {
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                     <g
                       id="SVGRepo_tracerCarrier"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     ></g>
                     <g id="SVGRepo_iconCarrier">
                       {" "}
@@ -522,8 +524,8 @@ export default function Home() {
                       <path
                         d="M19.1647 6.2358C18.6797 4.48023 18.4372 3.60244 17.7242 3.20319C17.0113 2.80394 16.1062 3.03915 14.2962 3.50955L12.3763 4.00849C10.5662 4.47889 9.66119 4.71409 9.24954 5.40562C8.8379 6.09714 9.0804 6.97492 9.56541 8.73049L10.0798 10.5926C10.5648 12.3481 10.8073 13.2259 11.5203 13.6252C12.2333 14.0244 13.1384 13.7892 14.9484 13.3188L16.8683 12.8199C18.6784 12.3495 19.5834 12.1143 19.995 11.4227C20.2212 11.0429 20.2499 10.6069 20.1495 10"
                         stroke="#ff3333"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
                       ></path>{" "}
                     </g>
                   </svg>
@@ -551,11 +553,11 @@ export default function Home() {
                     xmlSpace="preserve"
                     stroke="#ff3333"
                   >
-                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                     <g
                       id="SVGRepo_tracerCarrier"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     ></g>
                     <g id="SVGRepo_iconCarrier">
                       {" "}
@@ -590,20 +592,20 @@ export default function Home() {
                     xmlns="http://www.w3.org/2000/svg"
                     stroke="#ff3333"
                   >
-                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                     <g
                       id="SVGRepo_tracerCarrier"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     ></g>
                     <g id="SVGRepo_iconCarrier">
                       {" "}
                       <path
                         d="M8 8H8.01M11.5858 4.58579L19.5858 12.5858C20.3668 13.3668 20.3668 14.6332 19.5858 15.4142L15.4142 19.5858C14.6332 20.3668 13.3668 20.3668 12.5858 19.5858L4.58579 11.5858C4.21071 11.2107 4 10.702 4 10.1716V6C4 4.89543 4.89543 4 6 4H10.1716C10.702 4 11.2107 4.21071 11.5858 4.58579Z"
                         stroke="#ff3333"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
                       ></path>{" "}
                     </g>
                   </svg>
@@ -764,7 +766,7 @@ export default function Home() {
       </section> */}
 
       {/* <CustomerReviewsSection /> */}
-      <br />
+      {/* <br />
       <section id="instagram">
         <div className="container">
           <div className="text-center mb-4">
@@ -783,7 +785,7 @@ export default function Home() {
                         <use xlinkHref="#instagram"></use>
                       </svg>
                     </div>
-                    <Image
+                    <img
                       src={`images/insta-item${num}.jpg`}
                       alt="instagram"
                       className="img-fluid rounded-3 insta-image"
@@ -794,7 +796,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       <footer id="footer" className="padding-large">
         <div className="container">

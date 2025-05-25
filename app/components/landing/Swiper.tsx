@@ -99,6 +99,8 @@ export default function BillboardCarousel() {
                       src={slide.imageSrc}
                       className="img-fluid"
                       alt="banner"
+                      width={500}
+                      height={100}
                     />
                   </div>
                 </div>
