@@ -57,7 +57,10 @@ const products = [
 
 const ProductItems = () => {
   return (
-    <section id="best-selling-items" className="position-relative ">
+    <section
+      id="best-selling-items"
+      className="position-relative padding-large"
+    >
       <div className="container">
         <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
           <h3 className="d-flex align-items-center">Best selling items</h3>
@@ -66,12 +69,10 @@ const ProductItems = () => {
           </a>
         </div>
 
-        {/* Grid Layout with 4 Cards */}
         <div className="row g-4">
           {products.map((product, index) => (
             <div key={index} className="col-12 col-sm-6 col-md-4 col-lg-3">
               <div className="card position-relative p-4 border rounded-3 h-100">
-                {/* Discount badge */}
                 {product.discount && (
                   <div className="position-absolute top-0 end-0 z-1">
                     <p className="bg-primary py-1 px-3 fs-6 text-white rounded-2 mb-0">
@@ -79,14 +80,12 @@ const ProductItems = () => {
                     </p>
                   </div>
                 )}
-
-                {/* Image */}
                 <img
                   src={product.image}
                   className="img-fluid shadow-sm"
                   style={{
                     maxHeight: "250px",
-                    objectFit: "cover",
+                    objectFit: "contain",
                     width: "100%",
                   }}
                   alt={product.title}

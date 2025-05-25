@@ -561,8 +561,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <TikTokCarousel />
       <ItemListing />
+      <TikTokCarousel />
       <ProductItems />
       {/* <section
         id="limited-offer"

@@ -115,6 +115,7 @@ const ItemListing = () => {
                         <img
                           src={product.image}
                           className="img-fluid shadow-sm"
+                          style={{ objectFit: "contain" }}
                           alt={product.title}
                         />
                         <div className="item-content ms-3">
@@ -125,7 +126,7 @@ const ItemListing = () => {
                             </p>
                             <div className="rating text-warning d-flex align-items-center">
                               {Array(5)
-                                .fill()
+                                .fill(0)
                                 .map((_, i) => (
                                   <svg key={i} className="star star-fill">
                                     <use xlinkHref="#star-fill"></use>

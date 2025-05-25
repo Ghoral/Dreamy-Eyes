@@ -14,7 +14,7 @@ export default function TikTokCarousel() {
     >
       <div className="container">
         <div className="section-title d-md-flex justify-content-between align-items-center ">
-          <h3 className="d-flex align-items-center">Watch our TikToks</h3>
+          <h3 className="d-flex align-items-center mb-4">Watch our TikToks</h3>
           <a href="index.html" className="btn">
             View All
           </a>

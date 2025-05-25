@@ -6,22 +6,22 @@ import "swiper/css/bundle";
 
 const slides = [
   {
-    title: "The Fine Print Book Collection",
-    subtitle: "Best Offer Save 30%. Grab it now!",
+    title: "Precision Vision, Perfect Fit",
+    subtitle: "Get 30% off custom eye lenses—designed just for you!",
     buttonText: "Shop Collection",
     buttonLink: "index.html",
     imageSrc: "/images/banner-image2.png",
   },
   {
-    title: "How Innovation works",
-    subtitle: "Discount available. Grab it now!",
+    title: "Revolutionize How You See",
+    subtitle: "Next-gen lenses now at discounted prices. Limited time!",
     buttonText: "Shop Product",
     buttonLink: "index.html",
     imageSrc: "/images/banner-image1.png",
   },
   {
-    title: "Your Heart is the Sea",
-    subtitle: "Limited stocks available. Grab it now!",
+    title: "Tailored Lenses for Every Eye",
+    subtitle: "Experience personalized comfort. Stocks running out!",
     buttonText: "Shop Collection",
     buttonLink: "index.html",
     imageSrc: "/images/banner-image.png",
