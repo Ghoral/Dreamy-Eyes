@@ -1,3 +1,5 @@
+import React, { useState } from "react";
+
 const sections = [
   {
     title: "Featured",
@@ -98,47 +100,170 @@ const sections = [
 ];
 
 const ItemListing = () => {
+  const [hoveredItem, setHoveredItem] = useState(null);
+
+  const handleItemClick = (
+    sectionIndex: any,
+    productIndex: any,
+    product: any
+  ) => {
+    console.log("Clicked:", product.title);
+    // Add your click handler logic here
+  };
+
   return (
-    <section id="items-listing" className="py-5 bg-light">
+    <section
+      id="items-listing"
+      className="py-5"
+      style={{ backgroundColor: "#f8f9fa" }}
+    >
       <div className="container">
         <div className="row g-4">
           {sections.map((section, idx) => (
             <div key={idx} className="col-sm-6 col-lg-3 d-flex">
-              <div className="card shadow-sm w-100 h-100 border-0">
+              <div className="card shadow-sm w-100 h-100 border-0 bg-white">
                 <div className="card-body d-flex flex-column">
-                  <h5 className="card-title mb-4 text-primary">
+                  <h5
+                    className="card-title mb-4 fw-bold"
+                    style={{ color: "rgb(220, 53, 69)" }}
+                  >
                     {section.title}
                   </h5>
-                  <div className="d-flex flex-column gap-3">
-                    {section.products.map((product, pIdx) => (
-                      <div
-                        key={pIdx}
-                        className="d-flex align-items-start gap-2"
-                      >
-                        <img
-                          src={product.image}
-                          className="rounded"
-                          alt={product.title}
+                  <div className="d-flex flex-column gap-2">
+                    {section.products.map((product: any, pIdx: any) => {
+                      const itemId: any = `${idx}-${pIdx}`;
+                      const isHovered = hoveredItem === itemId;
+
+                      return (
+                        <div
+                          key={pIdx}
+                          className="d-flex align-items-start gap-3 p-2 rounded position-relative"
                           style={{
-                            width: "48px",
-                            height: "64px",
-                            objectFit: "cover",
-                            flexShrink: 0,
+                            cursor: "pointer",
+                            transition: "all 0.2s ease-in-out",
+                            backgroundColor: isHovered
+                              ? "#f8f9fa"
+                              : "transparent",
+                            transform: isHovered
+                              ? "translateY(-1px)"
+                              : "translateY(0)",
+                            boxShadow: isHovered
+                              ? "0 4px 12px rgba(0,0,0,0.1)"
+                              : "none",
+                            border: isHovered
+                              ? "1px solid #e9ecef"
+                              : "1px solid transparent",
                           }}
-                        />
-                        <div className="flex-grow-1">
-                          <h6 className="mb-1 text-dark fw-semibold fs-6">
-                            {product.title}
-                          </h6>
-                          <p className="mb-0 text-muted small">
-                            {product.author}
-                          </p>
-                          <span className="text-danger fw-bold small">
-                            Rs. {product.price}
-                          </span>
+                          onMouseEnter={() => setHoveredItem(itemId)}
+                          onMouseLeave={() => setHoveredItem(null)}
+                          onClick={() => handleItemClick(idx, pIdx, product)}
+                        >
+                          <div className="position-relative">
+                            <img
+                              src={product.image}
+                              className="rounded"
+                              alt={product.title}
+                              style={{
+                                width: "52px",
+                                height: "68px",
+                                objectFit: "cover",
+                                flexShrink: 0,
+                                transition: "transform 0.2s ease-in-out",
+                                transform: isHovered
+                                  ? "scale(1.05)"
+                                  : "scale(1)",
+                              }}
+                            />
+                            {isHovered && (
+                              <div
+                                className="position-absolute top-0 start-0 w-100 h-100 rounded d-flex align-items-center justify-content-center"
+                                style={{
+                                  backgroundColor: "rgba(220, 53, 69, 0.1)",
+                                  transition: "opacity 0.2s ease-in-out",
+                                }}
+                              >
+                                <div
+                                  className="bg-white rounded-circle d-flex align-items-center justify-content-center"
+                                  style={{ width: "24px", height: "24px" }}
+                                >
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "rgb(220, 53, 69)",
+                                    }}
+                                  >
+                                    →
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-grow-1 min-w-0">
+                            <h6
+                              className="mb-1 fw-semibold lh-sm"
+                              style={{
+                                fontSize: "0.9rem",
+                                color: isHovered
+                                  ? "rgb(220, 53, 69)"
+                                  : "#212529",
+                                transition: "color 0.2s ease-in-out",
+                              }}
+                            >
+                              {product.title}
+                            </h6>
+                            <p
+                              className="mb-1 text-muted"
+                              style={{ fontSize: "0.75rem" }}
+                            >
+                              by {product.author}
+                            </p>
+                            <div className="d-flex align-items-center justify-content-between">
+                              <span
+                                className="fw-bold"
+                                style={{
+                                  fontSize: "0.85rem",
+                                  color: "rgb(220, 53, 69)",
+                                }}
+                              >
+                                Rs. {product.price}
+                              </span>
+                              {isHovered && (
+                                <span
+                                  className="badge bg-light text-dark"
+                                  style={{
+                                    fontSize: "0.65rem",
+                                    transition: "opacity 0.2s ease-in-out",
+                                  }}
+                                >
+                                  View Details
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
+                  </div>
+                  <div className="mt-auto pt-3">
+                    <button
+                      className="btn btn-outline-danger btn-sm w-100"
+                      style={{
+                        fontSize: "0.8rem",
+                        transition: "all 0.2s ease-in-out",
+                      }}
+                      onMouseEnter={(e: any) => {
+                        e.target.style.backgroundColor = "rgb(220, 53, 69)";
+                        e.target.style.borderColor = "rgb(220, 53, 69)";
+                        e.target.style.color = "white";
+                      }}
+                      onMouseLeave={(e: any) => {
+                        e.target.style.backgroundColor = "transparent";
+                        e.target.style.borderColor = "rgb(220, 53, 69)";
+                        e.target.style.color = "rgb(220, 53, 69)";
+                      }}
+                    >
+                      View All {section.title}
+                    </button>
                   </div>
                 </div>
               </div>
