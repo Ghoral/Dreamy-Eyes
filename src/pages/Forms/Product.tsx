@@ -98,7 +98,7 @@ const ProductForm = () => {
   return (
     <form onSubmit={formik.handleSubmit}>
       <ComponentCard title="Product">
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <DropzoneComponent
             file={formik.values.images}
             setFile={handleImageChange}
@@ -114,7 +114,7 @@ const ProductForm = () => {
               {formik.errors.images}
             </div>
           )}
-        </div>
+        </div> */}
         <div className="mb-6">
           <Label htmlFor="title">Title</Label>
           <Input
