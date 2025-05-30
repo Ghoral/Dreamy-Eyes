@@ -67,10 +67,10 @@ const ProductItems = () => {
   return (
     <section
       id="best-selling-items"
-      className="position-relative py-5"
+      className="position-relative"
       style={{
-        marginTop: 48,
         backgroundColor: "#f8f9fa",
+        padding: "32px 0px",
       }}
     >
       <div className="container">

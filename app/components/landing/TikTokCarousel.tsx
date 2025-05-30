@@ -6,14 +6,22 @@ export default function TikTokCarousel() {
   return (
     <section
       id="best-selling-items"
-      className="bg-white py-5"
-      style={{ marginTop: 48 }}
+      style={{
+        backgroundImage: "url(/images/banner-image-bg-1.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        marginTop: 0,
+        padding: 0,
+      }}
     >
-      <div className="container">
+      <div style={{ maxWidth: "100%", padding: "40px 0" }}>
         {/* Section Header */}
-        <div className="section-title text-center mb-5">
-          <h2 className="fw-bold mb-3">Watch our TikToks</h2>
-          <p className="text-muted">
+        <div className="text-center mb-5">
+          <h2 className="fw-bold mb-3" style={{ color: "#000" }}>
+            Watch our TikToks
+          </h2>
+          <p style={{ color: "#000" }}>
             Follow us for the latest tips, trends, and behind-the-scenes
             content.
           </p>
