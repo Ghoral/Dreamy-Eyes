@@ -174,8 +174,12 @@ const Navbar = () => {
                 {navLinks.map((link) => (
                   <li key={link.label} className="nav-item" role="none">
                     <Link
+                      className={`nav-link px-4 py-3 ${
+                        link.isActive ? "active" : ""
+                      }`}
                       href={link.href}
                       role="menuitem"
+                      aria-current={link.isActive ? "page" : undefined}
                       onClick={handleLinkClick}
                     >
                       {link.label}
@@ -217,10 +221,9 @@ const Navbar = () => {
               {navLinks.map((link) => (
                 <li key={link.label} className="nav-item">
                   <a
-                    className={`nav-link me-4 ${
-                      link?.isActive ? "active" : ""
-                    }`}
+                    className={`nav-link me-4 ${link.isActive ? "active" : ""}`}
                     href={link.href}
+                    aria-current={link.isActive ? "page" : undefined}
                   >
                     {link.label}
                   </a>
