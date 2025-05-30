@@ -109,7 +109,7 @@ const ItemListing = () => {
     product: any
   ) => {
     console.log("Clicked:", product.title);
-    // Add your click handler logic here
+    // Click logic here
   };
 
   return (
@@ -119,41 +119,38 @@ const ItemListing = () => {
       style={{ backgroundColor: "#f8f9fa" }}
     >
       <div className="container">
-        <div className="row g-4">
+        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
           {sections.map((section, idx) => (
-            <div key={idx} className="col-sm-6 col-lg-3 d-flex">
-              <div className="card shadow-sm w-100 h-100 border-0 bg-white">
+            <div key={idx} className="col d-flex">
+              <div className="card shadow-sm w-100 h-100 border-0 bg-white rounded-4 overflow-hidden">
                 <div className="card-body d-flex flex-column">
                   <h5
-                    className="card-title mb-4 fw-bold"
-                    style={{ color: "rgb(220, 53, 69)" }}
+                    className="card-title mb-4 fw-bold text-danger text-uppercase"
+                    style={{ fontSize: "1rem", letterSpacing: "0.5px" }}
                   >
                     {section.title}
                   </h5>
+
                   <div className="d-flex flex-column gap-2">
-                    {section.products.map((product: any, pIdx: any) => {
+                    {section.products.map((product, pIdx) => {
                       const itemId: any = `${idx}-${pIdx}`;
                       const isHovered = hoveredItem === itemId;
 
                       return (
                         <div
                           key={pIdx}
-                          className="d-flex align-items-start gap-3 p-2 rounded position-relative"
+                          className="d-flex align-items-start gap-3 p-3 rounded-3 position-relative bg-white"
                           style={{
                             cursor: "pointer",
-                            transition: "all 0.2s ease-in-out",
-                            backgroundColor: isHovered
-                              ? "#f8f9fa"
-                              : "transparent",
+                            transition: "all 0.3s ease",
                             transform: isHovered
-                              ? "translateY(-1px)"
-                              : "translateY(0)",
+                              ? "translateY(-2px) scale(1.01)"
+                              : "scale(1)",
                             boxShadow: isHovered
-                              ? "0 4px 12px rgba(0,0,0,0.1)"
-                              : "none",
-                            border: isHovered
-                              ? "1px solid #e9ecef"
-                              : "1px solid transparent",
+                              ? "0 6px 20px rgba(0,0,0,0.1)"
+                              : "0 1px 4px rgba(0,0,0,0.05)",
+                            border: "1px solid",
+                            borderColor: isHovered ? "#dee2e6" : "#f8f9fa",
                           }}
                           onMouseEnter={() => setHoveredItem(itemId)}
                           onMouseLeave={() => setHoveredItem(null)}
@@ -162,17 +159,18 @@ const ItemListing = () => {
                           <div className="position-relative">
                             <Image
                               src={product.image}
-                              className="rounded"
+                              className="rounded-2"
                               alt={product.title}
                               width={80}
                               height={80}
                               style={{
                                 objectFit: "cover",
                                 flexShrink: 0,
-                                transition: "transform 0.2s ease-in-out",
+                                transition: "transform 0.3s ease",
                                 transform: isHovered
-                                  ? "scale(1.05)"
+                                  ? "scale(1.07)"
                                   : "scale(1)",
+                                borderRadius: "0.5rem",
                               }}
                             />
                             {isHovered && (
@@ -180,7 +178,7 @@ const ItemListing = () => {
                                 className="position-absolute top-0 start-0 w-100 h-100 rounded d-flex align-items-center justify-content-center"
                                 style={{
                                   backgroundColor: "rgba(220, 53, 69, 0.1)",
-                                  transition: "opacity 0.2s ease-in-out",
+                                  transition: "opacity 0.3s ease",
                                 }}
                               >
                                 <div
@@ -199,6 +197,7 @@ const ItemListing = () => {
                               </div>
                             )}
                           </div>
+
                           <div className="flex-grow-1 min-w-0">
                             <h6
                               className="mb-1 fw-semibold lh-sm"
@@ -207,7 +206,7 @@ const ItemListing = () => {
                                 color: isHovered
                                   ? "rgb(220, 53, 69)"
                                   : "#212529",
-                                transition: "color 0.2s ease-in-out",
+                                transition: "color 0.3s ease",
                               }}
                             >
                               {product.title}
@@ -233,7 +232,7 @@ const ItemListing = () => {
                                   className="badge bg-light text-dark"
                                   style={{
                                     fontSize: "0.65rem",
-                                    transition: "opacity 0.2s ease-in-out",
+                                    transition: "opacity 0.3s ease",
                                   }}
                                 >
                                   View Details
@@ -245,12 +244,13 @@ const ItemListing = () => {
                       );
                     })}
                   </div>
+
                   <div className="mt-auto pt-3">
                     <button
-                      className="btn btn-outline-danger btn-sm w-100"
+                      className="btn btn-outline-danger btn-sm w-100 rounded-pill"
                       style={{
                         fontSize: "0.8rem",
-                        transition: "all 0.2s ease-in-out",
+                        transition: "all 0.3s ease-in-out",
                       }}
                       onMouseEnter={(e: any) => {
                         e.target.style.backgroundColor = "rgb(220, 53, 69)";
