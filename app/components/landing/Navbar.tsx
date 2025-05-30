@@ -93,8 +93,6 @@ const Navbar = () => {
 
   const handleClickNavItems = (value: string) => router.push(value);
 
-  console.log("navlinks", navLinks);
-
   return (
     <>
       <nav
