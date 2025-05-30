@@ -21,12 +21,10 @@ const Navbar = () => {
     { href: "/contact", label: "Contact", isActive: false },
   ]);
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const closeOffcanvas = useCallback(() => {
     setIsOffcanvasOpen(false);
-    setIsDropdownOpen(false);
   }, []);
 
   useEffect(() => {
@@ -56,10 +54,6 @@ const Navbar = () => {
     setIsOffcanvasOpen((prev) => !prev);
   }, []);
 
-  const toggleDropdown = useCallback(() => {
-    setIsDropdownOpen((prev) => !prev);
-  }, []);
-
   const handleCartOpen = useCallback(() => {
     setIsCartOpen(true);
   }, []);
@@ -75,25 +69,21 @@ const Navbar = () => {
   }, [closeOffcanvas]);
 
   useLayoutEffect(() => {
-    const navItemIndex = navLinks.findIndex((item) => item.href === pathname);
-    if (navItemIndex !== -1) {
-      const temp = navLinks.map((item, index) => {
-        if (index === navItemIndex) {
-          return {
-            ...item,
-            isActive: true,
-          };
-        }
-        return { ...item, isActive: false };
-      });
-
-      setNavLinks(temp);
-    }
+    setNavLinks((prevNavLinks) => {
+      const navItemIndex = prevNavLinks.findIndex(
+        (item) => item.href === pathname
+      );
+      if (navItemIndex !== -1) {
+        return prevNavLinks.map((item, index) => ({
+          ...item,
+          isActive: index === navItemIndex,
+        }));
+      }
+      return prevNavLinks;
+    });
   }, [pathname]);
 
   const handleClickNavItems = (value: string) => router.push(value);
-
-  console.log("navlinks", navLinks);
 
   return (
     <>
@@ -104,13 +94,13 @@ const Navbar = () => {
         aria-label="Main navigation"
       >
         <div className="container">
-          <a
+          <Link
             className="navbar-brand fw-bold"
             href="/"
             aria-label="Dreamy Eyes - Home"
           >
             Dreamy Eyes
-          </a>
+          </Link>
 
           <button
             className={`navbar-toggler hamburger-menu d-lg-none ${
@@ -145,7 +135,7 @@ const Navbar = () => {
             style={{ zIndex: 1045 }}
           >
             <div className="offcanvas-header px-4 pb-3 border-bottom">
-              <a
+              <Link
                 className="navbar-brand"
                 href="/"
                 aria-label="Dreamy Eyes - Home"
@@ -160,7 +150,7 @@ const Navbar = () => {
                   priority
                   sizes="(max-width: 768px) 120px, 150px"
                 />
-              </a>
+              </Link>
               <button
                 type="button"
                 className="btn-close btn-close-enhanced"
@@ -220,13 +210,13 @@ const Navbar = () => {
             <ul className="navbar-nav text-uppercase">
               {navLinks.map((link) => (
                 <li key={link.label} className="nav-item">
-                  <a
+                  <Link
                     className={`nav-link me-4 ${link.isActive ? "active" : ""}`}
                     href={link.href}
                     aria-current={link.isActive ? "page" : undefined}
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
