@@ -24,18 +24,27 @@ const LoginComponent = () => {
             <div className="col-lg-6">
               <div className="card1 pb-5">
                 <div className="row">
-                  <img
+                  {/* <Image
                     src="https://i.imgur.com/CXQmsmF.png"
                     className="logo"
                     alt="Logo"
-                  />
+                    width={200}
+                    height={80}
+                    priority
+                  /> */}
                 </div>
                 <div className="row px-3 justify-content-center mt-4 mb-5 border-line">
-                  <img
+                  {/* <Image
                     src="https://i.imgur.com/uNGdWHi.png"
                     className="image img-fluid"
                     alt="Illustration"
-                  />
+                    width={400}
+                    height={300}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                    }}
+                  /> */}
                 </div>
               </div>
             </div>
@@ -111,6 +120,7 @@ const LoginComponent = () => {
                     </div>
                     <div className="row mb-4 px-3">
                       <small className="font-weight-bold">
+                        {/* eslint-disable-next-line react/no-unescaped-entities */}
                         Don't have an account?{" "}
                         <button
                           className="link-button"

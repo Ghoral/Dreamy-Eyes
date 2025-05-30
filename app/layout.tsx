@@ -3,7 +3,6 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import Navbar from "./components/landing/Navbar";
 import Header from "./components/landing/Header";
 
 const nunito = Nunito({
