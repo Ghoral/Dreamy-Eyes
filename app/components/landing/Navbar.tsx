@@ -1,452 +1,443 @@
 import Image from "next/image";
-import React from "react";
+import React, { useState, useCallback, useEffect } from "react";
+import ModalCart from "../modals/ModalCart";
+
+const NAV_LINKS = [
+  { href: "/", label: "Home", isActive: true },
+  { href: "/about", label: "About" },
+  { href: "/shop", label: "Shop" },
+  { href: "/blogs", label: "Blogs" },
+  { href: "/contact", label: "Contact" },
+];
+
+const DROPDOWN_ITEMS = [
+  { href: "/about", label: "About" },
+  { href: "/shop", label: "Shop" },
+  { href: "/product", label: "Single Product" },
+  { href: "/cart", label: "Cart" },
+  { href: "/checkout", label: "Checkout" },
+  { href: "/blog", label: "Blog" },
+  { href: "/post", label: "Single Post" },
+  { href: "/contact", label: "Contact" },
+];
 
 const Navbar = () => {
-  return (
-    <nav id="header-nav" className="navbar navbar-expand-lg py-3">
-      <div className="container">
-        <a className="navbar-brand" href="index.html">
-          Dreamy Eyes
-        </a>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-toggle="collapse"
-          data-target="#navbarToggleExternalContent"
-          aria-controls="navbarToggleExternalContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div
-          className="offcanvas offcanvas-end"
-          tabIndex={-1}
-          id="bdNavbar"
-          aria-labelledby="bdNavbarOffcanvasLabel"
-        >
-          <div className="offcanvas-header px-4 pb-0">
-            <a className="navbar-brand" href="index.html">
-              <Image
-                src="/images/main-logo.png"
-                className="logo"
-                alt="main-logo"
-                width={500}
-                height={500}
-              />
-            </a>
-            <button
-              type="button"
-              className="btn-close btn-close-black"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-              data-bs-target="#bdNavbar"
-            ></button>
-          </div>
-          <div className="offcanvas-body">
-            <ul
-              id="navbar"
-              className="navbar-nav text-uppercase justify-content-start justify-content-lg-center align-items-start align-items-lg-center flex-grow-1"
-            >
-              <li className="nav-item">
-                <a className="nav-link me-4 active" href="index.html">
-                  Home
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link me-4" href="index.html">
-                  About
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link me-4" href="index.html">
-                  Shop
-                </a>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link me-4" href="index.html">
-                  Blogs
-                </a>
-              </li>
-              <li className="nav-item dropdown">
-                <a
-                  className="nav-link me-4 dropdown-toggle"
-                  data-bs-toggle="dropdown"
-                  href="#"
-                  role="button"
-                  aria-expanded="false"
-                >
-                  Pages
-                </a>
-                <ul className="dropdown-menu animate slide border">
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      About
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      Shop
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      Single Product
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      Cart
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      Checkout
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      Blog
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      Single Post
-                    </a>
-                  </li>
-                  <li>
-                    <a href="index.html" className="dropdown-item fw-light">
-                      Contact
-                    </a>
-                  </li>
-                </ul>
-              </li>
-              <li className="nav-item">
-                <a className="nav-link me-4" href="index.html">
-                  Contact
-                </a>
-              </li>
-            </ul>
-            <div className="user-items d-flex">
-              <ul className="d-flex justify-content-end list-unstyled mb-0">
-                <li className="search-item pe-3">
-                  <a href="#" className="search-button">
-                    <svg className="search">
-                      <use xlinkHref="#search"></use>
-                    </svg>
-                  </a>
-                </li>
-                <li className="pe-3">
-                  <a
-                    href="#"
-                    data-bs-toggle="modal"
-                    data-bs-target="#exampleModal"
-                  >
-                    <svg className="user">
-                      <use xlinkHref="#user"></use>
-                    </svg>
-                  </a>
+  const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
-                  <div
-                    className="modal fade"
-                    id="exampleModal"
-                    tabIndex={-1}
-                    aria-labelledby="exampleModalLabel"
-                    aria-hidden="true"
-                  >
-                    <div className="modal-dialog">
-                      <div className="modal-content">
-                        <div className="modal-header border-bottom-0">
-                          <button
-                            type="button"
-                            className="btn-close"
-                            data-bs-dismiss="modal"
-                            aria-label="Close"
-                          ></button>
-                        </div>
-                        <div className="modal-body">
-                          <div className="tabs-listing">
-                            <nav>
-                              <div
-                                className="nav nav-tabs d-flex justify-content-center"
-                                id="nav-tab"
-                                role="tablist"
-                              >
-                                <button
-                                  className="nav-link text-capitalize active"
-                                  id="nav-sign-in-tab"
-                                  data-bs-toggle="tab"
-                                  data-bs-target="#nav-sign-in"
-                                  type="button"
-                                  role="tab"
-                                  aria-controls="nav-sign-in"
-                                  aria-selected="true"
-                                >
-                                  Sign In
-                                </button>
-                                <button
-                                  className="nav-link text-capitalize"
-                                  id="nav-register-tab"
-                                  data-bs-toggle="tab"
-                                  data-bs-target="#nav-register"
-                                  type="button"
-                                  role="tab"
-                                  aria-controls="nav-register"
-                                  aria-selected="false"
-                                >
-                                  Register
-                                </button>
-                              </div>
-                            </nav>
-                            <div className="tab-content" id="nav-tabContent">
-                              <div
-                                className="tab-pane fade active show"
-                                id="nav-sign-in"
-                                role="tabpanel"
-                                aria-labelledby="nav-sign-in-tab"
-                              >
-                                <div className="form-group py-3">
-                                  <label className="mb-2" htmlFor="sign-in">
-                                    Username or email address *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    min="2"
-                                    name="username"
-                                    placeholder="Your Username"
-                                    className="form-control w-100 rounded-3 p-3"
-                                    required
-                                  />
-                                </div>
-                                <div className="form-group pb-3">
-                                  <label className="mb-2" htmlFor="sign-in">
-                                    Password *
-                                  </label>
-                                  <input
-                                    type="password"
-                                    min="2"
-                                    name="password"
-                                    placeholder="Your Password"
-                                    className="form-control w-100 rounded-3 p-3"
-                                    required
-                                  />
-                                </div>
-                                <label className="py-3">
-                                  <input type="checkbox" className="d-inline" />
-                                  <span className="label-body">
-                                    Remember me
-                                  </span>
-                                  <span className="label-body">
-                                    <a href="#" className="fw-bold">
-                                      Forgot Password
-                                    </a>
-                                  </span>
-                                </label>
-                                <button
-                                  type="submit"
-                                  name="submit"
-                                  className="btn btn-dark w-100 my-3"
-                                >
-                                  Login
-                                </button>
-                              </div>
-                              <div
-                                className="tab-pane fade"
-                                id="nav-register"
-                                role="tabpanel"
-                                aria-labelledby="nav-register-tab"
-                              >
-                                <div className="form-group py-3">
-                                  <label className="mb-2" htmlFor="register">
-                                    Your email address *
-                                  </label>
-                                  <input
-                                    type="text"
-                                    min="2"
-                                    name="username"
-                                    placeholder="Your Email Address"
-                                    className="form-control w-100 rounded-3 p-3"
-                                    required
-                                  />
-                                </div>
-                                <div className="form-group pb-3">
-                                  <label className="mb-2" htmlFor="sign-in">
-                                    Password *
-                                  </label>
-                                  <input
-                                    type="password"
-                                    min="2"
-                                    name="password"
-                                    placeholder="Your Password"
-                                    className="form-control w-100 rounded-3 p-3"
-                                    required
-                                  />
-                                </div>
-                                <label className="py-3">
-                                  <input type="checkbox" className="d-inline" />
-                                  <span className="label-body">
-                                    I agree to the{" "}
-                                    <a href="#" className="fw-bold">
-                                      Privacy Policy
-                                    </a>
-                                  </span>
-                                </label>
-                                <button
-                                  type="submit"
-                                  name="submit"
-                                  className="btn btn-dark w-100 my-3"
-                                >
-                                  Register
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-                <li className="wishlist-dropdown dropdown pe-3">
-                  <a
-                    href="#"
-                    className="dropdown-toggle"
-                    data-bs-toggle="dropdown"
-                    role="button"
-                    aria-expanded="false"
-                  >
-                    <svg className="wishlist">
-                      <use xlinkHref="#heart"></use>
-                    </svg>
-                  </a>
-                  <div className="dropdown-menu animate slide dropdown-menu-start dropdown-menu-lg-end p-3">
-                    <h4 className="d-flex justify-content-between align-items-center mb-3">
-                      <span className="text-primary">Your wishlist</span>
-                      <span className="badge bg-primary rounded-pill">2</span>
-                    </h4>
-                    <ul className="list-group mb-3">
-                      <li className="list-group-item bg-transparent d-flex justify-content-between lh-sm">
-                        <div>
-                          <h5>
-                            <a href="index.html">The Emerald Crown</a>
-                          </h5>
-                          <small>Special discounted price.</small>
-                          <a
-                            href="#"
-                            className="d-block fw-medium text-capitalize mt-2"
-                          >
-                            Add to cart
-                          </a>
-                        </div>
-                        <span className="text-primary">$2000</span>
-                      </li>
-                      <li className="list-group-item bg-transparent d-flex justify-content-between lh-sm">
-                        <div>
-                          <h5>
-                            <a href="index.html">The Last Enchantment</a>
-                          </h5>
-                          <small>Perfect for enlightened people.</small>
-                          <a
-                            href="#"
-                            className="d-block fw-medium text-capitalize mt-2"
-                          >
-                            Add to cart
-                          </a>
-                        </div>
-                        <span className="text-primary">$400</span>
-                      </li>
-                      <li className="list-group-item bg-transparent d-flex justify-content-between">
-                        <span className="text-capitalize">
-                          <b>Total (USD)</b>
-                        </span>
-                        <strong>$1470</strong>
-                      </li>
-                    </ul>
-                    <div className="d-flex flex-wrap justify-content-center">
-                      <a
-                        href="#"
-                        className="w-100 btn btn-dark mb-1"
-                        type="submit"
-                      >
-                        Add all to cart
-                      </a>
-                      <a
-                        href="index.html"
-                        className="w-100 btn btn-primary"
-                        type="submit"
-                      >
-                        View cart
-                      </a>
-                    </div>
-                  </div>
-                </li>
-                <li className="cart-dropdown dropdown">
-                  <a
-                    href="index.html"
-                    className="dropdown-toggle"
-                    data-bs-toggle="dropdown"
-                    role="button"
-                    aria-expanded="false"
-                  >
-                    <svg className="cart">
-                      <use xlinkHref="#cart"></use>
-                    </svg>
-                    {/* <span className="fs-6 fw-light">(02)</span> */}
-                  </a>
-                  <div className="dropdown-menu animate slide dropdown-menu-start dropdown-menu-lg-end p-3">
-                    <h4 className="d-flex justify-content-between align-items-center mb-3">
-                      <span className="text-primary">Your cart</span>
-                      <span className="badge bg-primary rounded-pill">2</span>
-                    </h4>
-                    <ul className="list-group mb-3">
-                      <li className="list-group-item bg-transparent d-flex justify-content-between lh-sm">
-                        <div>
-                          <h5>
-                            <a href="index.html">Secrets of the Alchemist</a>
-                          </h5>
-                          <small>High quality in good price.</small>
-                        </div>
-                        <span>$870</span>
-                      </li>
-                      <li className="list-group-item bg-transparent d-flex justify-content-between lh-sm">
-                        <div>
-                          <h5>
-                            <a href="index.html">Quest for the Lost City</a>
-                          </h5>
-                          <small>Professional Quest for the Lost City.</small>
-                        </div>
-                        <span className="text-primary">$600</span>
-                      </li>
-                      <li className="list-group-item bg-transparent d-flex justify-content-between">
-                        <span className="text-capitalize">
-                          <b>Total (USD)</b>
-                        </span>
-                        <strong>$1470</strong>
-                      </li>
-                    </ul>
-                    <div className="d-flex flex-wrap justify-content-center">
-                      <a
-                        href="index.html"
-                        className="w-100 btn btn-dark mb-1"
-                        type="submit"
-                      >
-                        View Cart
-                      </a>
-                      <a
-                        href="index.html"
-                        className="w-100 btn btn-primary"
-                        type="submit"
-                      >
-                        Go to checkout
-                      </a>
-                    </div>
-                  </div>
-                </li>
+  const toggleOffcanvas = useCallback(() => {
+    setIsOffcanvasOpen((prev) => !prev);
+  }, []);
+
+  const closeOffcanvas = useCallback(() => {
+    setIsOffcanvasOpen(false);
+    setIsDropdownOpen(false);
+  }, []);
+
+  const toggleDropdown = useCallback(() => {
+    setIsDropdownOpen((prev) => !prev);
+  }, []);
+
+  const handleCartOpen = useCallback(() => {
+    setIsCartOpen(true);
+  }, []);
+
+  const handleCartClose = useCallback(() => {
+    setIsCartOpen(false);
+  }, []);
+
+  const handleLinkClick = useCallback(() => {
+    if (window.innerWidth < 992) {
+      closeOffcanvas();
+    }
+  }, [closeOffcanvas]);
+
+  useEffect(() => {
+    if (isOffcanvasOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOffcanvasOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: any) => {
+      if (e.key === "Escape" && isOffcanvasOpen) {
+        closeOffcanvas();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOffcanvasOpen, closeOffcanvas]);
+
+  return (
+    <>
+      <nav
+        id="header-nav"
+        className="navbar navbar-expand-lg py-3 position-relative"
+        role="navigation"
+        aria-label="Main navigation"
+      >
+        <div className="container">
+          <a
+            className="navbar-brand fw-bold"
+            href="/"
+            aria-label="Dreamy Eyes - Home"
+          >
+            Dreamy Eyes
+          </a>
+
+          <button
+            className={`navbar-toggler hamburger-menu d-lg-none ${
+              isOffcanvasOpen ? "active" : ""
+            }`}
+            type="button"
+            onClick={toggleOffcanvas}
+            aria-controls="bdNavbar"
+            aria-expanded={isOffcanvasOpen}
+            aria-label="Toggle navigation menu"
+          >
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+          </button>
+
+          {isOffcanvasOpen && (
+            <div
+              className="offcanvas-backdrop fade show d-lg-none"
+              onClick={closeOffcanvas}
+              style={{ zIndex: 1040 }}
+            />
+          )}
+
+          <div
+            className={`offcanvas offcanvas-end d-lg-none ${
+              isOffcanvasOpen ? "show" : ""
+            }`}
+            tabIndex={-1}
+            id="bdNavbar"
+            aria-labelledby="bdNavbarOffcanvasLabel"
+            style={{ zIndex: 1045 }}
+          >
+            <div className="offcanvas-header px-4 pb-3 border-bottom">
+              <a
+                className="navbar-brand"
+                href="/"
+                aria-label="Dreamy Eyes - Home"
+                onClick={handleLinkClick}
+              >
+                <Image
+                  src="/images/main-logo.png"
+                  className="logo"
+                  alt="Dreamy Eyes logo"
+                  width={120}
+                  height={40}
+                  priority
+                  sizes="(max-width: 768px) 120px, 150px"
+                />
+              </a>
+              <button
+                type="button"
+                className="btn-close btn-close-enhanced"
+                onClick={closeOffcanvas}
+                aria-label="Close navigation menu"
+              />
+            </div>
+
+            <div className="offcanvas-body p-0">
+              <ul id="navbar" className="navbar-nav mobile-nav" role="menubar">
+                {NAV_LINKS.map((link) => (
+                  <li key={link.label} className="nav-item" role="none">
+                    <a
+                      className={`nav-link px-4 py-3 ${
+                        link.isActive ? "active" : ""
+                      }`}
+                      href={link.href}
+                      role="menuitem"
+                      aria-current={link.isActive ? "page" : undefined}
+                      onClick={handleLinkClick}
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
               </ul>
+
+              <div className="mobile-user-actions border-top mt-auto p-4">
+                <div className="d-flex gap-3 justify-content-center">
+                  <button
+                    type="button"
+                    className="btn btn-outline-dark btn-sm flex-fill"
+                    aria-label="User account"
+                    onClick={handleLinkClick}
+                  >
+                    <i className="bi bi-person me-2" aria-hidden="true" />
+                    Account
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm flex-fill"
+                    aria-label="Shopping cart"
+                    onClick={() => {
+                      handleCartOpen();
+                      closeOffcanvas();
+                    }}
+                  >
+                    <i className="bi bi-cart-check me-2" aria-hidden="true" />
+                    Cart
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+
+          <div className="collapse navbar-collapse d-none d-lg-flex justify-content-center flex-grow-1">
+            <ul className="navbar-nav text-uppercase">
+              {NAV_LINKS.map((link) => (
+                <li key={link.label} className="nav-item">
+                  <a
+                    className={`nav-link me-4 ${link.isActive ? "active" : ""}`}
+                    href={link.href}
+                    aria-current={link.isActive ? "page" : undefined}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="user-items d-none d-lg-flex">
+            <ul className="d-flex justify-content-end list-unstyled mb-0">
+              <li className="pe-3">
+                <button
+                  type="button"
+                  className="btn btn-link p-2 text-dark"
+                  aria-label="User account"
+                >
+                  <i
+                    className="bi bi-person"
+                    style={{ fontSize: 20 }}
+                    aria-hidden="true"
+                  />
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="btn btn-link p-2 text-dark position-relative"
+                  aria-label="Shopping cart"
+                  onClick={handleCartOpen}
+                >
+                  <i
+                    className="bi bi-cart-check"
+                    style={{ fontSize: 20 }}
+                    aria-hidden="true"
+                  />
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                    2<span className="visually-hidden">items in cart</span>
+                  </span>
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      <ModalCart
+        isOpen={isCartOpen}
+        onCheckout={() => console.log("Checkout clicked")}
+        onClose={handleCartClose}
+        onViewCart={() => console.log("View cart clicked")}
+      />
+
+      <style jsx>{`
+        .hamburger-menu {
+          position: relative;
+          width: 30px;
+          height: 30px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          transition: all 0.3s ease;
+        }
+
+        .hamburger-line {
+          width: 25px;
+          height: 3px;
+          background-color: #000;
+          margin: 2px 0;
+          transition: all 0.3s ease;
+          transform-origin: center;
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(1) {
+          transform: rotate(45deg) translate(6px, 6px);
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(2) {
+          opacity: 0;
+        }
+
+        .hamburger-menu.active .hamburger-line:nth-child(3) {
+          transform: rotate(-45deg) translate(6px, -6px);
+        }
+
+        .hamburger-menu:hover .hamburger-line {
+          background-color: #007bff;
+        }
+
+        /* Enhanced Offcanvas Styles */
+        .offcanvas {
+          transition: transform 0.3s ease-in-out;
+          width: 320px !important;
+        }
+
+        /* Hide offcanvas on desktop */
+        @media (min-width: 992px) {
+          .offcanvas,
+          .offcanvas-backdrop {
+            display: none !important;
+          }
+        }
+
+        .offcanvas-backdrop {
+          background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Mobile Navigation Styles */
+        .mobile-nav .nav-link {
+          font-size: 1.1rem;
+          font-weight: 500;
+          color: #333;
+          border-bottom: 1px solid #f8f9fa;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+
+        .mobile-nav .nav-link:hover,
+        .mobile-nav .nav-link.active {
+          background-color: #f8f9fa;
+        }
+
+        .mobile-nav .nav-link.active::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 60%;
+          background-color: #007bff;
+        }
+
+        /* Enhanced Dropdown Styles */
+        .dropdown-enhanced .dropdown-toggle {
+          font-size: 1.1rem;
+          font-weight: 500;
+          color: #333;
+          border-bottom: 1px solid #f8f9fa;
+          transition: all 0.3s ease;
+        }
+
+        .dropdown-enhanced .dropdown-toggle:hover {
+          color: #007bff;
+          background-color: #f8f9fa;
+        }
+
+        .dropdown-menu-enhanced {
+          background-color: #f8f9fa;
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.3s ease;
+        }
+
+        .dropdown-menu-enhanced.show {
+          max-height: 400px;
+        }
+
+        .dropdown-item-enhanced {
+          display: block;
+          color: #666;
+          text-decoration: none;
+          font-size: 0.95rem;
+          transition: all 0.2s ease;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .dropdown-item-enhanced:hover {
+          color: #007bff;
+          background-color: #e9ecef;
+        }
+
+        /* Enhanced Close Button */
+        .btn-close-enhanced {
+          background-size: 1.2em;
+          opacity: 0.8;
+          transition: all 0.2s ease;
+        }
+
+        .btn-close-enhanced:hover {
+          opacity: 1;
+          transform: scale(1.1);
+        }
+
+        /* Mobile User Actions */
+        .mobile-user-actions {
+          background-color: #f8f9fa;
+        }
+
+        /* Desktop Navigation Improvements */
+        @media (min-width: 992px) {
+          .navbar-nav .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+          }
+
+          .navbar-nav .nav-link::after {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 50%;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+          }
+
+          .navbar-nav .nav-link:hover::after,
+          .navbar-nav .nav-link.active::after {
+            width: 100%;
+          }
+
+          .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+          }
+        }
+
+        /* Smooth Animations */
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-link,
+        .btn {
+          transition: all 0.2s ease;
+        }
+      `}</style>
+    </>
   );
 };
 
