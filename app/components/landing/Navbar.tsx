@@ -1,57 +1,33 @@
+"use client";
+
 import Image from "next/image";
-import React, { useState, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+} from "react";
 import ModalCart from "../modals/ModalCart";
-
-const NAV_LINKS = [
-  { href: "/", label: "Home", isActive: true },
-  { href: "/about", label: "About" },
-  { href: "/shop", label: "Shop" },
-  { href: "/blogs", label: "Blogs" },
-  { href: "/contact", label: "Contact" },
-];
-
-const DROPDOWN_ITEMS = [
-  { href: "/about", label: "About" },
-  { href: "/shop", label: "Shop" },
-  { href: "/product", label: "Single Product" },
-  { href: "/cart", label: "Cart" },
-  { href: "/checkout", label: "Checkout" },
-  { href: "/blog", label: "Blog" },
-  { href: "/post", label: "Single Post" },
-  { href: "/contact", label: "Contact" },
-];
+import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 
 const Navbar = () => {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [navLinks, setNavLinks] = useState([
+    { href: "/", label: "Home", isActive: false },
+    { href: "/shop", label: "Shop", isActive: false },
+    { href: "/about", label: "About", isActive: false },
+    { href: "/contact", label: "Contact", isActive: false },
+  ]);
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const toggleOffcanvas = useCallback(() => {
-    setIsOffcanvasOpen((prev) => !prev);
-  }, []);
 
   const closeOffcanvas = useCallback(() => {
     setIsOffcanvasOpen(false);
     setIsDropdownOpen(false);
   }, []);
-
-  const toggleDropdown = useCallback(() => {
-    setIsDropdownOpen((prev) => !prev);
-  }, []);
-
-  const handleCartOpen = useCallback(() => {
-    setIsCartOpen(true);
-  }, []);
-
-  const handleCartClose = useCallback(() => {
-    setIsCartOpen(false);
-  }, []);
-
-  const handleLinkClick = useCallback(() => {
-    if (window.innerWidth < 992) {
-      closeOffcanvas();
-    }
-  }, [closeOffcanvas]);
 
   useEffect(() => {
     if (isOffcanvasOpen) {
@@ -75,6 +51,49 @@ const Navbar = () => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOffcanvasOpen, closeOffcanvas]);
+
+  const toggleOffcanvas = useCallback(() => {
+    setIsOffcanvasOpen((prev) => !prev);
+  }, []);
+
+  const toggleDropdown = useCallback(() => {
+    setIsDropdownOpen((prev) => !prev);
+  }, []);
+
+  const handleCartOpen = useCallback(() => {
+    setIsCartOpen(true);
+  }, []);
+
+  const handleCartClose = useCallback(() => {
+    setIsCartOpen(false);
+  }, []);
+
+  const handleLinkClick = useCallback(() => {
+    if (window.innerWidth < 992) {
+      closeOffcanvas();
+    }
+  }, [closeOffcanvas]);
+
+  useLayoutEffect(() => {
+    const navItemIndex = navLinks.findIndex((item) => item.href === pathname);
+    if (navItemIndex !== -1) {
+      const temp = navLinks.map((item, index) => {
+        if (index === navItemIndex) {
+          return {
+            ...item,
+            isActive: true,
+          };
+        }
+        return { ...item, isActive: false };
+      });
+
+      setNavLinks(temp);
+    }
+  }, [pathname]);
+
+  const handleClickNavItems = (value: string) => router.push(value);
+
+  console.log("navlinks", navLinks);
 
   return (
     <>
@@ -152,19 +171,15 @@ const Navbar = () => {
 
             <div className="offcanvas-body p-0">
               <ul id="navbar" className="navbar-nav mobile-nav" role="menubar">
-                {NAV_LINKS.map((link) => (
+                {navLinks.map((link) => (
                   <li key={link.label} className="nav-item" role="none">
-                    <a
-                      className={`nav-link px-4 py-3 ${
-                        link.isActive ? "active" : ""
-                      }`}
+                    <Link
                       href={link.href}
                       role="menuitem"
-                      aria-current={link.isActive ? "page" : undefined}
                       onClick={handleLinkClick}
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -199,12 +214,13 @@ const Navbar = () => {
 
           <div className="collapse navbar-collapse d-none d-lg-flex justify-content-center flex-grow-1">
             <ul className="navbar-nav text-uppercase">
-              {NAV_LINKS.map((link) => (
+              {navLinks.map((link) => (
                 <li key={link.label} className="nav-item">
                   <a
-                    className={`nav-link me-4 ${link.isActive ? "active" : ""}`}
+                    className={`nav-link me-4 ${
+                      link?.isActive ? "active" : ""
+                    }`}
                     href={link.href}
-                    aria-current={link.isActive ? "page" : undefined}
                   >
                     {link.label}
                   </a>
@@ -219,6 +235,7 @@ const Navbar = () => {
                   type="button"
                   className="btn btn-link p-2 text-dark"
                   aria-label="User account"
+                  onClick={() => handleClickNavItems("/login")}
                 >
                   <i
                     className="bi bi-person"
