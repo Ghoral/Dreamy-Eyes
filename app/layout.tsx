@@ -4,6 +4,7 @@ import "./globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import Header from "./components/landing/Header";
+import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -24,8 +25,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={nunito.variable} style={{ margin: 0, padding: 0 }}>
-        <Header />
-        {children}
+        <>
+          <Header />
+          {children}
+        </>
       </body>
     </html>
   );

@@ -7,6 +7,7 @@ const LoginComponent = () => {
   const onToggle = (value: boolean) => {
     setIsRegister(value);
   };
+
   return (
     <div
       style={{

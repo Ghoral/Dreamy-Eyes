@@ -1,5 +1,7 @@
+"use client";
+
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const products = [
   {
@@ -56,7 +58,7 @@ const products = [
   },
 ];
 
-const ProductItems = () => {
+const ProductItems = ({ data }: { data: any }) => {
   const [hoveredItem, setHoveredItem] = useState<any>(null);
 
   const handleProductClick = (product: any) => {
@@ -82,7 +84,7 @@ const ProductItems = () => {
         </div>
 
         <div className="row g-3">
-          {products.map((product, index: number) => {
+          {data.map((product, index: number) => {
             const isHovered = hoveredItem === index;
 
             return (
