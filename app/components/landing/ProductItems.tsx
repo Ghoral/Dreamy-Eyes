@@ -1,62 +1,8 @@
 "use client";
 
+import { getFirstImageUrl } from "@/app/util";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-
-const products = [
-  {
-    title: "House of Sky Breath",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item1.png",
-    discount: "10% off",
-  },
-  {
-    title: "Heartland Stars",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item2.png",
-  },
-  {
-    title: "Heavenly Bodies",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item3.png",
-  },
-  {
-    title: "His Saving Grace",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item4.png",
-    discount: "10% off",
-  },
-  {
-    title: "House of Sky Breath",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item1.png",
-    discount: "10% off",
-  },
-  {
-    title: "Heartland Stars",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item2.png",
-  },
-  {
-    title: "Heavenly Bodies",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item3.png",
-  },
-  {
-    title: "His Saving Grace",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item4.png",
-    discount: "10% off",
-  },
-];
 
 const ProductItems = ({ data }: { data: any }) => {
   const [hoveredItem, setHoveredItem] = useState<any>(null);
@@ -65,6 +11,7 @@ const ProductItems = ({ data }: { data: any }) => {
     console.log("Clicked product:", product.title);
     // Add your click handler logic here
   };
+  console.log("data", data);
 
   return (
     <section
@@ -84,8 +31,13 @@ const ProductItems = ({ data }: { data: any }) => {
         </div>
 
         <div className="row g-3">
-          {data.map((product, index: number) => {
+          {data.map((product: any, index: number) => {
             const isHovered = hoveredItem === index;
+            const imageUrl = getFirstImageUrl(product.images);
+            console.log(
+              "imageUrl",
+              `${process.env.NEXT_PUBLIC_IMAGE_URL}${imageUrl}`
+            );
 
             return (
               <div key={index} className="col-6 col-sm-4 col-md-3 col-lg-2">
@@ -120,7 +72,11 @@ const ProductItems = ({ data }: { data: any }) => {
 
                   <div className="position-relative overflow-hidden rounded-2 mb-2 d-flex justify-content-center align-items-center">
                     <Image
-                      src={product.image}
+                      src={
+                        imageUrl
+                          ? `${process.env.NEXT_PUBLIC_IMAGE_URL}${imageUrl}`
+                          : ""
+                      }
                       className="img-fluid"
                       height={120}
                       width={120}
