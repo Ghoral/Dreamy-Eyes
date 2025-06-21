@@ -29,5 +29,5 @@ export const GlobalSupabaseListenerWrapper = () => {
 
     return () => sub.unsubscribe();
   }, []);
-  return <></>;
+  return null;
 };
