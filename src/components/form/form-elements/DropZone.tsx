@@ -78,11 +78,20 @@ const DropzoneComponent = ({
   }, [file, multiple]);
 
   const onDrop = (acceptedFiles: File[]) => {
+    const filesWithTimestamp = acceptedFiles.map((file) => {
+      const timestamp = Date.now();
+      const fileExtension = file.name.split(".").pop();
+      const fileName = file.name.replace(/\.[^/.]+$/, "");
+      const newFileName = `${fileName}_${timestamp}.${fileExtension}`;
+
+      return new File([file], newFileName, { type: file.type });
+    });
+
     if (multiple) {
       const currentFiles = Array.isArray(file) ? file : [];
-      setFile?.([...currentFiles, ...acceptedFiles]);
+      setFile?.([...currentFiles, ...filesWithTimestamp]);
     } else {
-      setFile?.([acceptedFiles[0]]);
+      setFile?.([filesWithTimestamp[0]]);
     }
   };
 

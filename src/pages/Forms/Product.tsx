@@ -17,6 +17,9 @@ const ProductForm = () => {
   const [specifications, setSpecifications] = useState<any>({});
   const [colorImageMap, setColorImageMap] = useState<any>({});
   const [selectedColor, setSelectedColor] = useState<string>("#2563eb");
+  const [colorQuantities, setColorQuantities] = useState<{
+    [color: string]: { quantity: string; label: string };
+  }>({});
 
   const formik = useFormik({
     initialValues: {
@@ -28,6 +31,7 @@ const ProductForm = () => {
       quantity: undefined,
       power: undefined,
       color: [],
+      color_quantity: [],
     },
     validationSchema: productValidationSchema,
     onSubmit: (values: IProduct) => {
@@ -37,13 +41,22 @@ const ProductForm = () => {
 
   const onSubmit = async (values: IProduct) => {
     const { color, ...rest } = values;
+
+    const color_quantity = values.color.map((colorValue) => ({
+      color: colorValue,
+      quantity: colorQuantities[colorValue]?.quantity || "0",
+      label: colorQuantities[colorValue]?.label || colorValue,
+    }));
+
     const body = {
       ...rest,
       images: getColorFileNameMap(colorImageMap),
       specifications: specifications.keyValuePairs,
+      color_quantity: color_quantity,
     };
-
-    await supabaseClient.from("lens").insert(body);
+    console.log("mogo nooo");
+    console.log("Submitting:", body); // Debug log
+    await supabaseClient.from("product").insert(body);
   };
 
   const handleImageChange = async (files: File[]) => {
@@ -53,7 +66,7 @@ const ProductForm = () => {
       if (files?.length) {
         const fileToUpload = files[files.length - 1];
         const { error } = await supabaseClient.storage
-          .from("lens-images")
+          .from("product-image")
           .upload(fileToUpload.name, fileToUpload, { upsert: true });
 
         if (error) {
@@ -95,26 +108,59 @@ const ProductForm = () => {
     formik.setFieldValue("description", content);
   };
 
+  const handleColorQuantityChange = (color: string, quantity: string) => {
+    setColorQuantities((prev) => ({
+      ...prev,
+      [color]: {
+        ...prev[color],
+        quantity,
+      },
+    }));
+  };
+
+  const handleColorLabelChange = (color: string, label: string) => {
+    setColorQuantities((prev) => ({
+      ...prev,
+      [color]: {
+        ...prev[color],
+        label,
+      },
+    }));
+  };
+
+  const handleColorChange = (colors: string[]) => {
+    formik.setFieldValue("color", colors);
+
+    // Set the newest color as selected
+    if (colors.length > 0) {
+      setSelectedColor(colors[colors.length - 1]);
+    }
+
+    // Initialize quantity and label for new colors
+    colors.forEach((color) => {
+      if (!(color in colorQuantities)) {
+        setColorQuantities((prev) => ({
+          ...prev,
+          [color]: { quantity: "0", label: color },
+        }));
+      }
+    });
+
+    // Remove quantities and labels for colors that are no longer selected
+    setColorQuantities((prev) => {
+      const newQuantities = { ...prev };
+      Object.keys(newQuantities).forEach((color) => {
+        if (!colors.includes(color)) {
+          delete newQuantities[color];
+        }
+      });
+      return newQuantities;
+    });
+  };
+
   return (
     <form onSubmit={formik.handleSubmit}>
       <ComponentCard title="Product">
-        {/* <div className="mb-6">
-          <DropzoneComponent
-            file={formik.values.images}
-            setFile={handleImageChange}
-            title="Product Images"
-            multiple
-            onReorder={(items) => {
-              formik.setFieldValue("images", items);
-            }}
-            bucket="lens-images"
-          />
-          {formik.touched.images && formik.errors.images && (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.images}
-            </div>
-          )}
-        </div> */}
         <div className="mb-6">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -253,7 +299,7 @@ const ProductForm = () => {
         </div>
         <div className="mb-6">
           <DropzoneComponent
-            bucket="lens-images"
+            bucket="product-image"
             file={colorImageMap[selectedColor]}
             setFile={handleImageChangeColor}
             title="Product Images"
@@ -272,16 +318,61 @@ const ProductForm = () => {
               !!!formik?.values?.images?.length ||
               formik.values.color.length === formik.values.images.length
             }
-            onChange={(colors) => {
-              formik.setFieldValue("color", colors);
-              console.log("colors", colors);
-              setSelectedColor(colors[colors.length - 1]);
-            }}
+            onChange={handleColorChange}
             values={formik.values.color}
             selectedColor={selectedColor}
             setSelectedColor={setSelectedColor}
           />
         </div>
+
+        {/* Color Quantities Section */}
+        {selectedColor && formik.values.color.includes(selectedColor) && (
+          <div className="mb-6" style={{ width: 200 }}>
+            <Label>Color Quantities for Selected Color</Label>
+            <div className="space-y-4 mt-3">
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-8 h-8 rounded-full border-2 border-gray-300 flex-shrink-0"
+                  style={{ backgroundColor: selectedColor }}
+                ></div>
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <Label htmlFor="color-label" className="text-sm">
+                      Color Name
+                    </Label>
+                    <Input
+                      type="text"
+                      id="color-label"
+                      name="color-label"
+                      value={colorQuantities[selectedColor]?.label || ""}
+                      onChange={(e) => {
+                        handleColorLabelChange(selectedColor, e.target.value);
+                      }}
+                      placeholder="e.g. Red"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="color-quantity" className="text-sm">
+                      Quantity
+                    </Label>
+                    <Input
+                      type="number"
+                      id="color-quantity"
+                      name="color-quantity"
+                      value={colorQuantities[selectedColor]?.quantity || ""}
+                      onChange={(e) =>
+                        handleColorQuantityChange(selectedColor, e.target.value)
+                      }
+                      placeholder="Enter quantity"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-8">
           <button

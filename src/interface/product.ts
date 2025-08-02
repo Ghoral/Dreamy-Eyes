@@ -8,6 +8,7 @@ export interface IProduct {
   power?: number;
   specifications?: Specifications;
   color: string[];
+  color_quantity: string[];
 }
 
 export interface IImage {
