@@ -13,7 +13,6 @@ interface MultiColorSelectorProps {
 const MultiColorSelector = ({
   selectedColor,
   values = [],
-  disabled,
   onChange,
   setSelectedColor,
   label = "Colors",
@@ -32,8 +31,6 @@ const MultiColorSelector = ({
     const newColors = values.filter((_, index) => index !== indexToRemove);
     onChange(newColors);
   };
-
-  console.log("selectedColor", selectedColor);
 
   return (
     <div className="mb-6">

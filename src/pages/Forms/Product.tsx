@@ -12,6 +12,7 @@ import { supabaseClient } from "../../service/supabase";
 import { showCustomToastError } from "../../utils/toast";
 import MultiColorSelector from "../../components/common/ColorPicker";
 import { getColorFileNameMap } from "../../utils";
+import Button from "../../components/common/Button";
 
 const ProductForm = () => {
   const [specifications, setSpecifications] = useState<any>({});
@@ -20,8 +21,9 @@ const ProductForm = () => {
   const [colorQuantities, setColorQuantities] = useState<{
     [color: string]: { quantity: string; label: string };
   }>({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  const formik = useFormik({
+  const formik: any = useFormik({
     initialValues: {
       title: "",
       sub_title: "",
@@ -31,28 +33,35 @@ const ProductForm = () => {
       quantity: undefined,
       power: undefined,
       color: [],
-      color_quantity: [], // this must be populated & synced!
+      color_quantity: [],
     },
     validationSchema: productValidationSchema,
-    onSubmit: (values: IProduct) => {
-      onSubmit(values);
+    onSubmit: async (values) => {
+      setIsLoading(true);
+      try {
+        await onSubmit(values);
+      } catch (error) {
+      } finally {
+        setIsLoading(false);
+      }
     },
   });
 
   const onSubmit = async (values: IProduct) => {
-    const { color, ...rest } = values;
+    try {
+      const { color, ...rest } = values;
 
-    // Use color_quantity from formik.values (already synced)
-    const color_quantity = values.color_quantity;
+      const color_quantity = values.color_quantity;
 
-    const body = {
-      ...rest,
-      images: getColorFileNameMap(colorImageMap),
-      specifications: specifications.keyValuePairs,
-      color_quantity: color_quantity,
-    };
+      const body = {
+        ...rest,
+        images: getColorFileNameMap(colorImageMap),
+        specifications: specifications.keyValuePairs,
+        color_quantity: color_quantity,
+      };
 
-    await supabaseClient.from("product").insert(body);
+      await supabaseClient.from("product").insert(body);
+    } catch (error) {}
   };
 
   const handleImageChange = async (files: File[]) => {
@@ -468,15 +477,9 @@ const ProductForm = () => {
             </div>
           </div>
         )}
-
-        <div className="mt-8">
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            Save Product
-          </button>
-        </div>
+        <Button onClick={formik.handleSubmit} loading={isLoading}>
+          Save Product
+        </Button>
       </ComponentCard>
     </form>
   );

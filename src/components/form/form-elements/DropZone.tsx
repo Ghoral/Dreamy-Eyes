@@ -17,7 +17,7 @@ const DropzoneComponent = ({
   setFile?: any;
   multiple?: boolean;
   onReorder?: (files: any[]) => void;
-  setFieldValue?: (index) => void;
+  setFieldValue?: (index: number) => void;
 }) => {
   const [previews, setPreviews] = useState<
     { id: string; url: string; file: File | string }[]

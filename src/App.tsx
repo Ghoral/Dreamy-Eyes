@@ -30,7 +30,6 @@ export default function App() {
   useEffect(() => {
     const checkSession = async () => {
       const { data, error }: any = await supabaseClient.auth.getSession();
-      console.log("data", data);
 
       if (error) {
         console.error("Error checking session", error);
