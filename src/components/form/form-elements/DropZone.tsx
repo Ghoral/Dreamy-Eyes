@@ -9,6 +9,7 @@ const DropzoneComponent = ({
   setFile,
   multiple = false,
   onReorder,
+  setFieldValue = () => {},
 }: {
   bucket?: string;
   title?: string;
@@ -16,6 +17,7 @@ const DropzoneComponent = ({
   setFile?: any;
   multiple?: boolean;
   onReorder?: (files: any[]) => void;
+  setFieldValue?: (index) => void;
 }) => {
   const [previews, setPreviews] = useState<
     { id: string; url: string; file: File | string }[]
@@ -99,7 +101,7 @@ const DropzoneComponent = ({
     const fileToRemove = file[indexToRemove];
 
     try {
-      const { data, error } = await supabaseClient.storage
+      const { error } = await supabaseClient.storage
         .from(bucket)
         .remove([fileToRemove.name]);
 
@@ -113,6 +115,7 @@ const DropzoneComponent = ({
     const newFiles = [...file];
     newFiles.splice(indexToRemove, 1);
     setFile?.(newFiles);
+    setFieldValue(indexToRemove);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -128,10 +131,9 @@ const DropzoneComponent = ({
     const [removed] = result.splice(startIndex, 1);
     result.splice(endIndex, 0, removed);
 
-    setPreviews(result); // update UI
+    setPreviews(result);
 
     if (onReorder) {
-      // send back reordered actual files (not previews)
       const reorderedFiles = result.map((preview) => preview.file);
       onReorder(reorderedFiles);
     }

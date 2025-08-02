@@ -31,7 +31,7 @@ const ProductForm = () => {
       quantity: undefined,
       power: undefined,
       color: [],
-      color_quantity: [],
+      color_quantity: [], // this must be populated & synced!
     },
     validationSchema: productValidationSchema,
     onSubmit: (values: IProduct) => {
@@ -42,11 +42,8 @@ const ProductForm = () => {
   const onSubmit = async (values: IProduct) => {
     const { color, ...rest } = values;
 
-    const color_quantity = values.color.map((colorValue) => ({
-      color: colorValue,
-      quantity: colorQuantities[colorValue]?.quantity || "0",
-      label: colorQuantities[colorValue]?.label || colorValue,
-    }));
+    // Use color_quantity from formik.values (already synced)
+    const color_quantity = values.color_quantity;
 
     const body = {
       ...rest,
@@ -54,8 +51,7 @@ const ProductForm = () => {
       specifications: specifications.keyValuePairs,
       color_quantity: color_quantity,
     };
-    console.log("mogo nooo");
-    console.log("Submitting:", body); // Debug log
+
     await supabaseClient.from("product").insert(body);
   };
 
@@ -108,30 +104,38 @@ const ProductForm = () => {
     formik.setFieldValue("description", content);
   };
 
-  const handleColorQuantityChange = (color: string, quantity: string) => {
-    setColorQuantities((prev) => ({
-      ...prev,
-      [color]: {
-        ...prev[color],
-        quantity,
-      },
-    }));
-  };
+  // Unified function to update label or quantity AND sync to Formik's color_quantity
+  const updateColorQuantity = (
+    color: string,
+    field: "label" | "quantity",
+    value: string
+  ) => {
+    setColorQuantities((prev) => {
+      const updated = {
+        ...prev,
+        [color]: {
+          ...prev[color],
+          [field]: value,
+        },
+      };
 
-  const handleColorLabelChange = (color: string, label: string) => {
-    setColorQuantities((prev) => ({
-      ...prev,
-      [color]: {
-        ...prev[color],
-        label,
-      },
-    }));
+      // Sync to formik
+      const color_quantity = Object.keys(updated).map((c) => ({
+        color: c,
+        quantity: updated[c]?.quantity || "0",
+        label: updated[c]?.label || "",
+      }));
+
+      formik.setFieldValue("color_quantity", color_quantity);
+
+      return updated;
+    });
   };
 
   const handleColorChange = (colors: string[]) => {
     formik.setFieldValue("color", colors);
 
-    // Set the newest color as selected
+    // Set newest color selected
     if (colors.length > 0) {
       setSelectedColor(colors[colors.length - 1]);
     }
@@ -139,14 +143,27 @@ const ProductForm = () => {
     // Initialize quantity and label for new colors
     colors.forEach((color) => {
       if (!(color in colorQuantities)) {
-        setColorQuantities((prev) => ({
-          ...prev,
-          [color]: { quantity: "0", label: color },
-        }));
+        setColorQuantities((prev) => {
+          const updated = {
+            ...prev,
+            [color]: { quantity: "0", label: "" },
+          };
+
+          // Sync to formik on adding new color
+          const color_quantity = Object.keys(updated).map((c) => ({
+            color: c,
+            quantity: updated[c]?.quantity || "0",
+            label: updated[c]?.label || "",
+          }));
+
+          formik.setFieldValue("color_quantity", color_quantity);
+
+          return updated;
+        });
       }
     });
 
-    // Remove quantities and labels for colors that are no longer selected
+    // Remove quantities and labels for colors no longer selected
     setColorQuantities((prev) => {
       const newQuantities = { ...prev };
       Object.keys(newQuantities).forEach((color) => {
@@ -154,13 +171,43 @@ const ProductForm = () => {
           delete newQuantities[color];
         }
       });
+
+      // Sync formik after removal too
+      const color_quantity = Object.keys(newQuantities).map((c) => ({
+        color: c,
+        quantity: newQuantities[c]?.quantity || "0",
+        label: newQuantities[c]?.label || "",
+      }));
+      formik.setFieldValue("color_quantity", color_quantity);
+
       return newQuantities;
+    });
+  };
+
+  const removeImageFromColor = (color: string, index: number) => {
+    setColorImageMap((prev: any) => {
+      const updatedFiles = [...(prev[color] || [])];
+      if (index < 0 || index >= updatedFiles.length) {
+        return prev;
+      }
+      updatedFiles.splice(index, 1);
+
+      if (updatedFiles.length === 0) {
+        const { [color]: _, ...rest } = prev;
+        return rest;
+      }
+
+      return {
+        ...prev,
+        [color]: updatedFiles,
+      };
     });
   };
 
   return (
     <form onSubmit={formik.handleSubmit}>
       <ComponentCard title="Product">
+        {/* Title */}
         <div className="mb-6">
           <Label htmlFor="title">Title</Label>
           <Input
@@ -176,8 +223,10 @@ const ProductForm = () => {
             </div>
           )}
         </div>
+
+        {/* Sub Title */}
         <div className="mb-6">
-          <Label htmlFor="title">Sub Title</Label>
+          <Label htmlFor="sub_title">Sub Title</Label>
           <Input
             type="text"
             id="sub_title"
@@ -191,6 +240,8 @@ const ProductForm = () => {
             </div>
           )}
         </div>
+
+        {/* Description */}
         <div className="mb-6">
           <Label htmlFor="description">Description</Label>
           <Editor
@@ -236,6 +287,8 @@ const ProductForm = () => {
             </div>
           )}
         </div>
+
+        {/* Description Preview */}
         <div className="mb-6">
           <Label htmlFor="sub-description">Description Preview</Label>
           <div
@@ -243,6 +296,8 @@ const ProductForm = () => {
             dangerouslySetInnerHTML={{ __html: formik.values.description }}
           />
         </div>
+
+        {/* Price */}
         <div className="mb-6">
           <Label htmlFor="price">Price</Label>
           <Input
@@ -258,6 +313,8 @@ const ProductForm = () => {
             </div>
           )}
         </div>
+
+        {/* Power */}
         <div className="mb-6">
           <Label htmlFor="power">Power</Label>
           <Input
@@ -273,6 +330,8 @@ const ProductForm = () => {
             </div>
           )}
         </div>
+
+        {/* Quantity */}
         <div className="mb-6">
           <Label htmlFor="quantity">Quantity</Label>
           <Input
@@ -288,15 +347,14 @@ const ProductForm = () => {
             </div>
           )}
         </div>
+
+        {/* Specification */}
         <div className="mb-6">
           <Label htmlFor="quantity">Specification</Label>
           <SpecificationsForm setSpecifications={setSpecifications} />
-          {formik.touched.title && formik.errors.title && (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.title}
-            </div>
-          )}
         </div>
+
+        {/* Dropzone & Color Selector */}
         <div className="mb-6">
           <DropzoneComponent
             bucket="product-image"
@@ -304,9 +362,10 @@ const ProductForm = () => {
             setFile={handleImageChangeColor}
             title="Product Images"
             multiple
-            onReorder={(items: any) => {
-              formik.setFieldValue("images", items);
-            }}
+            setFieldValue={(index: number) =>
+              removeImageFromColor(selectedColor, index)
+            }
+            onReorder={(items: any) => formik.setFieldValue("images", items)}
           />
           {formik.touched.images && formik.errors.images && (
             <div className="text-red-500 text-sm mt-1">
@@ -345,11 +404,29 @@ const ProductForm = () => {
                       id="color-label"
                       name="color-label"
                       value={colorQuantities[selectedColor]?.label || ""}
-                      onChange={(e) => {
-                        handleColorLabelChange(selectedColor, e.target.value);
-                      }}
+                      onChange={(e) =>
+                        updateColorQuantity(
+                          selectedColor,
+                          "label",
+                          e.target.value
+                        )
+                      }
                       placeholder="e.g. Red"
                     />
+                    {/* Show validation error for label */}
+                    {formik.errors.color_quantity &&
+                      Array.isArray(formik.errors.color_quantity) &&
+                      formik.errors.color_quantity[
+                        formik.values.color.indexOf(selectedColor)
+                      ]?.label && (
+                        <div className="text-red-500 text-sm mt-1">
+                          {
+                            formik.errors.color_quantity[
+                              formik.values.color.indexOf(selectedColor)
+                            ].label
+                          }
+                        </div>
+                      )}
                   </div>
 
                   <div>
@@ -362,11 +439,29 @@ const ProductForm = () => {
                       name="color-quantity"
                       value={colorQuantities[selectedColor]?.quantity || ""}
                       onChange={(e) =>
-                        handleColorQuantityChange(selectedColor, e.target.value)
+                        updateColorQuantity(
+                          selectedColor,
+                          "quantity",
+                          e.target.value
+                        )
                       }
                       placeholder="Enter quantity"
                       min="0"
                     />
+                    {/* Show validation error for quantity */}
+                    {formik.errors.color_quantity &&
+                      Array.isArray(formik.errors.color_quantity) &&
+                      formik.errors.color_quantity[
+                        formik.values.color.indexOf(selectedColor)
+                      ]?.quantity && (
+                        <div className="text-red-500 text-sm mt-1">
+                          {
+                            formik.errors.color_quantity[
+                              formik.values.color.indexOf(selectedColor)
+                            ].quantity
+                          }
+                        </div>
+                      )}
                   </div>
                 </div>
               </div>
