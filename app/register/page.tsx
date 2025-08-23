@@ -105,6 +105,16 @@ export default function RegisterPage() {
         setError(signUpError.message);
         return;
       }
+      console.log("ook", {
+        first_name: values.firstName,
+        last_name: values.lastName,
+        phone: values.phone,
+        country: values.country,
+        city: values.city,
+        state: values.state,
+        zip: values.zipCode,
+        street: values.address,
+      });
 
       const { data: profileData, error: profileError } =
         await supabaseBrowserClient.auth.signUp({

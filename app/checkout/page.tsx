@@ -32,7 +32,9 @@ export default function CheckoutPage() {
   const loadUserAddresses = async () => {
     try {
       const supabase = createSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         router.push("/login");
@@ -41,15 +43,17 @@ export default function CheckoutPage() {
 
       // Load user addresses
       const { data: addressesData } = await (supabase as any)
-        .from('addresses')
-        .select('*')
-        .eq('userId', user.id)
-        .order('isPrimary', { ascending: false });
+        .from("addresses")
+        .select("*")
+        .eq("userId", user.id)
+        .order("isPrimary", { ascending: false });
 
       if (addressesData && addressesData.length > 0) {
         setAddresses(addressesData as Address[]);
         // Auto-select primary address if available
-        const primaryAddress = addressesData.find((addr: any) => addr.isPrimary);
+        const primaryAddress = addressesData.find(
+          (addr: any) => addr.isPrimary
+        );
         if (primaryAddress) {
           setSelectedAddressId(primaryAddress.id);
         } else {
@@ -65,7 +69,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedAddressId) {
       setError("Please select a shipping address");
       return;
@@ -134,7 +138,10 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: "#f8f9fa" }}>
+      <div
+        className="min-vh-100 d-flex align-items-center justify-content-center"
+        style={{ backgroundColor: "#f8f9fa" }}
+      >
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
@@ -142,26 +149,9 @@ export default function CheckoutPage() {
     );
   }
 
-  if (addresses.length === 0) {
-    return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: "#f8f9fa" }}>
-        <div className="text-center">
-          <h2 className="mb-4">No Shipping Address Found</h2>
-          <p className="text-muted mb-4">
-            Please add a shipping address to your profile before checkout
-          </p>
-          <Link href="/profile" className="btn btn-primary btn-lg me-3">
-            Add Address
-          </Link>
-          <Link href="/shop" className="btn btn-outline-primary btn-lg">
-            Continue Shopping
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+  const selectedAddress = addresses.find(
+    (addr) => addr.id === selectedAddressId
+  );
 
   return (
     <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
@@ -190,7 +180,7 @@ export default function CheckoutPage() {
             <div className="card border-0 shadow-sm mb-4">
               <div className="card-body p-4">
                 <h3 className="fw-bold mb-4">Shipping Address</h3>
-                
+
                 {/* Error Message */}
                 {error && (
                   <div className="alert alert-danger" role="alert">
@@ -201,11 +191,19 @@ export default function CheckoutPage() {
 
                 {/* Address Selection */}
                 <div className="mb-4">
-                  <label className="form-label fw-semibold">Select Shipping Address</label>
+                  <label className="form-label fw-semibold">
+                    Select Shipping Address
+                  </label>
                   <div className="row g-3">
                     {addresses.map((address) => (
                       <div key={address.id} className="col-12">
-                        <div className={`card border ${selectedAddressId === address.id ? 'border-primary' : ''}`}>
+                        <div
+                          className={`card border ${
+                            selectedAddressId === address.id
+                              ? "border-primary"
+                              : ""
+                          }`}
+                        >
                           <div className="card-body">
                             <div className="form-check">
                               <input
@@ -215,19 +213,31 @@ export default function CheckoutPage() {
                                 id={`address-${address.id}`}
                                 value={address.id}
                                 checked={selectedAddressId === address.id}
-                                onChange={(e) => setSelectedAddressId(e.target.value)}
+                                onChange={(e) =>
+                                  setSelectedAddressId(e.target.value)
+                                }
                               />
-                              <label className="form-check-label" htmlFor={`address-${address.id}`}>
+                              <label
+                                className="form-check-label"
+                                htmlFor={`address-${address.id}`}
+                              >
                                 <div className="d-flex justify-content-between align-items-start">
                                   <div>
                                     {address.isPrimary && (
-                                      <span className="badge bg-primary mb-2">Primary Address</span>
+                                      <span className="badge bg-primary mb-2">
+                                        Primary Address
+                                      </span>
                                     )}
-                                    <p className="mb-1 fw-semibold">{address.address}</p>
-                                    <p className="mb-1 text-muted">
-                                      {address.city}, {address.state} {address.zipCode}
+                                    <p className="mb-1 fw-semibold">
+                                      {address.address}
                                     </p>
-                                    <p className="mb-0 text-muted">{address.country}</p>
+                                    <p className="mb-1 text-muted">
+                                      {address.city}, {address.state}{" "}
+                                      {address.zipCode}
+                                    </p>
+                                    <p className="mb-0 text-muted">
+                                      {address.country}
+                                    </p>
                                   </div>
                                 </div>
                               </label>
