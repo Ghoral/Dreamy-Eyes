@@ -106,34 +106,32 @@ export default function RegisterPage() {
         return;
       }
 
-      if (user) {
-        // Insert user profile with address information
-        const { error: profileError } = await supabaseBrowserClient
-          .from("profiles")
-          .insert({
-            id: user.id,
-            email: values.email,
-            first_name: values.firstName,
-            last_name: values.lastName,
-            role: "user",
-            country: values.country,
-            city: values.city,
-            state: values.state,
-            zip: values.zipCode,
-            street: values.address,
-            mobile_number: values.phone,
-          });
-        console.log("profileError", profileError);
-
-        if (profileError) {
-          return;
-        }
-
-        // Redirect to login page
-        router.push(
-          "/login?message=Registration successful! Please check your email to verify your account."
-        );
+      const { data: profileData, error: profileError } =
+        await supabaseBrowserClient.auth.signUp({
+          email: values.email,
+          password: values.password,
+          options: {
+            data: {
+              first_name: values.firstName,
+              last_name: values.lastName,
+              phone: values.phone,
+              country: values.country,
+              city: values.city,
+              state: values.state,
+              zip: values.zipCode,
+              street: values.address,
+            },
+          },
+        });
+      if (profileError) {
+        setError(profileError.message);
+        return;
       }
+
+      // Redirect to login page
+      router.push(
+        "/login?message=Registration successful! Please check your email to verify your account."
+      );
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
