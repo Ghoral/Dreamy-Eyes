@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import Header from "./components/landing/Header";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
+import { CartProvider } from "./context/CartContext";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -25,10 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={nunito.variable} style={{ margin: 0, padding: 0 }}>
-        <>
+        <CartProvider>
           <Header />
           {children}
-        </>
+        </CartProvider>
       </body>
     </html>
   );

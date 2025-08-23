@@ -1,21 +1,5 @@
-import React, { useState, useCallback, useMemo } from "react";
-
-const INITIAL_CART_ITEMS = [
-  {
-    id: 1,
-    title: "Secrets of the Alchemist",
-    description: "High quality in good price.",
-    price: 870,
-    quantity: 1,
-  },
-  {
-    id: 2,
-    title: "Quest for the Lost City",
-    description: "Professional Quest for the Lost City.",
-    price: 600,
-    quantity: 1,
-  },
-];
+import React, { useCallback } from "react";
+import { useCart } from "../../context/CartContext";
 
 const ModalCart = ({
   isOpen = false,
@@ -28,35 +12,7 @@ const ModalCart = ({
   onViewCart: () => void;
   onCheckout: () => void;
 }) => {
-  const [cartItems, setCartItems] = useState(INITIAL_CART_ITEMS);
-
-  const cartSummary = useMemo(() => {
-    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-    const totalPrice = cartItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    return { totalItems, totalPrice };
-  }, [cartItems]);
-
-  const removeItem = useCallback((itemId: any) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-  }, []);
-
-  const updateQuantity = useCallback(
-    (itemId: any, newQuantity: any) => {
-      if (newQuantity <= 0) {
-        removeItem(itemId);
-        return;
-      }
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.id === itemId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-    },
-    [removeItem]
-  );
+  const { state: cartItems, removeItem, updateQuantity } = useCart();
 
   const handleBackdropClick = useCallback(
     (e: any) => {
@@ -115,7 +71,7 @@ const ModalCart = ({
               >
                 <span className="text-primary">Your Cart</span>
                 <span className="badge bg-primary rounded-pill">
-                  {cartSummary.totalItems}
+                  {cartItems.totalItems}
                 </span>
               </h4>
               <button
@@ -127,7 +83,7 @@ const ModalCart = ({
             </div>
 
             <div className="modal-body">
-              {cartItems.length === 0 ? (
+              {cartItems.items.length === 0 ? (
                 <div className="text-center py-4">
                   <p className="text-muted mb-3">Your cart is empty</p>
                   <button
@@ -142,9 +98,9 @@ const ModalCart = ({
               ) : (
                 <>
                   <ul className="list-group mb-3">
-                    {cartItems.map((item) => (
+                    {cartItems.items.map((item) => (
                       <li
-                        key={item.id}
+                        key={`${item.id}-${item.color || "default"}`}
                         className="list-group-item bg-transparent d-flex justify-content-between align-items-start border-bottom"
                       >
                         <div className="flex-grow-1 me-3">
@@ -159,11 +115,20 @@ const ModalCart = ({
                           <small className="text-muted">
                             {item.description}
                           </small>
+                          {item.color && (
+                            <small className="d-block text-muted">
+                              Color:{" "}
+                              {item.color.charAt(0).toUpperCase() +
+                                item.color.slice(1)}
+                            </small>
+                          )}
 
                           {/* Quantity Controls */}
                           <div className="d-flex align-items-center mt-2">
                             <label
-                              htmlFor={`quantity-${item.id}`}
+                              htmlFor={`quantity-${item.id}-${
+                                item.color || "default"
+                              }`}
                               className="visually-hidden"
                             >
                               Quantity for {item.title}
@@ -174,22 +139,25 @@ const ModalCart = ({
                                 updateQuantity(item.id, item.quantity - 1)
                               }
                               aria-label={`Decrease quantity of ${item.title}`}
+                              disabled={item.quantity <= 1}
                             >
                               -
                             </button>
                             <input
-                              id={`quantity-${item.id}`}
+                              id={`quantity-${item.id}-${
+                                item.color || "default"
+                              }`}
                               type="number"
                               className="form-control form-control-sm mx-2 text-center"
                               style={{ width: "60px" }}
                               value={item.quantity}
-                              onChange={(e) =>
-                                updateQuantity(
-                                  item.id,
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                              min="0"
+                              onChange={(e) => {
+                                const newQuantity =
+                                  parseInt(e.target.value) || 0;
+                                updateQuantity(item.id, newQuantity);
+                              }}
+                              min="1"
+                              max={item.maxQuantity || 99}
                             />
                             <button
                               className="btn btn-sm btn-outline-secondary me-2"
@@ -197,6 +165,11 @@ const ModalCart = ({
                                 updateQuantity(item.id, item.quantity + 1)
                               }
                               aria-label={`Increase quantity of ${item.title}`}
+                              disabled={
+                                item.maxQuantity
+                                  ? item.quantity >= item.maxQuantity
+                                  : false
+                              }
                             >
                               +
                             </button>
@@ -208,6 +181,13 @@ const ModalCart = ({
                               Remove
                             </button>
                           </div>
+
+                          {/* Show quantity limit info */}
+                          {item.maxQuantity && (
+                            <small className="text-muted d-block mt-1">
+                              Max: {item.maxQuantity} available
+                            </small>
+                          )}
                         </div>
 
                         <div className="text-end">
@@ -228,7 +208,7 @@ const ModalCart = ({
                         <strong>Total (USD)</strong>
                       </span>
                       <strong className="text-primary fs-5">
-                        ${cartSummary.totalPrice}
+                        ${cartItems.totalPrice}
                       </strong>
                     </li>
                   </ul>
@@ -236,7 +216,7 @@ const ModalCart = ({
               )}
             </div>
 
-            {cartItems.length > 0 && (
+            {cartItems.items.length > 0 && (
               <div className="modal-footer border-0 pt-0">
                 <div className="d-flex gap-2 w-100">
                   <button

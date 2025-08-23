@@ -2,16 +2,59 @@
 
 import { getFirstImageUrl } from "@/app/util";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useCart } from "../../context/CartContext";
+import Toast from "../ui/Toast";
+import { useRouter } from "next/navigation";
 
 const ProductItems = ({ data }: { data: any }) => {
   const [hoveredItem, setHoveredItem] = useState<any>(null);
+  const [toastConfig, setToastConfig] = useState<{
+    message: string;
+    isVisible: boolean;
+  }>({ message: "", isVisible: false });
+  const { addItem } = useCart();
+  const router = useRouter();
 
   const handleProductClick = (product: any) => {
-    console.log("Clicked product:", product.title);
-    // Add your click handler logic here
+    // Navigate to product detail page
+    const productId = product.id || product.title;
+    router.push(`/${encodeURIComponent(productId)}`);
   };
-  console.log("data", data);
+
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+    e.stopPropagation();
+
+    // Parse color data if available
+    let maxQuantity = 1;
+    if (product.colors) {
+      try {
+        const colorData = JSON.parse(product.colors);
+        if (colorData.length > 0) {
+          maxQuantity = parseInt(colorData[0].quantity) || 1;
+        }
+      } catch (error) {
+        console.error("Error parsing color data:", error);
+      }
+    }
+
+    // Add item to cart
+    addItem({
+      id: product.id || product.title,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      quantity: 1,
+      image: getFirstImageUrl(product.images) || undefined,
+      maxQuantity: maxQuantity, // Add maximum quantity limit
+    });
+
+    // Show toast notification
+    setToastConfig({
+      message: `${product.title} added to cart!`,
+      isVisible: true,
+    });
+  };
 
   return (
     <section
@@ -31,13 +74,9 @@ const ProductItems = ({ data }: { data: any }) => {
         </div>
 
         <div className="row g-3">
-          {data.map((product: any, index: number) => {
+          {data?.map((product: any, index: number) => {
             const isHovered = hoveredItem === index;
             const imageUrl = getFirstImageUrl(product.images);
-            console.log(
-              "imageUrl",
-              `${process.env.NEXT_PUBLIC_IMAGE_URL}${imageUrl}`
-            );
 
             return (
               <div key={index} className="col-6 col-sm-4 col-md-3 col-lg-2">
@@ -70,7 +109,10 @@ const ProductItems = ({ data }: { data: any }) => {
                     </div>
                   )}
 
-                  <div className="position-relative overflow-hidden rounded-2 mb-2 d-flex justify-content-center align-items-center">
+                  <div
+                    className="position-relative overflow-hidden rounded-2 mb-2 d-flex justify-content-center align-items-center"
+                    style={{ height: "140px" }}
+                  >
                     <Image
                       src={
                         imageUrl
@@ -78,12 +120,14 @@ const ProductItems = ({ data }: { data: any }) => {
                           : ""
                       }
                       className="img-fluid"
-                      height={120}
-                      width={120}
+                      height={100}
+                      width={100}
                       style={{
                         objectFit: "contain",
                         transition: "transform 0.3s ease-in-out",
                         transform: isHovered ? "scale(1.05)" : "scale(1)",
+                        maxHeight: "120px",
+                        maxWidth: "120px",
                       }}
                       alt={product.title}
                     />
@@ -126,15 +170,22 @@ const ProductItems = ({ data }: { data: any }) => {
                     >
                       {product.title}
                     </h6>
-
+                    <p
+                      className="mt-1 mb-2  lh-sm"
+                      style={{
+                        color: isHovered ? "rgb(220, 53, 69)" : "#212529",
+                        transition: "color 0.2s ease-in-out",
+                        fontSize: "0.9rem",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    ></p>
                     {/* Author & Rating */}
                     <div className="review-content d-flex align-items-center justify-content-between mb-2">
-                      <p
-                        className="mb-0 text-muted"
-                        style={{ fontSize: "0.75rem" }}
-                      >
-                        by {product.author}
-                      </p>
                       <div className="rating text-warning d-flex align-items-center">
                         {[...Array(5)].map((_, i) => (
                           <span
@@ -182,36 +233,9 @@ const ProductItems = ({ data }: { data: any }) => {
                           e.target.style.borderColor = "rgb(220, 53, 69)";
                           e.target.style.color = "rgb(220, 53, 69)";
                         }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log("Add to cart:", product.title);
-                        }}
+                        onClick={(e) => handleAddToCart(e, product)}
                       >
-                        🛒 Cart
-                      </button>
-                      <button
-                        className="btn btn-outline-danger btn-sm flex-fill"
-                        style={{
-                          fontSize: "0.75rem",
-                          transition: "all 0.2s ease-in-out",
-                          padding: "6px 8px",
-                        }}
-                        onMouseEnter={(e: any) => {
-                          e.target.style.backgroundColor = "rgb(220, 53, 69)";
-                          e.target.style.borderColor = "rgb(220, 53, 69)";
-                          e.target.style.color = "white";
-                        }}
-                        onMouseLeave={(e: any) => {
-                          e.target.style.backgroundColor = "transparent";
-                          e.target.style.borderColor = "rgb(220, 53, 69)";
-                          e.target.style.color = "rgb(220, 53, 69)";
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log("Add to wishlist:", product.title);
-                        }}
-                      >
-                        ❤️ Wishlist
+                        🛒 Buy Now
                       </button>
                     </div>
                   </div>
@@ -221,6 +245,15 @@ const ProductItems = ({ data }: { data: any }) => {
           })}
         </div>
       </div>
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastConfig.message}
+        type="success"
+        isVisible={toastConfig.isVisible}
+        onClose={() => setToastConfig({ message: "", isVisible: false })}
+        duration={2000}
+      />
 
       <style jsx>{`
         @keyframes fadeIn {

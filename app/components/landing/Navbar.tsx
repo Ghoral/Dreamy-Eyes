@@ -10,10 +10,12 @@ import React, {
 import ModalCart from "../modals/ModalCart";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useCart } from "../../context/CartContext";
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { state: cartState } = useCart();
   const [navLinks, setNavLinks] = useState([
     { href: "/", label: "Home", isActive: false },
     { href: "/shop", label: "Shop", isActive: false },
@@ -22,6 +24,7 @@ const Navbar = () => {
   ]);
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const closeOffcanvas = useCallback(() => {
     setIsOffcanvasOpen(false);
@@ -38,6 +41,15 @@ const Navbar = () => {
       document.body.style.overflow = "unset";
     };
   }, [isOffcanvasOpen]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: any) => {
@@ -89,21 +101,39 @@ const Navbar = () => {
     <>
       <nav
         id="header-nav"
-        className="navbar navbar-expand-lg py-3 position-relative"
+        className={`navbar navbar-expand-lg py-3 position-fixed w-100 top-0 ${
+          isScrolled ? 'navbar-scrolled' : ''
+        }`}
         role="navigation"
         aria-label="Main navigation"
+        style={{ 
+          zIndex: 1030,
+          transition: 'all 0.3s ease',
+          backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+          backdropFilter: isScrolled ? 'blur(10px)' : 'blur(5px)',
+          boxShadow: isScrolled ? '0 2px 20px rgba(0,0,0,0.1)' : '0 1px 10px rgba(0,0,0,0.05)'
+        }}
       >
         <div className="container">
           <Link
-            className="navbar-brand fw-bold"
+            className="navbar-brand fw-bold d-flex align-items-center"
             href="/"
             aria-label="Dreamy Eyes - Home"
           >
-            Dreamy Eyes
+            <Image
+              src="/images/main-logo.png"
+              className="logo me-2"
+              alt="Dreamy Eyes logo"
+              width={40}
+              height={40}
+              priority
+              sizes="40px"
+            />
+            <span className="text-primary">Dreamy Eyes</span>
           </Link>
 
           <button
-            className={`navbar-toggler hamburger-menu d-lg-none ${
+            className={`navbar-toggler border-0 d-lg-none ${
               isOffcanvasOpen ? "active" : ""
             }`}
             type="button"
@@ -221,12 +251,13 @@ const Navbar = () => {
               ))}
             </ul>
           </div>
+          
           <div className="user-items d-none d-lg-flex">
-            <ul className="d-flex justify-content-end list-unstyled mb-0">
+            <ul className="d-flex justify-content-end list-unstyled mb-0 align-items-center">
               <li className="pe-3">
                 <button
                   type="button"
-                  className="btn btn-link p-2 text-dark"
+                  className="btn btn-link p-2 text-dark position-relative"
                   aria-label="User account"
                   onClick={() => handleClickNavItems("/login")}
                 >
@@ -249,15 +280,20 @@ const Navbar = () => {
                     style={{ fontSize: 20 }}
                     aria-hidden="true"
                   />
-                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-                    2<span className="visually-hidden">items in cart</span>
-                  </span>
+                  {cartState.totalItems > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                      {cartState.totalItems}<span className="visually-hidden">items in cart</span>
+                    </span>
+                  )}
                 </button>
               </li>
             </ul>
           </div>
         </div>
       </nav>
+
+      {/* Spacer to prevent content from hiding behind fixed navbar */}
+      <div style={{ height: '80px' }}></div>
 
       <ModalCart
         isOpen={isCartOpen}
@@ -291,29 +327,31 @@ const Navbar = () => {
           transform-origin: center;
         }
 
-        .hamburger-menu.active .hamburger-line:nth-child(1) {
+        .navbar-toggler.active .hamburger-line:nth-child(1) {
           transform: rotate(45deg) translate(6px, 6px);
         }
 
-        .hamburger-menu.active .hamburger-line:nth-child(2) {
+        .navbar-toggler.active .hamburger-line:nth-child(2) {
           opacity: 0;
         }
 
-        .hamburger-menu.active .hamburger-line:nth-child(3) {
+        .navbar-toggler.active .hamburger-line:nth-child(3) {
           transform: rotate(-45deg) translate(6px, -6px);
         }
 
-        .hamburger-menu:hover .hamburger-line {
+        .navbar-toggler:hover .hamburger-line {
           background-color: #007bff;
         }
 
-        /* Enhanced Offcanvas Styles */
+        .navbar-scrolled {
+          backdrop-filter: blur(15px);
+        }
+
         .offcanvas {
           transition: transform 0.3s ease-in-out;
           width: 320px !important;
         }
 
-        /* Hide offcanvas on desktop */
         @media (min-width: 992px) {
           .offcanvas,
           .offcanvas-backdrop {
@@ -325,7 +363,6 @@ const Navbar = () => {
           background-color: rgba(0, 0, 0, 0.5);
         }
 
-        /* Mobile Navigation Styles */
         .mobile-nav .nav-link {
           font-size: 1.1rem;
           font-weight: 500;
@@ -351,100 +388,43 @@ const Navbar = () => {
           background-color: #007bff;
         }
 
-        /* Enhanced Dropdown Styles */
-        .dropdown-enhanced .dropdown-toggle {
-          font-size: 1.1rem;
+        .navbar-nav .nav-link {
+          position: relative;
+          transition: color 0.3s ease;
           font-weight: 500;
-          color: #333;
-          border-bottom: 1px solid #f8f9fa;
+        }
+
+        .navbar-nav .nav-link::after {
+          content: "";
+          position: absolute;
+          width: 0;
+          height: 2px;
+          bottom: -5px;
+          left: 50%;
           transition: all 0.3s ease;
+          transform: translateX(-50%);
+          background-color: #007bff;
         }
 
-        .dropdown-enhanced .dropdown-toggle:hover {
-          color: #007bff;
-          background-color: #f8f9fa;
+        .navbar-nav .nav-link:hover::after,
+        .navbar-nav .nav-link.active::after {
+          width: 100%;
         }
 
-        .dropdown-menu-enhanced {
-          background-color: #f8f9fa;
-          max-height: 0;
-          overflow: hidden;
-          transition: max-height 0.3s ease;
-        }
-
-        .dropdown-menu-enhanced.show {
-          max-height: 400px;
-        }
-
-        .dropdown-item-enhanced {
-          display: block;
-          color: #666;
-          text-decoration: none;
-          font-size: 0.95rem;
-          transition: all 0.2s ease;
-          border-bottom: 1px solid #e9ecef;
-        }
-
-        .dropdown-item-enhanced:hover {
-          color: #007bff;
-          background-color: #e9ecef;
-        }
-
-        /* Enhanced Close Button */
-        .btn-close-enhanced {
-          background-size: 1.2em;
-          opacity: 0.8;
+        .btn-link {
           transition: all 0.2s ease;
         }
 
-        .btn-close-enhanced:hover {
-          opacity: 1;
+        .btn-link:hover {
+          transform: translateY(-2px);
+        }
+
+        .logo {
+          transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover .logo {
           transform: scale(1.1);
-        }
-
-        /* Mobile User Actions */
-        .mobile-user-actions {
-          background-color: #f8f9fa;
-        }
-
-        /* Desktop Navigation Improvements */
-        @media (min-width: 992px) {
-          .navbar-nav .nav-link {
-            position: relative;
-            transition: color 0.3s ease;
-          }
-
-          .navbar-nav .nav-link::after {
-            content: "";
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -5px;
-            left: 50%;
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-          }
-
-          .navbar-nav .nav-link:hover::after,
-          .navbar-nav .nav-link.active::after {
-            width: 100%;
-          }
-
-          .dropdown-menu {
-            border: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-          }
-        }
-
-        /* Smooth Animations */
-        * {
-          -webkit-tap-highlight-color: transparent;
-        }
-
-        .nav-link,
-        .btn {
-          transition: all 0.2s ease;
         }
       `}</style>
     </>
