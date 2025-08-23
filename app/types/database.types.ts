@@ -20,33 +20,33 @@ export type Database = {
           country: string | null
           created_at: string
           id: number
+          is_primary: boolean | null
           state: string | null
           street: string | null
           user_id: string | null
           zip: string | null
-          is_primary: boolean | null
         }
         Insert: {
           city?: string | null
           country?: string | null
           created_at?: string
           id?: number
+          is_primary?: boolean | null
           state?: string | null
           street?: string | null
           user_id?: string | null
           zip?: string | null
-          is_primary?: boolean | null
         }
         Update: {
           city?: string | null
           country?: string | null
           created_at?: string
           id?: number
+          is_primary?: boolean | null
           state?: string | null
           street?: string | null
           user_id?: string | null
           zip?: string | null
-          is_primary?: boolean | null
         }
         Relationships: [
           {
@@ -58,7 +58,7 @@ export type Database = {
           },
         ]
       }
-      color: {
+      colors: {
         Row: {
           created_at: string
           id: string
@@ -79,26 +79,41 @@ export type Database = {
         }
         Relationships: []
       }
-      order: {
+      orders: {
         Row: {
+          address_id: number | null
+          color: string | null
           created_at: string
           id: string
+          order_number: number | null
           product_id: string | null
+          quantity: number | null
           status: string | null
+          total_amount: number | null
           user_id: string | null
         }
         Insert: {
+          address_id?: number | null
+          color?: string | null
           created_at?: string
           id?: string
+          order_number?: number | null
           product_id?: string | null
+          quantity?: number | null
           status?: string | null
+          total_amount?: number | null
           user_id?: string | null
         }
         Update: {
+          address_id?: number | null
+          color?: string | null
           created_at?: string
           id?: string
+          order_number?: number | null
           product_id?: string | null
+          quantity?: number | null
           status?: string | null
+          total_amount?: number | null
           user_id?: string | null
         }
         Relationships: [
@@ -106,12 +121,26 @@ export type Database = {
             foreignKeyName: "order_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "product"
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "address"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      product: {
+      products: {
         Row: {
           color_quantity: Json | null
           created_at: string
@@ -215,6 +244,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_orders_and_update_stock: {
+        Args: {
+          p_address_id: string
+          p_items: Json
+          p_order_number: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      get_available_products: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_orders: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_orders_profiles_stats: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
       get_product_details: {
         Args: { product_id?: string }
         Returns: Json

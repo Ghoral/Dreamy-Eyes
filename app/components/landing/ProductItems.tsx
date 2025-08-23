@@ -8,6 +8,8 @@ import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
 
 const ProductItems = ({ data }: { data: any }) => {
+  console.log("data", data);
+
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [toastConfig, setToastConfig] = useState<{
     message: string;

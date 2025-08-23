@@ -13,3 +13,14 @@ export const getFirstImageUrl = (images: string): string | null => {
     return null;
   }
 };
+
+export const generateUniqueCode = () => {
+  const now = Date.now();
+  const random = Math.floor(Math.random() * 1000);
+
+  // keep it as a number
+  const uniqueNumber = Number(`${now}${random}`);
+
+  // base36 string, max 7 chars
+  return uniqueNumber.toString(36).slice(-7);
+};

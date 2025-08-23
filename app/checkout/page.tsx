@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
+import { generateUniqueCode } from "../util";
 
 interface Address {
   id: number;
@@ -60,7 +61,7 @@ export default function CheckoutPage() {
           .from("address")
           .select("*")
           .eq("user_id", user.id);
-          
+
         if (allAddressesData && allAddressesData.length > 0) {
           setAddresses(allAddressesData as Address[]);
           setSelectedAddressId(allAddressesData[0].id.toString());
@@ -75,6 +76,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("e", e);
 
     if (!selectedAddressId) {
       setError("Please select a shipping address");
@@ -95,24 +97,15 @@ export default function CheckoutPage() {
       if (userError || !user) {
         throw new Error("User not authenticated");
       }
+      const order_number = generateUniqueCode();
 
-      // Insert orders for each cart item
-      const orderPromises = cartState.items.map(async (item) => {
-        const { error } = await (supabase as any).from("orders").insert({
-          productId: item.id,
-          quantity: item.quantity,
-          color: item.color || null,
-          userId: user.id,
-        });
-
-        if (error) {
-          throw error;
-        }
+      const { error } = await supabase.rpc("create_orders_and_update_stock", {
+        p_user_id: user.id,
+        p_address_id: selectedAddressId,
+        p_order_number: order_number,
+        p_items: JSON.stringify(cartState.items),
       });
 
-      await Promise.all(orderPromises);
-
-      // Clear cart and redirect to success page
       clearCart();
       router.push("/checkout/success");
     } catch (error) {
@@ -154,10 +147,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
-  const selectedAddress = addresses.find(
-    (addr) => addr.id === selectedAddressId
-  );
 
   return (
     <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
@@ -257,7 +246,10 @@ export default function CheckoutPage() {
 
                 {/* Add New Address Link */}
                 <div className="text-center mb-4">
-                  <Link href="/shipping-address" className="btn btn-outline-primary">
+                  <Link
+                    href="/shipping-address"
+                    className="btn btn-outline-primary"
+                  >
                     <i className="bi bi-plus me-2"></i>
                     Add New Address
                   </Link>

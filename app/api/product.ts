@@ -5,8 +5,9 @@ import { createSupabaseServerClient } from "../services/supabase/server/supabase
 export async function get_all_products() {
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase.from("product").select("*");
-  console.log("data", data);
+  const { data, error } = await supabase.rpc("get_available_products");
+
+  console.log("data", data, error);
 
   if (error) {
     return {
