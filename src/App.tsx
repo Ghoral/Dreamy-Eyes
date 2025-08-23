@@ -13,6 +13,7 @@ import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
+import Orders from "./pages/Tables/Orders";
 import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path="/form/product" element={<ProductForm />} />
         {/* Tables */}
         <Route path="/basic-tables" element={<BasicTables />} />
+        <Route path="/orders" element={<Orders />} />
         {/* UI Elements */}
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/avatars" element={<Avatars />} />

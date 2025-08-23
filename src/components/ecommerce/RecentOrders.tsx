@@ -5,47 +5,11 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { useDashboardData } from "../../hooks/useDashboardData";
 
 // Define the TypeScript interface for orders by country
-interface OrderByCountry {
-  country: string;
-  count: number;
-  percentage: number;
-}
 
-export default function RecentOrders() {
-  const { ordersByCountry, loading, error } = useDashboardData();
-
-  if (loading) {
-    return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-        <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Orders by Country
-            </h3>
-          </div>
-        </div>
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center justify-between py-3">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-gray-200 rounded-full dark:bg-gray-700"></div>
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded dark:bg-gray-700 w-20"></div>
-                  <div className="h-3 bg-gray-200 rounded dark:bg-gray-700 w-16"></div>
-                </div>
-              </div>
-              <div className="h-4 bg-gray-200 rounded dark:bg-gray-700 w-12"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
+export default function RecentOrders({ data }: { data: any[] }) {
+  if (data.length === 0) {
     return (
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
         <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -61,21 +25,6 @@ export default function RecentOrders() {
       </div>
     );
   }
-
-  // Calculate total orders for percentage calculation
-  const totalOrders = ordersByCountry.reduce(
-    (sum, item) => sum + item.count,
-    0
-  );
-
-  // Add percentage to each country
-  const ordersWithPercentage: OrderByCountry[] = ordersByCountry.map(
-    (item) => ({
-      ...item,
-      percentage:
-        totalOrders > 0 ? Math.round((item.count / totalOrders) * 100) : 0,
-    })
-  );
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
@@ -150,24 +99,12 @@ export default function RecentOrders() {
               >
                 Orders
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Percentage
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Distribution
-              </TableCell>
             </TableRow>
           </TableHeader>
 
           {/* Table Body */}
           <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-            {ordersWithPercentage.map((item, index) => (
+            {data.map((item, index) => (
               <TableRow key={index} className="">
                 <TableCell className="py-3">
                   <div className="flex items-center gap-3">
@@ -181,29 +118,13 @@ export default function RecentOrders() {
                         {item.country}
                       </p>
                       <span className="text-gray-500 text-theme-xs dark:text-gray-400">
-                        {item.count} orders
+                        {item.order_count} orders
                       </span>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="py-3 text-gray-800 text-theme-sm font-medium dark:text-white/90">
-                  {item.count.toLocaleString()}
-                </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {item.percentage}%
-                </TableCell>
-                <TableCell className="py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="relative block h-2 w-20 rounded-sm bg-gray-200 dark:bg-gray-800">
-                      <div
-                        className="absolute left-0 top-0 flex h-full items-center justify-center rounded-sm bg-brand-500 text-xs font-medium text-white"
-                        style={{ width: `${item.percentage}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[30px]">
-                      {item.percentage}%
-                    </span>
-                  </div>
+                  {item.order_count.toLocaleString()}
                 </TableCell>
               </TableRow>
             ))}

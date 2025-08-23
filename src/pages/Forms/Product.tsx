@@ -7,7 +7,7 @@ import { Editor } from "@tinymce/tinymce-react";
 import SpecificationsForm from "../Components/SpecificationForm";
 import { IProduct } from "../../interface/product";
 import { productValidationSchema } from "../../validation/product";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabaseClient } from "../../service/supabase";
 import { showCustomToastError } from "../../utils/toast";
 import MultiColorSelector from "../../components/common/ColorPicker";
