@@ -33,11 +33,6 @@ const validationSchema = Yup.object({
     .matches(/^[0-9+\-\s()]+$/, "Invalid phone number format")
     .min(10, "Phone number must be at least 10 digits")
     .required("Phone number is required"),
-  address: Yup.string().required("Address is required"),
-  city: Yup.string().required("City is required"),
-  state: Yup.string().required("State is required"),
-  zipCode: Yup.string().required("ZIP code is required"),
-  country: Yup.string().required("Country is required"),
 });
 
 export default function RegisterPage() {
@@ -54,11 +49,6 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     phone: "",
-    address: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    country: "India",
   };
 
   const handleSubmit = async (
@@ -97,6 +87,7 @@ export default function RegisterPage() {
             first_name: values.firstName,
             last_name: values.lastName,
             phone: values.phone,
+            mobile_number: values.phone,
           },
         },
       });
@@ -105,42 +96,10 @@ export default function RegisterPage() {
         setError(signUpError.message);
         return;
       }
-      console.log("ook", {
-        first_name: values.firstName,
-        last_name: values.lastName,
-        phone: values.phone,
-        country: values.country,
-        city: values.city,
-        state: values.state,
-        zip: values.zipCode,
-        street: values.address,
-      });
-
-      const { data: profileData, error: profileError } =
-        await supabaseBrowserClient.auth.signUp({
-          email: values.email,
-          password: values.password,
-          options: {
-            data: {
-              first_name: values.firstName,
-              last_name: values.lastName,
-              phone: values.phone,
-              country: values.country,
-              city: values.city,
-              state: values.state,
-              zip: values.zipCode,
-              street: values.address,
-            },
-          },
-        });
-      if (profileError) {
-        setError(profileError.message);
-        return;
-      }
-
-      // Redirect to login page
+      
+      // Redirect to login page with message about adding shipping address
       router.push(
-        "/login?message=Registration successful! Please check your email to verify your account."
+        "/login?message=Registration successful! Please check your email to verify your account. You'll need to add your shipping address after logging in."
       );
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
@@ -161,6 +120,7 @@ export default function RegisterPage() {
                 <div className="text-center mb-4">
                   <h2 className="fw-bold text-primary mb-2">Create Account</h2>
                   <p className="text-muted">Join us and start shopping today</p>
+                  <p className="text-muted small">You'll be asked to add your shipping address after registration</p>
                 </div>
 
                 {/* Error Message */}
@@ -361,142 +321,7 @@ export default function RegisterPage() {
                         </div>
                       </div>
 
-                      {/* Address Information */}
-                      <div className="mb-4">
-                        <h5 className="fw-semibold mb-3">Shipping Address</h5>
-                        <div className="row g-3">
-                          <div className="col-12">
-                            <label
-                              htmlFor="address"
-                              className="form-label fw-semibold"
-                            >
-                              Street Address *
-                            </label>
-                            <Field
-                              type="text"
-                              className={`form-control ${
-                                errors.address && touched.address
-                                  ? "is-invalid"
-                                  : ""
-                              }`}
-                              id="address"
-                              name="address"
-                              placeholder="Enter your street address"
-                            />
-                            <ErrorMessage
-                              name="address"
-                              component="div"
-                              className="invalid-feedback d-block"
-                            />
-                          </div>
-                          <div className="col-md-6">
-                            <label
-                              htmlFor="city"
-                              className="form-label fw-semibold"
-                            >
-                              City *
-                            </label>
-                            <Field
-                              type="text"
-                              className={`form-control ${
-                                errors.city && touched.city ? "is-invalid" : ""
-                              }`}
-                              id="city"
-                              name="city"
-                              placeholder="Enter your city"
-                            />
-                            <ErrorMessage
-                              name="city"
-                              component="div"
-                              className="invalid-feedback d-block"
-                            />
-                          </div>
-                          <div className="col-md-3">
-                            <label
-                              htmlFor="state"
-                              className="form-label fw-semibold"
-                            >
-                              State *
-                            </label>
-                            <Field
-                              type="text"
-                              className={`form-control ${
-                                errors.state && touched.state
-                                  ? "is-invalid"
-                                  : ""
-                              }`}
-                              id="state"
-                              name="state"
-                              placeholder="State"
-                            />
-                            <ErrorMessage
-                              name="state"
-                              component="div"
-                              className="invalid-feedback d-block"
-                            />
-                          </div>
-                          <div className="col-md-3">
-                            <label
-                              htmlFor="zipCode"
-                              className="form-label fw-semibold"
-                            >
-                              ZIP Code *
-                            </label>
-                            <Field
-                              type="text"
-                              className={`form-control ${
-                                errors.zipCode && touched.zipCode
-                                  ? "is-invalid"
-                                  : ""
-                              }`}
-                              id="zipCode"
-                              name="zipCode"
-                              placeholder="ZIP Code"
-                            />
-                            <ErrorMessage
-                              name="zipCode"
-                              component="div"
-                              className="invalid-feedback d-block"
-                            />
-                          </div>
-                          <div className="col-md-6">
-                            <label
-                              htmlFor="country"
-                              className="form-label fw-semibold"
-                            >
-                              Country *
-                            </label>
-                            <Field
-                              as="select"
-                              className={`form-select ${
-                                errors.country && touched.country
-                                  ? "is-invalid"
-                                  : ""
-                              }`}
-                              id="country"
-                              name="country"
-                            >
-                              <option value="India">India</option>
-                              <option value="Nepal">Nepal</option>
-                              <option value="United States">
-                                United States
-                              </option>
-                              <option value="Canada">Canada</option>
-                              <option value="United Kingdom">
-                                United Kingdom
-                              </option>
-                              <option value="Germany">Germany</option>
-                              <option value="France">France</option>
-                              <option value="Australia">Australia</option>
-                            </Field>
-                            <ErrorMessage
-                              name="country"
-                              component="div"
-                              className="invalid-feedback d-block"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      {/* Address Information section removed */}
 
                       {/* Submit Button */}
                       <div className="d-grid mb-4">

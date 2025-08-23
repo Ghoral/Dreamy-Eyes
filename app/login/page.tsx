@@ -37,9 +37,28 @@ export default function LoginPage() {
 
       if (error) {
         setError(error.message);
-      } else {
-        router.push("/");
+        return;
       }
+      
+      // Check if profile is complete
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('profile_completed')
+          .eq('id', user.id)
+          .single();
+        
+        // If profile is not complete, redirect to shipping address page
+        if (!profileData || profileData.profile_completed !== true) {
+          router.push("/shipping-address");
+          return;
+        }
+      }
+      
+      // Profile is complete, redirect to home
+      router.push("/");
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {

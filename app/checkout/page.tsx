@@ -7,13 +7,14 @@ import Link from "next/link";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
 
 interface Address {
-  id: string;
-  address: string;
+  id: number;
+  street: string;
   city: string;
   state: string;
-  zipCode: string;
+  zip: string;
   country: string;
-  isPrimary: boolean;
+  user_id: string;
+  created_at: string;
 }
 
 export default function CheckoutPage() {
@@ -43,22 +44,14 @@ export default function CheckoutPage() {
 
       // Load user addresses
       const { data: addressesData } = await (supabase as any)
-        .from("addresses")
+        .from("address")
         .select("*")
-        .eq("userId", user.id)
-        .order("isPrimary", { ascending: false });
+        .eq("user_id", user.id);
 
       if (addressesData && addressesData.length > 0) {
         setAddresses(addressesData as Address[]);
-        // Auto-select primary address if available
-        const primaryAddress = addressesData.find(
-          (addr: any) => addr.isPrimary
-        );
-        if (primaryAddress) {
-          setSelectedAddressId(primaryAddress.id);
-        } else {
-          setSelectedAddressId(addressesData[0].id);
-        }
+        // Select the first address since there's no isPrimary field in the schema
+        setSelectedAddressId(addressesData[0].id.toString());
       }
     } catch (error) {
       setError("Failed to load addresses");
@@ -223,17 +216,12 @@ export default function CheckoutPage() {
                               >
                                 <div className="d-flex justify-content-between align-items-start">
                                   <div>
-                                    {address.isPrimary && (
-                                      <span className="badge bg-primary mb-2">
-                                        Primary Address
-                                      </span>
-                                    )}
                                     <p className="mb-1 fw-semibold">
-                                      {address.address}
+                                      {address.street}
                                     </p>
                                     <p className="mb-1 text-muted">
                                       {address.city}, {address.state}{" "}
-                                      {address.zipCode}
+                                      {address.zip}
                                     </p>
                                     <p className="mb-0 text-muted">
                                       {address.country}
