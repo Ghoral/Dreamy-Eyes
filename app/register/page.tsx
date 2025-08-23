@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
+import { supabaseBrowserClient } from "../services/supabase/client/supabaseBrowserClient";
 
 const validationSchema = Yup.object({
   firstName: Yup.string()
@@ -69,10 +69,8 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      const supabase = createSupabaseClient();
-
       // Check if email already exists
-      const { data: existingProfile } = await (supabase as any)
+      const { data: existingProfile } = await supabaseBrowserClient
         .from("profiles")
         .select("email")
         .eq("email", values.email)
@@ -91,7 +89,7 @@ export default function RegisterPage() {
       const {
         data: { user },
         error: signUpError,
-      } = await supabase.auth.signUp({
+      } = await supabaseBrowserClient.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
@@ -110,10 +108,11 @@ export default function RegisterPage() {
 
       if (user) {
         // Insert user profile with address information
-        const { error: profileError } = await (supabase as any)
+        const { error: profileError } = await supabaseBrowserClient
           .from("profiles")
           .insert({
             id: user.id,
+            email: values.email,
             first_name: values.firstName,
             last_name: values.lastName,
             role: "user",
@@ -124,9 +123,10 @@ export default function RegisterPage() {
             street: values.address,
             mobile_number: values.phone,
           });
+        console.log("profileError", profileError);
 
         if (profileError) {
-          console.error("Profile creation error:", profileError);
+          return;
         }
 
         // Redirect to login page
