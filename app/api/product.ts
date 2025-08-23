@@ -1,13 +1,11 @@
 "use server";
 
-import { createSupabaseServerClient } from "../services/supabase/server/supabaseServerClient";
+import { supabaseBrowserClient } from "../services/supabase/client/supabaseBrowserClient";
 
 export async function get_all_products() {
-  const supabase = await createSupabaseServerClient();
-
-  const { data, error } = await supabase.rpc("get_available_products");
-
-  console.log("data", data, error);
+  const { data, error } = await await supabaseBrowserClient.rpc(
+    "get_available_products"
+  );
 
   if (error) {
     return {

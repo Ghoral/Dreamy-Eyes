@@ -103,9 +103,12 @@ export default function CheckoutPage() {
         p_user_id: user.id,
         p_address_id: selectedAddressId,
         p_order_number: order_number,
-        p_items: JSON.stringify(cartState.items),
+        p_items: cartState.items as any,
       });
 
+      if (error) {
+        return;
+      }
       clearCart();
       router.push("/checkout/success");
     } catch (error) {

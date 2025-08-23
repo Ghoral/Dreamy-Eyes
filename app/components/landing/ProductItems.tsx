@@ -8,8 +8,6 @@ import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
 
 const ProductItems = ({ data }: { data: any }) => {
-  console.log("data", data);
-
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [toastConfig, setToastConfig] = useState<{
     message: string;
@@ -235,7 +233,7 @@ const ProductItems = ({ data }: { data: any }) => {
                           e.target.style.borderColor = "rgb(220, 53, 69)";
                           e.target.style.color = "rgb(220, 53, 69)";
                         }}
-                        onClick={(e) => handleAddToCart(e, product)}
+                        onClick={(e) => handleProductClick(product)}
                       >
                         🛒 Buy Now
                       </button>

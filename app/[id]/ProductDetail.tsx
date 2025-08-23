@@ -10,16 +10,10 @@ const ProductDetail = ({ product }: { product: any }) => {
     "https://images.unsplash.com/photo-1528148343865-51218c4a13e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.0.3&q=80&w=1080",
   ];
 
-  // Parse color data from product
-  const colorOptions = product.colors
-    ? JSON.parse(product.colors)
-    : [
-        { color: "#2563eb", quantity: "1", label: "grey" },
-        { color: "#61708f", quantity: "2", label: "blue" },
-      ];
-
   const [mainImage, setMainImage] = useState(images[0]);
-  const [selectedColor, setSelectedColor] = useState(colorOptions[0] || null);
+  const [selectedColor, setSelectedColor] = useState(
+    product?.color_quantity?.[0] || null
+  );
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
 
@@ -195,57 +189,59 @@ const ProductDetail = ({ product }: { product: any }) => {
               <div className="color-section mb-4">
                 <h6 className="fw-semibold mb-3">Color</h6>
                 <div className="d-flex gap-3 flex-wrap">
-                  {colorOptions.map((colorOption: any, index: number) => {
-                    const isAvailable = parseInt(colorOption.quantity) > 0;
-                    const isSelected =
-                      selectedColor?.label === colorOption.label;
-                    const isDisabled = !isAvailable;
+                  {product?.color_quantity.map(
+                    (colorOption: any, index: number) => {
+                      const isAvailable = parseInt(colorOption.quantity) > 0;
+                      const isSelected =
+                        selectedColor?.label === colorOption.label;
+                      const isDisabled = !isAvailable;
 
-                    return (
-                      <div key={index} className="text-center">
-                        <input
-                          type="radio"
-                          className="btn-check"
-                          name="color"
-                          id={colorOption.label}
-                          autoComplete="off"
-                          checked={isSelected}
-                          onChange={() => handleColorSelect(colorOption)}
-                          disabled={isDisabled}
-                        />
-                        <label
-                          className={`btn rounded-pill px-4 py-2 ${
-                            isSelected
-                              ? "btn-primary"
-                              : isDisabled
-                              ? "btn-secondary disabled"
-                              : "btn-outline-secondary"
-                          }`}
-                          htmlFor={colorOption.label}
-                          style={{
-                            minWidth: "80px",
-                            transition: "all 0.3s ease",
-                            opacity: isDisabled ? 0.6 : 1,
-                            cursor: isDisabled ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          <div className="d-flex align-items-center gap-2">
-                            <div
-                              className="rounded-circle"
-                              style={{
-                                width: "20px",
-                                height: "20px",
-                                backgroundColor: colorOption.color,
-                                border: "2px solid #fff",
-                                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                              }}
-                            ></div>
-                            <span>{colorOption.label}</span>
-                          </div>
-                        </label>
-                      </div>
-                    );
-                  })}
+                      return (
+                        <div key={index} className="text-center">
+                          <input
+                            type="radio"
+                            className="btn-check"
+                            name="color"
+                            id={colorOption.label}
+                            autoComplete="off"
+                            checked={isSelected}
+                            onChange={() => handleColorSelect(colorOption)}
+                            disabled={isDisabled}
+                          />
+                          <label
+                            className={`btn rounded-pill px-4 py-2 ${
+                              isSelected
+                                ? "btn-primary"
+                                : isDisabled
+                                ? "btn-secondary disabled"
+                                : "btn-outline-secondary"
+                            }`}
+                            htmlFor={colorOption.label}
+                            style={{
+                              minWidth: "80px",
+                              transition: "all 0.3s ease",
+                              opacity: isDisabled ? 0.6 : 1,
+                              cursor: isDisabled ? "not-allowed" : "pointer",
+                            }}
+                          >
+                            <div className="d-flex align-items-center gap-2">
+                              <div
+                                className="rounded-circle"
+                                style={{
+                                  width: "20px",
+                                  height: "20px",
+                                  backgroundColor: colorOption.color,
+                                  border: "2px solid #fff",
+                                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                }}
+                              ></div>
+                              <span>{colorOption.label}</span>
+                            </div>
+                          </label>
+                        </div>
+                      );
+                    }
+                  )}
                 </div>
               </div>
 
