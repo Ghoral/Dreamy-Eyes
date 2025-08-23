@@ -134,8 +134,13 @@ export default function ProfilePage() {
 
       if (!user) return;
 
-      // Note: The address table doesn't have an isPrimary field in the schema
-      // We'll skip the primary address logic since it's not supported in the current schema
+      // If setting as primary, update all other addresses to not be primary
+      if (addressForm.isPrimary) {
+        await (supabase as any)
+          .from('address')
+          .update({ is_primary: false })
+          .eq('user_id', user.id);
+      }
 
       if (addressForm.id) {
         // Update existing address
@@ -147,6 +152,7 @@ export default function ProfilePage() {
             state: addressForm.state,
             zip: addressForm.zip,
             country: addressForm.country,
+            is_primary: addressForm.isPrimary
           })
           .eq('id', addressForm.id);
 
@@ -165,6 +171,7 @@ export default function ProfilePage() {
             state: addressForm.state,
             zip: addressForm.zip,
             country: addressForm.country,
+            is_primary: addressForm.isPrimary
           });
 
         if (error) {
@@ -210,7 +217,7 @@ export default function ProfilePage() {
       state: address.state,
       zip: address.zip,
       country: address.country,
-      isPrimary: false, // Not in schema, but keeping for UI consistency
+      isPrimary: address.is_primary || false
     });
     setIsAddingAddress(true);
   };
@@ -418,7 +425,24 @@ export default function ProfilePage() {
                           <option value="Australia">Australia</option>
                         </select>
                       </div>
-                      {/* Note: Primary Address feature removed as it's not in the schema */}
+                      {/* Primary Address Checkbox */}
+                      <div className="form-check mb-3">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="isPrimary"
+                          checked={addressForm.isPrimary}
+                          onChange={(e) =>
+                            setAddressForm({
+                              ...addressForm,
+                              isPrimary: e.target.checked,
+                            })
+                          }
+                        />
+                        <label className="form-check-label" htmlFor="isPrimary">
+                          Set as primary address
+                        </label>
+                      </div>
                       <div className="d-flex gap-2">
                         <button
                           className="btn btn-primary"
@@ -442,7 +466,12 @@ export default function ProfilePage() {
                   <div className="row g-3">
                     {addresses.map((address) => (
                       <div key={address.id} className="col-12">
-                        <div className="card border">
+                        <div className="card border position-relative">
+                          {address.is_primary && (
+                            <div className="position-absolute top-0 end-0 mt-2 me-2">
+                              <span className="badge bg-success">Primary</span>
+                            </div>
+                          )}
                           <div className="card-body">
                             <div className="d-flex justify-content-between align-items-start mb-2">
                               <div>

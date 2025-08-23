@@ -15,6 +15,7 @@ interface Address {
   country: string;
   user_id: string;
   created_at: string;
+  is_primary: boolean;
 }
 
 export default function CheckoutPage() {
@@ -42,16 +43,28 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Load user addresses
+      // Load only primary addresses
       const { data: addressesData } = await (supabase as any)
         .from("address")
         .select("*")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .eq("is_primary", true);
 
       if (addressesData && addressesData.length > 0) {
         setAddresses(addressesData as Address[]);
-        // Select the first address since there's no isPrimary field in the schema
+        // Select the primary address
         setSelectedAddressId(addressesData[0].id.toString());
+      } else {
+        // If no primary address found, load all addresses as fallback
+        const { data: allAddressesData } = await (supabase as any)
+          .from("address")
+          .select("*")
+          .eq("user_id", user.id);
+          
+        if (allAddressesData && allAddressesData.length > 0) {
+          setAddresses(allAddressesData as Address[]);
+          setSelectedAddressId(allAddressesData[0].id.toString());
+        }
       }
     } catch (error) {
       setError("Failed to load addresses");
@@ -197,6 +210,11 @@ export default function CheckoutPage() {
                               : ""
                           }`}
                         >
+                          {address.is_primary && (
+                            <div className="position-absolute top-0 end-0 mt-2 me-2">
+                              <span className="badge bg-success">Primary</span>
+                            </div>
+                          )}
                           <div className="card-body">
                             <div className="form-check">
                               <input
@@ -239,7 +257,7 @@ export default function CheckoutPage() {
 
                 {/* Add New Address Link */}
                 <div className="text-center mb-4">
-                  <Link href="/profile" className="btn btn-outline-primary">
+                  <Link href="/shipping-address" className="btn btn-outline-primary">
                     <i className="bi bi-plus me-2"></i>
                     Add New Address
                   </Link>

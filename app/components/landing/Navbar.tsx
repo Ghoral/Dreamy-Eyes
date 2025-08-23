@@ -240,15 +240,58 @@ const Navbar = () => {
 
               <div className="mobile-user-actions border-top mt-auto p-4">
                 <div className="d-flex gap-3 justify-content-center">
-                  <button
-                    type="button"
-                    className="btn btn-outline-dark btn-sm flex-fill"
-                    aria-label="User account"
-                    onClick={handleLinkClick}
-                  >
-                    <i className="bi bi-person me-2" aria-hidden="true" />
-                    Account
-                  </button>
+                  {user ? (
+                    <div className="dropdown w-100">
+                      <button
+                        type="button"
+                        className="btn btn-outline-dark btn-sm flex-fill dropdown-toggle"
+                        aria-label="User account"
+                        onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <i className="bi bi-person me-2" aria-hidden="true" />
+                        Profile
+                      </button>
+                      <ul className={`dropdown-menu ${isAccountDropdownOpen ? 'show' : ''}`} style={{ minWidth: '200px' }}>
+                        <li>
+                          <Link 
+                            className="dropdown-item d-flex align-items-center gap-2" 
+                            href="/profile"
+                            onClick={() => {
+                              setIsAccountDropdownOpen(false);
+                              closeOffcanvas();
+                            }}
+                          >
+                            <i className="bi bi-person-circle"></i>
+                            Profile
+                          </Link>
+                        </li>
+                        <li><hr className="dropdown-divider" /></li>
+                        <li>
+                          <button 
+                            className="dropdown-item d-flex align-items-center gap-2 text-danger" 
+                            onClick={() => {
+                              handleSignOut();
+                              closeOffcanvas();
+                            }}
+                          >
+                            <i className="bi bi-box-arrow-right"></i>
+                            Sign Out
+                          </button>
+                        </li>
+                      </ul>
+                    </div>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="btn btn-outline-dark btn-sm flex-fill"
+                      onClick={closeOffcanvas}
+                    >
+                      <i className="bi bi-person me-2" aria-hidden="true" />
+                      Sign In
+                    </Link>
+                  )}
                   <button
                     type="button"
                     className="btn btn-primary btn-sm flex-fill"

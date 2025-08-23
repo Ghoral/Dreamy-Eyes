@@ -87,7 +87,6 @@ export default function RegisterPage() {
             first_name: values.firstName,
             last_name: values.lastName,
             phone: values.phone,
-            mobile_number: values.phone,
           },
         },
       });
@@ -97,6 +96,7 @@ export default function RegisterPage() {
         return;
       }
       
+    
       // Redirect to login page with message about adding shipping address
       router.push(
         "/login?message=Registration successful! Please check your email to verify your account. You'll need to add your shipping address after logging in."

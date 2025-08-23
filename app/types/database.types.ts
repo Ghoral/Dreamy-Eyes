@@ -24,6 +24,7 @@ export type Database = {
           street: string | null
           user_id: string | null
           zip: string | null
+          is_primary: boolean | null
         }
         Insert: {
           city?: string | null
@@ -34,6 +35,7 @@ export type Database = {
           street?: string | null
           user_id?: string | null
           zip?: string | null
+          is_primary?: boolean | null
         }
         Update: {
           city?: string | null
@@ -44,6 +46,7 @@ export type Database = {
           street?: string | null
           user_id?: string | null
           zip?: string | null
+          is_primary?: boolean | null
         }
         Relationships: [
           {

@@ -42,6 +42,7 @@ export default function ShippingAddressPage() {
     state: "",
     zipCode: "",
     country: "Nepal", // Default to Nepal
+    is_primary: false, // Add is_primary field with default false
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -110,6 +111,7 @@ export default function ShippingAddressPage() {
     state: string;
     zipCode: string;
     country: string;
+    is_primary: boolean;
   }
 
   // Define type for Formik submission handler
@@ -139,16 +141,26 @@ export default function ShippingAddressPage() {
         return;
       }
 
+      // If this is set as primary, update all other addresses to not be primary
+      if (values.is_primary) {
+        await supabase
+          .from('address')
+          .update({ is_primary: false })
+          .eq('user_id', user.id);
+      }
+
       // Insert address into address table
       const { error: addressError } = await supabase
         .from('address')
-        .update({
+        .insert({
+          user_id: user.id,
           street: values.address,
           city: values.city,
           state: values.state,
           zip: values.zipCode,
-          country: values.country
-        }).eq('user_id', user.id);
+          country: values.country,
+          is_primary: values.is_primary
+        });
 
       if (addressError) {
         setError("Failed to save address: " + addressError.message);
@@ -286,6 +298,21 @@ export default function ShippingAddressPage() {
                             placeholder="Enter your zip code"
                           />
                           <ErrorMessage name="zipCode" component="div" className="invalid-feedback" />
+                        </div>
+
+                        {/* Primary Address Checkbox */}
+                        <div className="col-12 mt-3">
+                          <div className="form-check">
+                            <Field
+                              type="checkbox"
+                              className="form-check-input"
+                              id="is_primary"
+                              name="is_primary"
+                            />
+                            <label className="form-check-label" htmlFor="is_primary">
+                              Set as primary address
+                            </label>
+                          </div>
                         </div>
                       </div>
 
