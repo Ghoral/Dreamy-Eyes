@@ -11,6 +11,7 @@ import ModalCart from "../modals/ModalCart";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext";
+import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -25,6 +26,31 @@ const Navbar = () => {
   const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  // Debug: Log cart state changes in Navbar
+  useEffect(() => {
+    console.log("Navbar - Cart state changed:", cartState);
+  }, [cartState]);
+
+  // Get current user
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = createSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = createSupabaseClient();
+    await supabase.auth.signOut();
+    setUser(null);
+    setIsAccountDropdownOpen(false);
+    router.push('/');
+  };
 
   const closeOffcanvas = useCallback(() => {
     setIsOffcanvasOpen(false);
@@ -47,8 +73,8 @@ const Navbar = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -102,16 +128,20 @@ const Navbar = () => {
       <nav
         id="header-nav"
         className={`navbar navbar-expand-lg py-3 position-fixed w-100 top-0 ${
-          isScrolled ? 'navbar-scrolled' : ''
+          isScrolled ? "navbar-scrolled" : ""
         }`}
         role="navigation"
         aria-label="Main navigation"
-        style={{ 
+        style={{
           zIndex: 1030,
-          transition: 'all 0.3s ease',
-          backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.98)',
-          backdropFilter: isScrolled ? 'blur(10px)' : 'blur(5px)',
-          boxShadow: isScrolled ? '0 2px 20px rgba(0,0,0,0.1)' : '0 1px 10px rgba(0,0,0,0.05)'
+          transition: "all 0.3s ease",
+          backgroundColor: isScrolled
+            ? "rgba(255, 255, 255, 0.95)"
+            : "rgba(255, 255, 255, 0.98)",
+          backdropFilter: isScrolled ? "blur(10px)" : "blur(5px)",
+          boxShadow: isScrolled
+            ? "0 2px 20px rgba(0,0,0,0.1)"
+            : "0 1px 10px rgba(0,0,0,0.05)",
         }}
       >
         <div className="container">
@@ -251,22 +281,75 @@ const Navbar = () => {
               ))}
             </ul>
           </div>
-          
+
           <div className="user-items d-none d-lg-flex">
             <ul className="d-flex justify-content-end list-unstyled mb-0 align-items-center">
               <li className="pe-3">
-                <button
-                  type="button"
-                  className="btn btn-link p-2 text-dark position-relative"
-                  aria-label="User account"
-                  onClick={() => handleClickNavItems("/login")}
-                >
-                  <i
-                    className="bi bi-person"
-                    style={{ fontSize: 20 }}
-                    aria-hidden="true"
-                  />
-                </button>
+                <div className="dropdown">
+                  <button
+                    type="button"
+                    className="btn btn-link p-2 text-dark position-relative dropdown-toggle"
+                    aria-label="User account"
+                    onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <i
+                      className="bi bi-person"
+                      style={{ fontSize: 20 }}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <ul className={`dropdown-menu ${isAccountDropdownOpen ? 'show' : ''}`} style={{ minWidth: '200px' }}>
+                    {user ? (
+                      <>
+                        <li>
+                          <Link 
+                            className="dropdown-item d-flex align-items-center gap-2" 
+                            href="/profile"
+                            onClick={() => setIsAccountDropdownOpen(false)}
+                          >
+                            <i className="bi bi-person-circle"></i>
+                            Profile
+                          </Link>
+                        </li>
+                        <li><hr className="dropdown-divider" /></li>
+                        <li>
+                          <button 
+                            className="dropdown-item d-flex align-items-center gap-2 text-danger" 
+                            onClick={handleSignOut}
+                          >
+                            <i className="bi bi-box-arrow-right"></i>
+                            Sign Out
+                          </button>
+                        </li>
+                      </>
+                    ) : (
+                      <>
+                        <li>
+                          <Link 
+                            className="dropdown-item d-flex align-items-center gap-2" 
+                            href="/login"
+                            onClick={() => setIsAccountDropdownOpen(false)}
+                          >
+                            <i className="bi bi-box-arrow-in-right"></i>
+                            Sign In
+                          </Link>
+                        </li>
+                        <li>
+                          <Link 
+                            className="dropdown-item d-flex align-items-center gap-2" 
+                            href="/register"
+                            onClick={() => setIsAccountDropdownOpen(false)}
+                          >
+                            <i className="bi bi-person-plus"></i>
+                            Register
+                          </Link>
+                        </li>
+                      </>
+                    )}
+                  </ul>
+                </div>
               </li>
               <li>
                 <button
@@ -282,7 +365,8 @@ const Navbar = () => {
                   />
                   {cartState.totalItems > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-                      {cartState.totalItems}<span className="visually-hidden">items in cart</span>
+                      {cartState.totalItems}
+                      <span className="visually-hidden">items in cart</span>
                     </span>
                   )}
                 </button>
@@ -293,7 +377,7 @@ const Navbar = () => {
       </nav>
 
       {/* Spacer to prevent content from hiding behind fixed navbar */}
-      <div style={{ height: '80px' }}></div>
+      <div style={{ height: "80px" }}></div>
 
       <ModalCart
         isOpen={isCartOpen}

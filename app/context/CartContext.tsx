@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useReducer, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  ReactNode,
+  useEffect,
+  useState,
+} from "react";
 
 export interface CartItem {
   id: string | number;
@@ -27,7 +34,8 @@ type CartAction =
       type: "UPDATE_QUANTITY";
       payload: { id: string | number; quantity: number };
     }
-  | { type: "CLEAR_CART" };
+  | { type: "CLEAR_CART" }
+  | { type: "LOAD_CART"; payload: CartState };
 
 const initialState: CartState = {
   items: [],
@@ -170,6 +178,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         totalPrice: 0,
       };
 
+    case "LOAD_CART":
+      return action.payload;
+
     default:
       return state;
   }
@@ -199,22 +210,84 @@ interface CartProviderProps {
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Load cart from localStorage on mount (client-side only)
+  useEffect(() => {
+    if (!isClient) return;
+
+    try {
+      const savedCart = localStorage.getItem("dreamy-eyes-cart");
+      console.log("Loading cart from localStorage:", savedCart);
+
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        console.log("Parsed cart data:", parsedCart);
+
+        // Only load if the parsed cart has items
+        if (parsedCart.items && parsedCart.items.length > 0) {
+          dispatch({ type: "LOAD_CART", payload: parsedCart });
+        }
+      } else {
+        console.log("No saved cart found in localStorage");
+      }
+      setIsInitialized(true);
+    } catch (error) {
+      console.error("Error loading cart from localStorage:", error);
+      setIsInitialized(true);
+    }
+  }, [isClient]);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    if (!isInitialized || !isClient) return; // Don't save until after initial load and on client
+
+    try {
+      console.log("Saving cart to localStorage:", state);
+
+      // Only save if cart has items, otherwise remove from localStorage
+      if (state.items && state.items.length > 0) {
+        localStorage.setItem("dreamy-eyes-cart", JSON.stringify(state));
+      } else {
+        localStorage.removeItem("dreamy-eyes-cart");
+      }
+    } catch (error) {
+      console.error("Error saving cart to localStorage:", error);
+    }
+  }, [state, isInitialized, isClient]);
 
   const addItem = (item: CartItem) => {
+    console.log("Adding item to cart:", item);
     dispatch({ type: "ADD_ITEM", payload: item });
   };
 
   const removeItem = (id: string | number) => {
+    console.log("Removing item from cart:", id);
     dispatch({ type: "REMOVE_ITEM", payload: id });
   };
 
   const updateQuantity = (id: string | number, quantity: number) => {
+    console.log("Updating quantity for item:", id, "to:", quantity);
     dispatch({ type: "UPDATE_QUANTITY", payload: { id, quantity } });
   };
 
   const clearCart = () => {
+    console.log("Clearing cart");
     dispatch({ type: "CLEAR_CART" });
   };
+
+  // Debug: Log current cart state
+  useEffect(() => {
+    if (isClient) {
+      console.log("Current cart state:", state);
+    }
+  }, [state, isClient]);
 
   return (
     <CartContext.Provider

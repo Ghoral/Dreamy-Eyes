@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import { useCart } from "../../context/CartContext";
+import { useRouter } from "next/navigation";
 
 const ModalCart = ({
   isOpen = false,
@@ -13,6 +14,7 @@ const ModalCart = ({
   onCheckout: () => void;
 }) => {
   const { state: cartItems, removeItem, updateQuantity } = useCart();
+  const router = useRouter();
 
   const handleBackdropClick = useCallback(
     (e: any) => {
@@ -38,9 +40,9 @@ const ModalCart = ({
   }, [onViewCart, onClose]);
 
   const handleCheckout = useCallback(() => {
-    onCheckout?.();
     onClose?.();
-  }, [onCheckout, onClose]);
+    router.push("/checkout");
+  }, [onClose, router]);
 
   if (!isOpen) return null;
 
