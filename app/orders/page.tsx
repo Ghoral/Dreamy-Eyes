@@ -65,7 +65,7 @@ export default function OrdersPage() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "paid":
         return "bg-green-100 text-green-800";
       case "pending":
