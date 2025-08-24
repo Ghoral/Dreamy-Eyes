@@ -14,8 +14,6 @@ const ItemListing = () => {
       description:
         "Discover the newest fashion lens collections that just arrived",
       price: "$29.99",
-      originalPrice: "$39.99",
-      discount: "25% OFF",
     },
     {
       id: 2,
@@ -26,8 +24,6 @@ const ItemListing = () => {
       description:
         "Our top-rated lenses that customers can't stop raving about",
       price: "$34.99",
-      originalPrice: "$44.99",
-      discount: "22% OFF",
     },
     {
       id: 3,
@@ -37,8 +33,6 @@ const ItemListing = () => {
       category: "Rated",
       description: "Lenses with the best customer reviews and ratings",
       price: "$39.99",
-      originalPrice: "$49.99",
-      discount: "20% OFF",
     },
     {
       id: 4,
@@ -48,8 +42,6 @@ const ItemListing = () => {
       category: "Featured",
       description: "Handpicked collections that showcase the latest trends",
       price: "$44.99",
-      originalPrice: "$54.99",
-      discount: "18% OFF",
     },
   ];
 
@@ -105,13 +97,6 @@ const ItemListing = () => {
                     {section.category}
                   </span>
                 </div>
-
-                {/* Discount Badge */}
-                <div className="absolute top-4 right-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500 text-white">
-                    {section.discount}
-                  </span>
-                </div>
               </div>
 
               {/* Content */}
@@ -127,15 +112,10 @@ const ItemListing = () => {
                 </p>
 
                 {/* Price */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-2xl font-bold text-primary-600">
-                      {section.price}
-                    </span>
-                    <span className="text-sm text-secondary-400 line-through">
-                      {section.originalPrice}
-                    </span>
-                  </div>
+                <div className="mb-4">
+                  <span className="text-2xl font-bold text-primary-600">
+                    {section.price}
+                  </span>
                 </div>
 
                 {/* Action Button */}
@@ -192,25 +172,6 @@ const ItemListing = () => {
                   />
                 </svg>
                 Shop All Lenses
-              </Link>
-              <Link
-                href="/contact"
-                className="inline-flex items-center px-8 py-4 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                Get Style Advice
               </Link>
             </div>
           </div>

@@ -87,31 +87,6 @@ const BillboardCarousel = () => {
                   className="object-cover"
                   priority={index === 0}
                 />
-
-                {/* Content Overlay - Removed title, keeping only CTA */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent flex items-center">
-                  <div className="ml-16 md:ml-24 max-w-md">
-                    <Link
-                      href={slide.ctaLink}
-                      className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
-                    >
-                      {slide.ctaText}
-                      <svg
-                        className="w-5 h-5 ml-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 8l4 4m0 0l-4 4m4-4H3"
-                        />
-                      </svg>
-                    </Link>
-                  </div>
-                </div>
               </div>
             </div>
           ))}
