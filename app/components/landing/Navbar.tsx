@@ -3,10 +3,13 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart } from "../../context/CartContext";
 import ModalCart from "../modals/ModalCart";
+import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
 
 const Navbar = () => {
+  const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
@@ -40,6 +43,17 @@ const Navbar = () => {
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createSupabaseClient();
+      await supabase.auth.signOut();
+      setIsProfileMenuOpen(false);
+      router.push("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   const navLinks = [
@@ -202,7 +216,7 @@ const Navbar = () => {
                       Addresses
                     </Link>
                     <Link
-                      href="/checkout"
+                      href="/orders"
                       className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
                       onClick={() => setIsProfileMenuOpen(false)}
                     >
@@ -224,7 +238,7 @@ const Navbar = () => {
                     <div className="border-t border-secondary-100 my-2"></div>
                     <button
                       className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200"
-                      onClick={() => setIsProfileMenuOpen(false)}
+                      onClick={handleLogout}
                     >
                       <svg
                         className="w-5 h-5 mr-3"
@@ -328,6 +342,13 @@ const Navbar = () => {
                   className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
                 >
                   Addresses
+                </Link>
+                <Link
+                  href="/orders"
+                  onClick={closeMobileMenu}
+                  className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                >
+                  Orders
                 </Link>
               </div>
             </div>

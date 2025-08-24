@@ -163,6 +163,21 @@ export default function ShippingAddressPage() {
         }
 
         setSuccess("Address added successfully!");
+
+        // Mark profile as complete when first address is added
+        const { data: addressesData } = await (supabase as any)
+          .from("address")
+          .select("id")
+          .eq("user_id", user.id);
+
+        if (addressesData && addressesData.length === 1) {
+          // This is the first address, mark profile as complete
+          await (supabase as any).from("profiles").upsert({
+            id: user.id,
+            profile_completed: true,
+            updated_at: new Date().toISOString(),
+          });
+        }
       }
 
       // Reload addresses and reset form
