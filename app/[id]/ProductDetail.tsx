@@ -5,54 +5,107 @@ import { useCart } from "../context/CartContext";
 import Toast from "../components/ui/Toast";
 
 const ProductDetail = ({ product }: { product: any }) => {
-  // Dynamic images based on color - you can customize this mapping
-  const getImageForColor = (colorLabel: string): string => {
-    // Map color labels to specific images
-    // You can customize this mapping based on your product images
-    const colorImageMap: { [key: string]: string } = {
-      Red: "/images/product-red.jpg",
-      Blue: "/images/product-blue.jpg",
-      Green: "/images/product-green.jpg",
-      Black: "/images/product-black.jpg",
-      White: "/images/product-white.jpg",
-      Yellow: "/images/product-yellow.jpg",
-      Purple: "/images/product-purple.jpg",
-      Orange: "/images/product-orange.jpg",
-      Pink: "/images/product-pink.jpg",
-      Brown: "/images/product-brown.jpg",
-      Gray: "/images/product-gray.jpg",
-      Silver: "/images/product-silver.jpg",
-      Gold: "/images/product-gold.jpg",
-    };
+  // Get images for a specific color from product.images
+  const getImagesForColor = (colorHex: string): string[] => {
+    if (!product?.images) return [];
 
-    // Return the mapped image or a default image
-    return colorImageMap[colorLabel] || "/images/product-default.jpg";
+    try {
+      const parsedImages = JSON.parse(product.images);
+      return parsedImages[colorHex] || [];
+    } catch (error) {
+      console.error("Error parsing product images:", error);
+      return [];
+    }
   };
 
-  // Get available images for the product
-  const getAvailableImages = (): string[] => {
-    if (!product?.color_quantity) return ["/images/product-default.jpg"];
+  // Check if product has valid images
+  const hasValidImages = (): boolean => {
+    if (!product?.images) return false;
 
-    // Get unique images for available colors
-    const images = (product.color_quantity as any[])
-      .filter((color: any) => parseInt(color.quantity) > 0)
-      .map((color: any) => getImageForColor(color.label))
-      .filter((img: string) => img !== undefined) as string[];
-
-    // Remove duplicates and ensure we have at least one image
-    const uniqueImages = [...new Set(images)];
-    return uniqueImages.length > 0
-      ? uniqueImages
-      : ["/images/product-default.jpg"];
+    try {
+      const parsedImages = JSON.parse(product.images);
+      return (
+        Object.keys(parsedImages).length > 0 &&
+        Object.values(parsedImages).some(
+          (arr: any) => Array.isArray(arr) && arr.length > 0
+        )
+      );
+    } catch (error) {
+      return false;
+    }
   };
 
-  const availableImages = getAvailableImages();
-  const [mainImage, setMainImage] = useState<string>(
-    availableImages[0] || "/images/product-default.jpg"
-  );
+  // Get the first image URL for a color (similar to ProductItems logic)
+  const getFirstImageUrl = (images: string): string | null => {
+    try {
+      const parsed = JSON.parse(images);
+      const firstKey = Object.keys(parsed)[0];
+      const firstImage = parsed[firstKey]?.[0];
+
+      if (firstImage) {
+        return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${firstImage}`;
+      }
+      return null;
+    } catch (err) {
+      console.error("Invalid image format", err);
+      return null;
+    }
+  };
+
+  // Get image URL for a specific color
+  const getImageUrlForColor = (colorHex: string): string => {
+    const images = getImagesForColor(colorHex);
+    if (images.length > 0) {
+      return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${images[0]}`;
+    }
+    // Fallback to first available image or default
+    return getFirstImageUrl(product.images) || "/images/product-default.jpg";
+  };
+
+  // Get all available images for the product
+  const getAllProductImages = (): string[] => {
+    if (!product?.images) return ["/images/product-default.jpg"];
+
+    try {
+      const parsedImages = JSON.parse(product.images);
+      const allImages: string[] = [];
+
+      Object.values(parsedImages).forEach((imageArray: any) => {
+        if (Array.isArray(imageArray)) {
+          imageArray.forEach((image: string) => {
+            const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${image}`;
+            if (!allImages.includes(imageUrl)) {
+              allImages.push(imageUrl);
+            }
+          });
+        }
+      });
+
+      return allImages.length > 0 ? allImages : ["/images/product-default.jpg"];
+    } catch (error) {
+      console.error("Error parsing product images:", error);
+      return ["/images/product-default.jpg"];
+    }
+  };
+
+  const availableImages = getAllProductImages();
+  const [mainImage, setMainImage] = useState<string>(() => {
+    // Try to get the first image from the first available color
+    if (product?.color_quantity?.[0]) {
+      const firstColor = product.color_quantity[0];
+      const firstColorImage = getImageUrlForColor(firstColor.color);
+      if (firstColorImage !== "/images/product-default.jpg") {
+        return firstColorImage;
+      }
+    }
+    return availableImages[0] || "/images/product-default.jpg";
+  });
+
   const [selectedColor, setSelectedColor] = useState(
     product?.color_quantity?.[0] || null
   );
+  console.log("selectedColor", selectedColor);
+
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
 
@@ -61,10 +114,18 @@ const ProductDetail = ({ product }: { product: any }) => {
   // Update main image when color changes
   useEffect(() => {
     if (selectedColor) {
-      const colorImage = getImageForColor(selectedColor.label);
+      const colorImage = getImageUrlForColor(selectedColor.color);
       setMainImage(colorImage);
     }
   }, [selectedColor]);
+
+  // Initialize main image when component mounts
+  useEffect(() => {
+    if (selectedColor && !mainImage.includes("/product-image/")) {
+      const colorImage = getImageUrlForColor(selectedColor.color);
+      setMainImage(colorImage);
+    }
+  }, []);
 
   // Get current cart quantity for this product and color
   const getCurrentCartQuantity = () => {
@@ -157,7 +218,7 @@ const ProductDetail = ({ product }: { product: any }) => {
         quantity: quantity,
         color: selectedColor.label,
         colorHex: selectedColor.color,
-        image: mainImage,
+        image: getImageUrlForColor(selectedColor.color),
         maxQuantity: parseInt(selectedColor.quantity),
       });
     }
@@ -227,47 +288,126 @@ const ProductDetail = ({ product }: { product: any }) => {
                   className="position-relative rounded-4 overflow-hidden shadow-lg"
                   style={{ backgroundColor: "white" }}
                 >
-                  <img
-                    src={mainImage}
-                    alt={product.title}
-                    className="w-100"
-                    style={{
-                      height: "500px",
-                      objectFit: "contain",
-                      padding: "20px",
-                    }}
-                  />
+                  {hasValidImages() ? (
+                    <img
+                      src={mainImage}
+                      alt={product.title}
+                      className="w-100"
+                      style={{
+                        height: "500px",
+                        objectFit: "contain",
+                        padding: "20px",
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="w-100 d-flex align-items-center justify-content-center"
+                      style={{
+                        height: "500px",
+                        backgroundColor: "#f8f9fa",
+                        color: "#6c757d",
+                      }}
+                    >
+                      <div className="text-center">
+                        <i
+                          className="bi bi-image"
+                          style={{ fontSize: "3rem" }}
+                        ></i>
+                        <p className="mt-2 mb-0">No image available</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Thumbnail Images */}
               <div className="thumbnail-container">
-                <div className="d-flex gap-3 justify-content-center">
-                  {availableImages.map((img, i) => (
-                    <div
-                      key={i}
-                      className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
-                        mainImage === img
-                          ? "border-3 border-primary"
-                          : "border border-light"
-                      }`}
-                      style={{
-                        width: "80px",
-                        height: "80px",
-                        transition: "all 0.3s ease",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => setMainImage(img)}
-                    >
-                      <img
-                        src={img}
-                        alt={`Thumbnail ${i + 1}`}
-                        className="w-100 h-100"
-                        style={{ objectFit: "cover" }}
-                      />
-                    </div>
-                  ))}
-                </div>
+                {hasValidImages() && (
+                  <div className="d-flex gap-3 justify-content-center">
+                    {selectedColor
+                      ? // Show images for the selected color
+                        getImagesForColor(selectedColor.color).length > 0
+                        ? getImagesForColor(selectedColor.color).map(
+                            (image, i) => {
+                              const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${image}`;
+                              return (
+                                <div
+                                  key={i}
+                                  className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
+                                    mainImage === imageUrl
+                                      ? "border-3 border-primary"
+                                      : "border border-light"
+                                  }`}
+                                  style={{
+                                    width: "80px",
+                                    height: "80px",
+                                    transition: "all 0.3s ease",
+                                    cursor: "pointer",
+                                  }}
+                                  onClick={() => setMainImage(imageUrl)}
+                                >
+                                  <img
+                                    src={imageUrl}
+                                    alt={`Thumbnail ${i + 1}`}
+                                    className="w-100 h-100"
+                                    style={{ objectFit: "cover" }}
+                                  />
+                                </div>
+                              );
+                            }
+                          )
+                        : // Show all available images if selected color has no images
+                          availableImages.map((img, i) => (
+                            <div
+                              key={i}
+                              className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
+                                mainImage === img
+                                  ? "border-3 border-primary"
+                                  : "border border-light"
+                              }`}
+                              style={{
+                                width: "80px",
+                                height: "80px",
+                                transition: "all 0.3s ease",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => setMainImage(img)}
+                            >
+                              <img
+                                src={img}
+                                alt={`Thumbnail ${i + 1}`}
+                                className="w-100 h-100"
+                                style={{ objectFit: "cover" }}
+                              />
+                            </div>
+                          ))
+                      : // Show all available images if no color is selected
+                        availableImages.map((img, i) => (
+                          <div
+                            key={i}
+                            className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
+                              mainImage === img
+                                ? "border-3 border-primary"
+                                : "border border-light"
+                            }`}
+                            style={{
+                              width: "80px",
+                              height: "80px",
+                              transition: "all 0.3s ease",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => setMainImage(img)}
+                          >
+                            <img
+                              src={img}
+                              alt={`Thumbnail ${i + 1}`}
+                              className="w-100 h-100"
+                              style={{ objectFit: "cover" }}
+                            />
+                          </div>
+                        ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
