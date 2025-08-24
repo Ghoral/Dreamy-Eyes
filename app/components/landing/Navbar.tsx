@@ -38,7 +38,9 @@ const Navbar = () => {
   useEffect(() => {
     const getUser = async () => {
       const supabase = createSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
@@ -49,7 +51,7 @@ const Navbar = () => {
     await supabase.auth.signOut();
     setUser(null);
     setIsAccountDropdownOpen(false);
-    router.push('/');
+    router.push("/");
   };
 
   const closeOffcanvas = useCallback(() => {
@@ -127,7 +129,7 @@ const Navbar = () => {
     <>
       <nav
         id="header-nav"
-        className={`navbar navbar-expand-lg py-3 position-fixed w-100 top-0 ${
+        className={`navbar navbar-expand-lg position-fixed w-100 top-0 ${
           isScrolled ? "navbar-scrolled" : ""
         }`}
         role="navigation"
@@ -246,17 +248,24 @@ const Navbar = () => {
                         type="button"
                         className="btn btn-outline-dark btn-sm flex-fill dropdown-toggle"
                         aria-label="User account"
-                        onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                        onClick={() =>
+                          setIsAccountDropdownOpen(!isAccountDropdownOpen)
+                        }
                         data-bs-toggle="dropdown"
                         aria-expanded="false"
                       >
                         <i className="bi bi-person me-2" aria-hidden="true" />
                         Profile
                       </button>
-                      <ul className={`dropdown-menu ${isAccountDropdownOpen ? 'show' : ''}`} style={{ minWidth: '200px' }}>
+                      <ul
+                        className={`dropdown-menu ${
+                          isAccountDropdownOpen ? "show" : ""
+                        }`}
+                        style={{ minWidth: "200px" }}
+                      >
                         <li>
-                          <Link 
-                            className="dropdown-item d-flex align-items-center gap-2" 
+                          <Link
+                            className="dropdown-item d-flex align-items-center gap-2"
                             href="/profile"
                             onClick={() => {
                               setIsAccountDropdownOpen(false);
@@ -267,10 +276,12 @@ const Navbar = () => {
                             Profile
                           </Link>
                         </li>
-                        <li><hr className="dropdown-divider" /></li>
                         <li>
-                          <button 
-                            className="dropdown-item d-flex align-items-center gap-2 text-danger" 
+                          <hr className="dropdown-divider" />
+                        </li>
+                        <li>
+                          <button
+                            className="dropdown-item d-flex align-items-center gap-2 text-danger"
                             onClick={() => {
                               handleSignOut();
                               closeOffcanvas();
@@ -333,7 +344,9 @@ const Navbar = () => {
                     type="button"
                     className="btn btn-link p-2 text-dark position-relative dropdown-toggle"
                     aria-label="User account"
-                    onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                    onClick={() =>
+                      setIsAccountDropdownOpen(!isAccountDropdownOpen)
+                    }
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                   >
@@ -343,12 +356,17 @@ const Navbar = () => {
                       aria-hidden="true"
                     />
                   </button>
-                  <ul className={`dropdown-menu ${isAccountDropdownOpen ? 'show' : ''}`} style={{ minWidth: '200px' }}>
+                  <ul
+                    className={`dropdown-menu ${
+                      isAccountDropdownOpen ? "show" : ""
+                    }`}
+                    style={{ minWidth: "200px" }}
+                  >
                     {user ? (
                       <>
                         <li>
-                          <Link 
-                            className="dropdown-item d-flex align-items-center gap-2" 
+                          <Link
+                            className="dropdown-item d-flex align-items-center gap-2"
                             href="/profile"
                             onClick={() => setIsAccountDropdownOpen(false)}
                           >
@@ -356,10 +374,12 @@ const Navbar = () => {
                             Profile
                           </Link>
                         </li>
-                        <li><hr className="dropdown-divider" /></li>
                         <li>
-                          <button 
-                            className="dropdown-item d-flex align-items-center gap-2 text-danger" 
+                          <hr className="dropdown-divider" />
+                        </li>
+                        <li>
+                          <button
+                            className="dropdown-item d-flex align-items-center gap-2 text-danger"
                             onClick={handleSignOut}
                           >
                             <i className="bi bi-box-arrow-right"></i>
@@ -370,8 +390,8 @@ const Navbar = () => {
                     ) : (
                       <>
                         <li>
-                          <Link 
-                            className="dropdown-item d-flex align-items-center gap-2" 
+                          <Link
+                            className="dropdown-item d-flex align-items-center gap-2"
                             href="/login"
                             onClick={() => setIsAccountDropdownOpen(false)}
                           >
@@ -380,8 +400,8 @@ const Navbar = () => {
                           </Link>
                         </li>
                         <li>
-                          <Link 
-                            className="dropdown-item d-flex align-items-center gap-2" 
+                          <Link
+                            className="dropdown-item d-flex align-items-center gap-2"
                             href="/register"
                             onClick={() => setIsAccountDropdownOpen(false)}
                           >

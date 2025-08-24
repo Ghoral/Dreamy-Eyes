@@ -7,11 +7,23 @@ import Toast from "../components/ui/Toast";
 const ProductDetail = ({ product }: { product: any }) => {
   // Get images for a specific color from product.images
   const getImagesForColor = (colorHex: string): string[] => {
-    if (!product?.images) return [];
+    console.log("getImagesForColor called with hex:", colorHex);
+    console.log("Product images:", product?.images);
+
+    if (!product?.images) {
+      console.log("No product images found");
+      return [];
+    }
 
     try {
       const parsedImages = JSON.parse(product.images);
-      return parsedImages[colorHex] || [];
+      console.log("Parsed images:", parsedImages);
+      console.log("Looking for color:", colorHex);
+      console.log("Available colors:", Object.keys(parsedImages));
+
+      const images = parsedImages[colorHex] || [];
+      console.log("Images found for color:", images);
+      return images;
     } catch (error) {
       console.error("Error parsing product images:", error);
       return [];
@@ -54,12 +66,21 @@ const ProductDetail = ({ product }: { product: any }) => {
 
   // Get image URL for a specific color
   const getImageUrlForColor = (colorHex: string): string => {
+    console.log("Getting image for color:", colorHex);
     const images = getImagesForColor(colorHex);
+    console.log("Images found for color:", images);
+
     if (images.length > 0) {
-      return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${images[0]}`;
+      const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${images[0]}`;
+      console.log("Returning image URL:", imageUrl);
+      return imageUrl;
     }
+
     // Fallback to first available image or default
-    return getFirstImageUrl(product.images) || "/images/product-default.jpg";
+    const fallbackUrl =
+      getFirstImageUrl(product.images) || "/images/product-default.jpg";
+    console.log("Using fallback URL:", fallbackUrl);
+    return fallbackUrl;
   };
 
   // Get all available images for the product
@@ -115,17 +136,29 @@ const ProductDetail = ({ product }: { product: any }) => {
   useEffect(() => {
     if (selectedColor) {
       const colorImage = getImageUrlForColor(selectedColor.color);
+      console.log(
+        "Color changed to:",
+        selectedColor.color,
+        "Image:",
+        colorImage
+      );
       setMainImage(colorImage);
     }
   }, [selectedColor]);
 
   // Initialize main image when component mounts
   useEffect(() => {
-    if (selectedColor && !mainImage.includes("/product-image/")) {
+    if (selectedColor) {
       const colorImage = getImageUrlForColor(selectedColor.color);
+      console.log("Initial color image:", colorImage);
       setMainImage(colorImage);
     }
   }, []);
+
+  // Monitor mainImage changes for debugging
+  useEffect(() => {
+    console.log("Main image changed to:", mainImage);
+  }, [mainImage]);
 
   // Get current cart quantity for this product and color
   const getCurrentCartQuantity = () => {
@@ -159,13 +192,6 @@ const ProductDetail = ({ product }: { product: any }) => {
     const availableStock = parseInt(selectedColor.quantity);
     const currentCartQuantity = getCurrentCartQuantity();
     const maxAddable = Math.max(0, availableStock - currentCartQuantity);
-
-    console.log("Cart Debug:", {
-      availableStock,
-      currentCartQuantity,
-      maxAddable,
-      selectedColor: selectedColor.label,
-    });
 
     return maxAddable;
   };
@@ -233,8 +259,24 @@ const ProductDetail = ({ product }: { product: any }) => {
   };
 
   const handleColorSelect = (colorOption: any) => {
+    console.log("=== handleColorSelect called ===");
+    console.log("Color selected:", colorOption);
+    console.log("Color hex:", colorOption.color);
+
+    // Update selected color first
     setSelectedColor(colorOption);
-    setQuantity(1); // Reset quantity when color changes
+
+    // Reset quantity when color changes
+    setQuantity(1);
+
+    // Get and set the image for the new color
+    const colorImage = getImageUrlForColor(colorOption.color);
+    console.log("Image URL for color:", colorImage);
+
+    // Update the main image
+    setMainImage(colorImage);
+
+    console.log("=== handleColorSelect completed ===");
   };
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -297,6 +339,7 @@ const ProductDetail = ({ product }: { product: any }) => {
                         height: "500px",
                         objectFit: "contain",
                         padding: "20px",
+                        backgroundColor: "white",
                       }}
                     />
                   ) : (
@@ -304,7 +347,7 @@ const ProductDetail = ({ product }: { product: any }) => {
                       className="w-100 d-flex align-items-center justify-content-center"
                       style={{
                         height: "500px",
-                        backgroundColor: "#f8f9fa",
+                        backgroundColor: "white",
                         color: "#6c757d",
                       }}
                     >
@@ -350,7 +393,7 @@ const ProductDetail = ({ product }: { product: any }) => {
                                     src={imageUrl}
                                     alt={`Thumbnail ${i + 1}`}
                                     className="w-100 h-100"
-                                    style={{ objectFit: "cover" }}
+                                    style={{ objectFit: "contain" }}
                                   />
                                 </div>
                               );
@@ -377,7 +420,7 @@ const ProductDetail = ({ product }: { product: any }) => {
                                 src={img}
                                 alt={`Thumbnail ${i + 1}`}
                                 className="w-100 h-100"
-                                style={{ objectFit: "cover" }}
+                                style={{ objectFit: "contain" }}
                               />
                             </div>
                           ))
@@ -402,7 +445,7 @@ const ProductDetail = ({ product }: { product: any }) => {
                               src={img}
                               alt={`Thumbnail ${i + 1}`}
                               className="w-100 h-100"
-                              style={{ objectFit: "cover" }}
+                              style={{ objectFit: "contain" }}
                             />
                           </div>
                         ))}
@@ -485,7 +528,13 @@ const ProductDetail = ({ product }: { product: any }) => {
                             id={colorOption.label}
                             autoComplete="off"
                             checked={isSelected}
-                            onChange={() => handleColorSelect(colorOption)}
+                            onChange={() => {
+                              console.log(
+                                "Radio button clicked for:",
+                                colorOption
+                              );
+                              handleColorSelect(colorOption);
+                            }}
                             disabled={isDisabled}
                           />
                           <label
@@ -497,6 +546,12 @@ const ProductDetail = ({ product }: { product: any }) => {
                                 : "btn-outline-secondary"
                             }`}
                             htmlFor={colorOption.label}
+                            onClick={() => {
+                              if (!isDisabled) {
+                                console.log("Label clicked for:", colorOption);
+                                handleColorSelect(colorOption);
+                              }
+                            }}
                             style={{
                               minWidth: "80px",
                               transition: "all 0.3s ease",

@@ -25,6 +25,8 @@ export default function BillboardCarousel() {
       style={{
         height: "600px",
         backgroundColor: "#f8f9fa",
+        padding: "0",
+        margin: "0",
       }}
     >
       {/* Navigation Arrows */}
