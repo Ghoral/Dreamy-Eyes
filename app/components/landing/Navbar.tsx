@@ -439,9 +439,6 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Spacer to prevent content from hiding behind fixed navbar */}
-      <div style={{ height: "80px" }}></div>
-
       <ModalCart
         isOpen={isCartOpen}
         onCheckout={() => console.log("Checkout clicked")}

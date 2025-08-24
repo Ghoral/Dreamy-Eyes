@@ -301,25 +301,6 @@ const ProductDetail = ({ product }: { product: any }) => {
   return (
     <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
       <div className="container py-5">
-        {/* Breadcrumb */}
-        <nav aria-label="breadcrumb" className="mb-4">
-          <ol className="breadcrumb">
-            <li className="breadcrumb-item">
-              <a href="/" className="text-decoration-none text-muted">
-                Home
-              </a>
-            </li>
-            <li className="breadcrumb-item">
-              <a href="/shop" className="text-decoration-none text-muted">
-                Shop
-              </a>
-            </li>
-            <li className="breadcrumb-item active" aria-current="page">
-              {product.title}
-            </li>
-          </ol>
-        </nav>
-
         <div className="row g-5">
           {/* Left Column - Product Images */}
           <div className="col-lg-6">

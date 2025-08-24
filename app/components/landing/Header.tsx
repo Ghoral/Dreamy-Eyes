@@ -2,11 +2,7 @@ import React from "react";
 import Navbar from "./Navbar";
 
 const Header = () => {
-  return (
-    <header id="header" className="site-header">
-      <Navbar />
-    </header>
-  );
+  return <Navbar />;
 };
 
 export default Header;
