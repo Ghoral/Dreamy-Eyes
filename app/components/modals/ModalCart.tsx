@@ -138,7 +138,7 @@ const ModalCart = ({
                             <button
                               className="btn btn-sm btn-outline-secondary"
                               onClick={() =>
-                                updateQuantity(item.id, item.quantity - 1)
+                                updateQuantity(item.id, item.quantity - 1, item.color)
                               }
                               aria-label={`Decrease quantity of ${item.title}`}
                               disabled={item.quantity <= 1}
@@ -156,7 +156,7 @@ const ModalCart = ({
                               onChange={(e) => {
                                 const newQuantity =
                                   parseInt(e.target.value) || 0;
-                                updateQuantity(item.id, newQuantity);
+                                updateQuantity(item.id, newQuantity, item.color);
                               }}
                               min="1"
                               max={item.maxQuantity || 99}
@@ -164,7 +164,7 @@ const ModalCart = ({
                             <button
                               className="btn btn-sm btn-outline-secondary me-2"
                               onClick={() =>
-                                updateQuantity(item.id, item.quantity + 1)
+                                updateQuantity(item.id, item.quantity + 1, item.color)
                               }
                               aria-label={`Increase quantity of ${item.title}`}
                               disabled={
@@ -177,7 +177,7 @@ const ModalCart = ({
                             </button>
                             <button
                               className="btn btn-sm btn-outline-danger"
-                              onClick={() => removeItem(item.id)}
+                              onClick={() => removeItem(item.id, item.color)}
                               aria-label={`Remove ${item.title} from cart`}
                             >
                               Remove

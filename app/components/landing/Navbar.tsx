@@ -406,9 +406,9 @@ const Navbar = () => {
                     style={{ fontSize: 20 }}
                     aria-hidden="true"
                   />
-                  {cartState.totalItems > 0 && (
+                  {cartState.itemCount > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-                      {cartState.totalItems}
+                      {cartState.itemCount}
                       <span className="visually-hidden">items in cart</span>
                     </span>
                   )}

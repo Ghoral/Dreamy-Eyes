@@ -23,6 +23,7 @@ interface Address {
   zip: string;
   country: string;
   created_at: string;
+  is_primary: boolean;
 }
 
 export default function ProfilePage() {
@@ -38,7 +39,7 @@ export default function ProfilePage() {
     phone: "",
   });
   const [addressForm, setAddressForm] = useState({
-    id: "",
+    id: 0,
     street: "",
     city: "",
     state: "",
@@ -55,7 +56,9 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     try {
       const supabase = createSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         router.push("/login");
@@ -64,16 +67,16 @@ export default function ProfilePage() {
 
       // Load profile
       const { data: profileData } = await (supabase as any)
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
       // Load addresses
       const { data: addressesData } = await (supabase as any)
-        .from('address')
-        .select('*')
-        .eq('user_id', user.id);
+        .from("address")
+        .select("*")
+        .eq("user_id", user.id);
 
       if (profileData) {
         setProfile(profileData);
@@ -97,30 +100,36 @@ export default function ProfilePage() {
   const handleProfileUpdate = async () => {
     try {
       const supabase = createSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) return;
 
       const { error } = await (supabase as any)
-        .from('profiles')
+        .from("profiles")
         .update({
           first_name: editForm.firstName,
           last_name: editForm.lastName,
           mobile_number: editForm.phone,
         })
-        .eq('id', user.id);
+        .eq("id", user.id);
 
       if (error) {
         setError("Failed to update profile");
         return;
       }
 
-      setProfile(prev => prev ? {
-        ...prev,
-        first_name: editForm.firstName,
-        last_name: editForm.lastName,
-        mobile_number: editForm.phone,
-      } : null);
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              first_name: editForm.firstName,
+              last_name: editForm.lastName,
+              mobile_number: editForm.phone,
+            }
+          : null
+      );
       setIsEditing(false);
     } catch (error) {
       setError("Failed to update profile");
@@ -130,31 +139,33 @@ export default function ProfilePage() {
   const handleAddressSubmit = async () => {
     try {
       const supabase = createSupabaseClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) return;
 
       // If setting as primary, update all other addresses to not be primary
       if (addressForm.isPrimary) {
         await (supabase as any)
-          .from('address')
+          .from("address")
           .update({ is_primary: false })
-          .eq('user_id', user.id);
+          .eq("user_id", user.id);
       }
 
       if (addressForm.id) {
         // Update existing address
         const { error } = await (supabase as any)
-          .from('address')
+          .from("address")
           .update({
             street: addressForm.street,
             city: addressForm.city,
             state: addressForm.state,
             zip: addressForm.zip,
             country: addressForm.country,
-            is_primary: addressForm.isPrimary
+            is_primary: addressForm.isPrimary,
           })
-          .eq('id', addressForm.id);
+          .eq("id", addressForm.id);
 
         if (error) {
           setError("Failed to update address");
@@ -162,17 +173,15 @@ export default function ProfilePage() {
         }
       } else {
         // Create new address
-        const { error } = await (supabase as any)
-          .from('address')
-          .insert({
-            user_id: user.id,
-            street: addressForm.street,
-            city: addressForm.city,
-            state: addressForm.state,
-            zip: addressForm.zip,
-            country: addressForm.country,
-            is_primary: addressForm.isPrimary
-          });
+        const { error } = await (supabase as any).from("address").insert({
+          user_id: user.id,
+          street: addressForm.street,
+          city: addressForm.city,
+          state: addressForm.state,
+          zip: addressForm.zip,
+          country: addressForm.country,
+          is_primary: addressForm.isPrimary,
+        });
 
         if (error) {
           setError("Failed to add address");
@@ -189,13 +198,13 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDeleteAddress = async (addressId: string) => {
+  const handleDeleteAddress = async (addressId: number) => {
     try {
       const supabase = createSupabaseClient();
       const { error } = await (supabase as any)
-        .from('address')
+        .from("address")
         .delete()
-        .eq('id', addressId);
+        .eq("id", addressId);
 
       if (error) {
         setError("Failed to delete address");
@@ -217,14 +226,47 @@ export default function ProfilePage() {
       state: address.state,
       zip: address.zip,
       country: address.country,
-      isPrimary: address.is_primary || false
+      isPrimary: address.is_primary || false,
     });
     setIsAddingAddress(true);
   };
 
+  const handleSetPrimaryAddress = async (addressId: number) => {
+    try {
+      const supabase = createSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      // Update all other addresses to not be primary
+      await (supabase as any)
+        .from("address")
+        .update({ is_primary: false })
+        .eq("user_id", user.id);
+
+      // Update the selected address to be primary
+      const { error } = await (supabase as any)
+        .from("address")
+        .update({ is_primary: true })
+        .eq("id", addressId);
+
+      if (error) {
+        setError("Failed to set primary address");
+        return;
+      }
+
+      // Reload addresses
+      loadProfile();
+    } catch (error) {
+      setError("Failed to set primary address");
+    }
+  };
+
   const resetAddressForm = () => {
     setAddressForm({
-      id: "",
+      id: 0,
       street: "",
       city: "",
       state: "",
@@ -266,16 +308,27 @@ export default function ProfilePage() {
             <div className="card border-0 shadow-sm">
               <div className="card-body p-4">
                 <div className="text-center mb-4">
-                  <div className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "80px", height: "80px" }}>
-                    <i className="bi bi-person text-white" style={{ fontSize: "2rem" }}></i>
+                  <div
+                    className="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                    style={{ width: "80px", height: "80px" }}
+                  >
+                    <i
+                      className="bi bi-person text-white"
+                      style={{ fontSize: "2rem" }}
+                    ></i>
                   </div>
-                  <h4 className="fw-bold mb-1">{profile.first_name} {profile.last_name}</h4>
+                  <h4 className="fw-bold mb-1">
+                    {profile.first_name} {profile.last_name}
+                  </h4>
                   <p className="text-muted mb-0">{profile.email}</p>
                 </div>
 
                 {!isEditing ? (
                   <div className="mb-3">
-                    <p className="mb-1"><strong>Phone:</strong> {profile.mobile_number || "Not provided"}</p>
+                    <p className="mb-1">
+                      <strong>Phone:</strong>{" "}
+                      {profile.mobile_number || "Not provided"}
+                    </p>
                     <button
                       className="btn btn-outline-primary btn-sm"
                       onClick={() => setIsEditing(true)}
@@ -291,7 +344,12 @@ export default function ProfilePage() {
                         className="form-control form-control-sm"
                         placeholder="First Name"
                         value={editForm.firstName}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, firstName: e.target.value }))}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            firstName: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div className="mb-2">
@@ -300,7 +358,12 @@ export default function ProfilePage() {
                         className="form-control form-control-sm"
                         placeholder="Last Name"
                         value={editForm.lastName}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, lastName: e.target.value }))}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            lastName: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div className="mb-2">
@@ -309,7 +372,12 @@ export default function ProfilePage() {
                         className="form-control form-control-sm"
                         placeholder="Phone"
                         value={editForm.phone}
-                        onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={(e) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            phone: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                     <div className="d-flex gap-2">
@@ -338,7 +406,7 @@ export default function ProfilePage() {
               <div className="card-body p-4">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                   <h4 className="fw-bold mb-0">My Addresses</h4>
-                  <button 
+                  <button
                     className="btn btn-primary btn-sm"
                     onClick={() => {
                       resetAddressForm();
@@ -372,7 +440,12 @@ export default function ProfilePage() {
                           className="form-control"
                           placeholder="Street Address"
                           value={addressForm.street}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, street: e.target.value }))}
+                          onChange={(e) =>
+                            setAddressForm((prev) => ({
+                              ...prev,
+                              street: e.target.value,
+                            }))
+                          }
                         />
                       </div>
                       <div className="mb-3">
@@ -382,7 +455,12 @@ export default function ProfilePage() {
                           className="form-control"
                           placeholder="City"
                           value={addressForm.city}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, city: e.target.value }))}
+                          onChange={(e) =>
+                            setAddressForm((prev) => ({
+                              ...prev,
+                              city: e.target.value,
+                            }))
+                          }
                         />
                       </div>
                       <div className="row mb-3">
@@ -393,18 +471,28 @@ export default function ProfilePage() {
                             className="form-control"
                             placeholder="State/Province"
                             value={addressForm.state}
-                            onChange={(e) => setAddressForm(prev => ({ ...prev, state: e.target.value }))}
+                            onChange={(e) =>
+                              setAddressForm((prev) => ({
+                                ...prev,
+                                state: e.target.value,
+                              }))
+                            }
                           />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label">ZIP/Postal Code</label>
                           <input
-                              type="text"
-                              className="form-control"
-                              placeholder="ZIP/Postal Code"
-                              value={addressForm.zip}
-                              onChange={(e) => setAddressForm(prev => ({ ...prev, zip: e.target.value }))}
-                            />
+                            type="text"
+                            className="form-control"
+                            placeholder="ZIP/Postal Code"
+                            value={addressForm.zip}
+                            onChange={(e) =>
+                              setAddressForm((prev) => ({
+                                ...prev,
+                                zip: e.target.value,
+                              }))
+                            }
+                          />
                         </div>
                       </div>
                       <div className="mb-3">
@@ -412,7 +500,12 @@ export default function ProfilePage() {
                         <select
                           className="form-select"
                           value={addressForm.country}
-                          onChange={(e) => setAddressForm(prev => ({ ...prev, country: e.target.value }))}
+                          onChange={(e) =>
+                            setAddressForm((prev) => ({
+                              ...prev,
+                              country: e.target.value,
+                            }))
+                          }
                         >
                           <option value="">Select Country</option>
                           <option value="India">India</option>
@@ -473,27 +566,63 @@ export default function ProfilePage() {
                             </div>
                           )}
                           <div className="card-body">
-                            <div className="d-flex justify-content-between align-items-start mb-2">
-                              <div>
-                                <h6 className="mb-1 fw-semibold">{address.street}</h6>
+                            <div className="d-flex justify-content-between align-items-start mb-3">
+                              <div className="flex-grow-1">
+                                <h6 className="mb-1 fw-semibold">
+                                  {address.street}
+                                </h6>
                                 <p className="mb-1 text-muted">
                                   {address.city}, {address.state} {address.zip}
                                 </p>
-                                <p className="mb-0 text-muted">{address.country}</p>
+                                <p className="mb-0 text-muted">
+                                  {address.country}
+                                </p>
                               </div>
-                              <div className="d-flex gap-2">
-                                <button
-                                  className="btn btn-outline-primary btn-sm"
-                                  onClick={() => handleEditAddress(address)}
-                                >
-                                  <i className="bi bi-pencil"></i>
-                                </button>
-                                <button
-                                  className="btn btn-outline-danger btn-sm"
-                                  onClick={() => handleDeleteAddress(address.id)}
-                                >
-                                  <i className="bi bi-trash"></i>
-                                </button>
+
+                              {/* Primary Address Controls - Above Action Buttons */}
+                              <div className="d-flex flex-column align-items-end gap-2">
+                                <div className="form-check d-flex align-items-center">
+                                  <input
+                                    type="checkbox"
+                                    className="form-check-input me-2"
+                                    checked={address.is_primary}
+                                    onChange={() =>
+                                      handleSetPrimaryAddress(address.id)
+                                    }
+                                    disabled={address.is_primary}
+                                  />
+                                  <label className="form-check-label fw-semibold mb-0">
+                                    {address.is_primary ? (
+                                      <span className="text-success">
+                                        Primary
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted">
+                                        Set Primary
+                                      </span>
+                                    )}
+                                  </label>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="d-flex gap-2">
+                                  <button
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => handleEditAddress(address)}
+                                    title="Edit address"
+                                  >
+                                    <i className="bi bi-pencil"></i>
+                                  </button>
+                                  <button
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() =>
+                                      handleDeleteAddress(address.id)
+                                    }
+                                    title="Delete address"
+                                  >
+                                    <i className="bi bi-trash"></i>
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -503,7 +632,9 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-muted mb-0">You don't have any saved addresses yet.</p>
+                    <p className="text-muted mb-0">
+                      You don't have any saved addresses yet.
+                    </p>
                   </div>
                 )}
               </div>

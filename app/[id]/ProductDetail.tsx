@@ -1,23 +1,135 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import Toast from "../components/ui/Toast";
 
 const ProductDetail = ({ product }: { product: any }) => {
-  const images = [
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.0.3&q=80&w=1080",
-    "https://images.unsplash.com/photo-1528148343865-51218c4a13e6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.0.3&q=80&w=1080",
-  ];
+  // Dynamic images based on color - you can customize this mapping
+  const getImageForColor = (colorLabel: string): string => {
+    // Map color labels to specific images
+    // You can customize this mapping based on your product images
+    const colorImageMap: { [key: string]: string } = {
+      Red: "/images/product-red.jpg",
+      Blue: "/images/product-blue.jpg",
+      Green: "/images/product-green.jpg",
+      Black: "/images/product-black.jpg",
+      White: "/images/product-white.jpg",
+      Yellow: "/images/product-yellow.jpg",
+      Purple: "/images/product-purple.jpg",
+      Orange: "/images/product-orange.jpg",
+      Pink: "/images/product-pink.jpg",
+      Brown: "/images/product-brown.jpg",
+      Gray: "/images/product-gray.jpg",
+      Silver: "/images/product-silver.jpg",
+      Gold: "/images/product-gold.jpg",
+    };
 
-  const [mainImage, setMainImage] = useState(images[0]);
+    // Return the mapped image or a default image
+    return colorImageMap[colorLabel] || "/images/product-default.jpg";
+  };
+
+  // Get available images for the product
+  const getAvailableImages = (): string[] => {
+    if (!product?.color_quantity) return ["/images/product-default.jpg"];
+
+    // Get unique images for available colors
+    const images = (product.color_quantity as any[])
+      .filter((color: any) => parseInt(color.quantity) > 0)
+      .map((color: any) => getImageForColor(color.label))
+      .filter((img: string) => img !== undefined) as string[];
+
+    // Remove duplicates and ensure we have at least one image
+    const uniqueImages = [...new Set(images)];
+    return uniqueImages.length > 0
+      ? uniqueImages
+      : ["/images/product-default.jpg"];
+  };
+
+  const availableImages = getAvailableImages();
+  const [mainImage, setMainImage] = useState<string>(
+    availableImages[0] || "/images/product-default.jpg"
+  );
   const [selectedColor, setSelectedColor] = useState(
     product?.color_quantity?.[0] || null
   );
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
 
-  const { addItem } = useCart();
+  const { addItem, state: cartState, updateQuantity, removeItem } = useCart();
+
+  // Update main image when color changes
+  useEffect(() => {
+    if (selectedColor) {
+      const colorImage = getImageForColor(selectedColor.label);
+      setMainImage(colorImage);
+    }
+  }, [selectedColor]);
+
+  // Get current cart quantity for this product and color
+  const getCurrentCartQuantity = () => {
+    if (!selectedColor) return 0;
+
+    const existingItem = cartState.items.find(
+      (item) =>
+        item.id === (product.id || product.title) &&
+        item.color === selectedColor.label
+    );
+
+    return existingItem ? existingItem.quantity : 0;
+  };
+
+  // Get maximum quantity that can be added (available stock minus current cart quantity)
+  const getMaxAddableQuantity = () => {
+    if (!selectedColor) return 0;
+
+    const availableStock = parseInt(selectedColor.quantity);
+    const currentCartQuantity = getCurrentCartQuantity();
+
+    // You can add up to the available stock, regardless of current cart quantity
+    // This allows users to remove items and then add them back
+    return Math.max(0, availableStock);
+  };
+
+  // Get the actual maximum quantity that can be added in this session
+  const getMaxQuantityForThisSession = () => {
+    if (!selectedColor) return 0;
+
+    const availableStock = parseInt(selectedColor.quantity);
+    const currentCartQuantity = getCurrentCartQuantity();
+    const maxAddable = Math.max(0, availableStock - currentCartQuantity);
+
+    console.log("Cart Debug:", {
+      availableStock,
+      currentCartQuantity,
+      maxAddable,
+      selectedColor: selectedColor.label,
+    });
+
+    return maxAddable;
+  };
+
+  // Initialize quantity based on cart state when component mounts or color changes
+  useEffect(() => {
+    if (selectedColor) {
+      const currentCartQuantity = getCurrentCartQuantity();
+      // If item is already in cart, start with 1 (to add more)
+      // If not in cart, start with 1
+      setQuantity(1);
+    }
+  }, [selectedColor, cartState.items]);
+
+  // Reset quantity when cart changes to ensure proper limits
+  useEffect(() => {
+    if (selectedColor) {
+      const maxForSession = getMaxQuantityForThisSession();
+      if (quantity > maxForSession && maxForSession > 0) {
+        setQuantity(maxForSession);
+      } else if (maxForSession === 0) {
+        setQuantity(1);
+      }
+    }
+  }, [cartState.items, selectedColor, quantity]);
 
   const handleAddToCart = () => {
     if (!selectedColor) {
@@ -25,18 +137,38 @@ const ProductDetail = ({ product }: { product: any }) => {
       return;
     }
 
-    addItem({
-      id: product.id || product.title,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      quantity: quantity,
-      color: selectedColor.label,
-      colorHex: selectedColor.color,
-      image: mainImage,
-      maxQuantity: parseInt(selectedColor.quantity), // Add maximum quantity limit
-    });
+    const currentCartQuantity = getCurrentCartQuantity();
+
+    if (currentCartQuantity > 0) {
+      // Update existing item quantity
+      const newTotalQuantity = currentCartQuantity + quantity;
+      updateQuantity(
+        product.id || product.title,
+        newTotalQuantity,
+        selectedColor.label
+      );
+    } else {
+      // Add new item
+      addItem({
+        id: product.id || product.title,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        quantity: quantity,
+        color: selectedColor.label,
+        colorHex: selectedColor.color,
+        image: mainImage,
+        maxQuantity: parseInt(selectedColor.quantity),
+      });
+    }
+
     setShowToast(true);
+  };
+
+  const handleRemoveFromCart = () => {
+    if (!selectedColor) return;
+
+    removeItem(product.id || product.title, selectedColor.label);
   };
 
   const handleColorSelect = (colorOption: any) => {
@@ -46,8 +178,16 @@ const ProductDetail = ({ product }: { product: any }) => {
 
   const handleQuantityChange = (newQuantity: number) => {
     if (selectedColor) {
-      const maxQuantity = parseInt(selectedColor.quantity);
-      setQuantity(Math.min(Math.max(1, newQuantity), maxQuantity));
+      const maxForSession = getMaxQuantityForThisSession();
+      const validQuantity = Math.min(Math.max(1, newQuantity), maxForSession);
+
+      console.log("Quantity Change:", {
+        requested: newQuantity,
+        maxForSession,
+        validQuantity,
+      });
+
+      setQuantity(validQuantity);
     }
   };
 
@@ -103,7 +243,7 @@ const ProductDetail = ({ product }: { product: any }) => {
               {/* Thumbnail Images */}
               <div className="thumbnail-container">
                 <div className="d-flex gap-3 justify-content-center">
-                  {images.map((img, i) => (
+                  {availableImages.map((img, i) => (
                     <div
                       key={i}
                       className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
@@ -248,6 +388,40 @@ const ProductDetail = ({ product }: { product: any }) => {
               {/* Quantity */}
               <div className="quantity-section mb-4">
                 <h6 className="fw-semibold mb-3">Quantity</h6>
+
+                {/* Cart Summary */}
+                <div className="cart-summary mb-3">
+                  <div className="row g-2">
+                    <div className="col-md-6">
+                      <div className="d-flex align-items-center p-2 bg-light rounded">
+                        <i className="bi bi-cart-check text-primary me-2"></i>
+                        <small className="text-muted">
+                          In Cart: <strong>{getCurrentCartQuantity()}</strong>
+                        </small>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="d-flex align-items-center p-2 bg-light rounded">
+                        <i className="bi bi-box text-success me-2"></i>
+                        <small className="text-muted">
+                          Can Add:{" "}
+                          <strong>{getMaxQuantityForThisSession()}</strong>
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Current Cart Quantity Display */}
+                {getCurrentCartQuantity() > 0 && (
+                  <div className="alert alert-info mb-3" role="alert">
+                    <i className="bi bi-cart-check me-2"></i>
+                    You currently have{" "}
+                    <strong>{getCurrentCartQuantity()}</strong> of this item in
+                    your cart
+                  </div>
+                )}
+
                 <div className="d-flex align-items-center gap-3">
                   <div className="input-group" style={{ width: "150px" }}>
                     <button
@@ -263,7 +437,7 @@ const ProductDetail = ({ product }: { product: any }) => {
                       className="form-control text-center border-start-0 border-end-0"
                       value={quantity}
                       min={1}
-                      max={getMaxQuantity()}
+                      max={getMaxQuantityForThisSession()}
                       onChange={(e) =>
                         handleQuantityChange(Number(e.target.value))
                       }
@@ -273,28 +447,60 @@ const ProductDetail = ({ product }: { product: any }) => {
                       className="btn btn-outline-secondary"
                       type="button"
                       onClick={() => handleQuantityChange(quantity + 1)}
-                      disabled={quantity >= getMaxQuantity()}
+                      disabled={
+                        quantity >= getMaxQuantityForThisSession() ||
+                        getMaxQuantityForThisSession() === 0
+                      }
                     >
                       <i className="bi bi-plus"></i>
                     </button>
                   </div>
-                  <small className="text-muted">
-                    {getMaxQuantity()} available
-                  </small>
+                  <div className="d-flex flex-column">
+                    <small className="text-muted">
+                      {getMaxQuantityForThisSession()} more can be added
+                    </small>
+                    <small className="text-muted">
+                      Total available: {getMaxQuantity()}
+                    </small>
+                    {getMaxQuantityForThisSession() === 0 && (
+                      <small className="text-warning">
+                        <i className="bi bi-exclamation-triangle me-1"></i>
+                        Maximum quantity reached
+                      </small>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="action-buttons mb-4">
-                <div className="d-grid">
+                <div className="d-grid gap-2">
                   <button
                     className="btn btn-primary btn-lg py-3 fw-semibold"
                     onClick={handleAddToCart}
-                    disabled={!selectedColor || getMaxQuantity() === 0}
+                    disabled={
+                      !selectedColor || getMaxQuantityForThisSession() === 0
+                    }
                   >
                     <i className="bi bi-cart-plus me-2"></i>
-                    {!selectedColor ? "Select Color First" : "Add to Cart"}
+                    {!selectedColor
+                      ? "Select Color First"
+                      : getCurrentCartQuantity() > 0
+                      ? `Add ${quantity} More to Cart`
+                      : "Add to Cart"}
                   </button>
+
+                  {/* Show Remove from Cart button if item is already in cart */}
+                  {getCurrentCartQuantity() > 0 && (
+                    <button
+                      className="btn btn-outline-danger btn-lg py-3 fw-semibold"
+                      onClick={handleRemoveFromCart}
+                      disabled={!selectedColor}
+                    >
+                      <i className="bi bi-cart-dash me-2"></i>
+                      Remove from Cart ({getCurrentCartQuantity()})
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -344,12 +550,14 @@ const ProductDetail = ({ product }: { product: any }) => {
         message={
           !selectedColor
             ? "Please select a color first!"
+            : getCurrentCartQuantity() > 0 &&
+              getCurrentCartQuantity() > parseInt(selectedColor.quantity)
+            ? `${quantity} more ${product.title} added to cart!`
             : `${product.title} added to cart!`
         }
         type={!selectedColor ? "error" : "success"}
         isVisible={showToast}
         onClose={() => setShowToast(false)}
-        duration={2000}
       />
 
       <style jsx>{`

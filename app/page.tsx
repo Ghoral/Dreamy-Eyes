@@ -11,7 +11,6 @@ export default function Home() {
     <div>
       <GlobalSupabaseListenerWrapper />
       <BillboardCarousel />
-      <CompanyService />
       <ItemListing />
       <TikTokCarousel />
       <ProductWrapper />

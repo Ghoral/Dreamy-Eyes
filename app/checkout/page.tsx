@@ -24,7 +24,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [selectedAddressId, setSelectedAddressId] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -54,7 +54,7 @@ export default function CheckoutPage() {
       if (addressesData && addressesData.length > 0) {
         setAddresses(addressesData as Address[]);
         // Select the primary address
-        setSelectedAddressId(addressesData[0].id.toString());
+        setSelectedAddressId(addressesData[0].id);
       } else {
         // If no primary address found, load all addresses as fallback
         const { data: allAddressesData } = await (supabase as any)
@@ -64,7 +64,7 @@ export default function CheckoutPage() {
 
         if (allAddressesData && allAddressesData.length > 0) {
           setAddresses(allAddressesData as Address[]);
-          setSelectedAddressId(allAddressesData[0].id.toString());
+          setSelectedAddressId(allAddressesData[0].id);
         }
       }
     } catch (error) {
@@ -78,7 +78,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     console.log("e", e);
 
-    if (!selectedAddressId) {
+    if (!selectedAddressId || selectedAddressId <= 0) {
       setError("Please select a shipping address");
       return;
     }
@@ -101,7 +101,7 @@ export default function CheckoutPage() {
 
       const { error } = await supabase.rpc("create_orders_and_update_stock", {
         p_user_id: user.id,
-        p_address_id: selectedAddressId,
+        p_address_id: selectedAddressId.toString(),
         p_order_number: order_number,
         p_items: cartState.items as any,
       });
@@ -187,6 +187,19 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Stock Adjustment Warning */}
+                {cartState.items.some(
+                  (item) =>
+                    item.maxQuantity && item.quantity >= item.maxQuantity
+                ) && (
+                  <div className="alert alert-warning" role="alert">
+                    <i className="bi bi-exclamation-triangle me-2"></i>
+                    Some items in your cart have been automatically adjusted to
+                    match available stock. Please review your order before
+                    proceeding.
+                  </div>
+                )}
+
                 {/* Address Selection */}
                 <div className="mb-4">
                   <label className="form-label fw-semibold">
@@ -217,7 +230,7 @@ export default function CheckoutPage() {
                                 value={address.id}
                                 checked={selectedAddressId === address.id}
                                 onChange={(e) =>
-                                  setSelectedAddressId(e.target.value)
+                                  setSelectedAddressId(Number(e.target.value))
                                 }
                               />
                               <label
@@ -265,6 +278,23 @@ export default function CheckoutPage() {
               <div className="card-body p-4">
                 <h3 className="fw-bold mb-4">Order Summary</h3>
 
+                {/* Stock Adjustment Warning */}
+                {cartState.items.some(
+                  (item) =>
+                    item.maxQuantity && item.quantity >= item.maxQuantity
+                ) && (
+                  <div
+                    className="alert alert-warning alert-sm mb-3"
+                    role="alert"
+                  >
+                    <i className="bi bi-exclamation-triangle me-2"></i>
+                    <small>
+                      Some quantities have been adjusted to match available
+                      stock
+                    </small>
+                  </div>
+                )}
+
                 {/* Cart Items */}
                 <div className="mb-4">
                   {cartState.items.map((item, index) => (
@@ -296,6 +326,17 @@ export default function CheckoutPage() {
                         <small className="text-muted">
                           Qty: {item.quantity} × ${item.price}
                         </small>
+                        {item.maxQuantity && (
+                          <small className="text-muted d-block">
+                            Stock: {item.maxQuantity} available
+                            {item.quantity >= item.maxQuantity && (
+                              <span className="text-warning ms-2">
+                                <i className="bi bi-exclamation-triangle"></i>{" "}
+                                Max quantity reached
+                              </span>
+                            )}
+                          </small>
+                        )}
                       </div>
                       <div className="text-end">
                         <span className="fw-bold">
