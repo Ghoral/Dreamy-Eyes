@@ -640,13 +640,7 @@ const ProductDetail = ({ product }: { product: any }) => {
                   </button>
                 </div>
                 <div className="text-sm text-secondary-500">
-                  <div>{getMaxQuantityForThisSession()} more can be added</div>
                   <div>Total available: {getMaxQuantity()}</div>
-                  {getMaxQuantityForThisSession() === 0 && (
-                    <div className="text-amber-600 font-medium">
-                      Maximum quantity reached
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
