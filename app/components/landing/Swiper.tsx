@@ -1,115 +1,180 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay } from "swiper/modules";
-import "swiper/css/bundle";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
-const slides = [
-  {
-    imageSrc: "/images/banner-image2.png",
-  },
-  {
-    imageSrc: "/images/banner-image1.png",
-  },
-  {
-    imageSrc: "/images/banner-image.png",
-  },
-];
+const BillboardCarousel = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-export default function BillboardCarousel() {
+  const slides = [
+    {
+      id: 1,
+      imageSrc: "/images/logo.png", // Placeholder - replace with your fashion lens banner
+      title: "Discover Your Style",
+      subtitle: "Premium Fashion Contact Lenses",
+      ctaText: "Shop Now",
+      ctaLink: "/shop",
+    },
+    {
+      id: 2,
+      imageSrc: "/images/logo.png", // Placeholder - replace with your fashion lens banner
+      title: "Express Yourself",
+      subtitle: "Trendy Colors & Designs",
+      ctaText: "Explore Collection",
+      ctaLink: "/shop",
+    },
+    {
+      id: 3,
+      imageSrc: "/images/logo.png", // Placeholder - replace with your fashion lens banner
+      title: "Be Bold, Be Beautiful",
+      subtitle: "Transform Your Look Today",
+      ctaText: "Get Started",
+      ctaLink: "/shop",
+    },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  const goToPrevious = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  const goToNext = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
   return (
-    <section
-      id="billboard"
-      className="position-relative"
-      style={{
-        height: "600px",
-        backgroundColor: "#f8f9fa",
-        padding: "0",
-        margin: "0",
-      }}
-    >
-      {/* Navigation Arrows */}
-      <div
-        className="position-absolute end-0 pe-4 me-4 swiper-button-next main-slider-button-next text-white d-none d-md-block"
-        style={{ zIndex: 10 }}
-      >
+    <section className="relative pt-20 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
+      {/* Background Animated Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
         <div
-          className="bg-dark bg-opacity-50 rounded-circle d-flex justify-content-center align-items-center"
-          style={{ width: "50px", height: "50px" }}
-        >
-          <i className="bi bi-chevron-right fs-4"></i>
-        </div>
+          className="absolute bottom-20 right-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
-      <div
-        className="position-absolute start-0 ps-4 ms-4 swiper-button-prev main-slider-button-prev text-white d-none d-md-block"
-        style={{ zIndex: 10 }}
-      >
-        <div
-          className="bg-dark bg-opacity-50 rounded-circle d-flex justify-content-center align-items-center"
-          style={{ width: "50px", height: "50px" }}
-        >
-          <i className="bi bi-chevron-left fs-4"></i>
-        </div>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative">
+          {/* Carousel Container */}
+          <div className="relative h-[600px] rounded-3xl overflow-hidden shadow-2xl">
+            {slides.map((slide, index) => (
+              <div
+                key={slide.id}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  index === currentSlide ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <div className="relative w-full h-full">
+                  <Image
+                    src={slide.imageSrc}
+                    alt={`Fashion Lens Banner ${slide.id}`}
+                    fill
+                    className="object-cover"
+                    priority={index === 0}
+                  />
 
-      <Swiper
-        modules={[Navigation, Autoplay]}
-        navigation={{
-          nextEl: ".main-slider-button-next",
-          prevEl: ".main-slider-button-prev",
-        }}
-        autoplay={{ delay: 5000 }}
-        loop={true}
-        className="main-swiper w-100 h-100"
-        style={{ height: "600px" }}
-      >
-        {slides.map((slide, index) => (
-          <SwiperSlide key={index}>
-            <div className="w-100 h-100 position-relative">
-              <Image
-                src={slide.imageSrc}
-                className="w-100 h-100"
-                alt={`Banner ${index + 1}`}
-                fill
-                style={{
-                  objectFit: "cover",
-                  objectPosition: "center",
-                }}
-                priority={index === 0}
+                  {/* Content Overlay - Removed title, keeping only CTA */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent flex items-center">
+                    <div className="ml-16 md:ml-24 max-w-md">
+                      <Link
+                        href={slide.ctaLink}
+                        className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-bold text-lg rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
+                      >
+                        {slide.ctaText}
+                        <svg
+                          className="w-5 h-5 ml-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 8l4 4m0 0l-4 4m4-4H3"
+                          />
+                        </svg>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Navigation Arrows */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-secondary-600 hover:text-primary-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
               />
-            </div>
-          </SwiperSlide>
-        ))}
-      </Swiper>
+            </svg>
+          </button>
 
-      <style jsx>{`
-        .swiper-button-next,
-        .swiper-button-prev {
-          top: 50%;
-          transform: translateY(-50%);
-          transition: all 0.3s ease;
-        }
+          <button
+            onClick={goToNext}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-secondary-600 hover:text-primary-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
 
-        .swiper-button-next:hover,
-        .swiper-button-prev:hover {
-          transform: translateY(-50%) scale(1.1);
-        }
-
-        .swiper-button-next::after,
-        .swiper-button-prev::after {
-          display: none;
-        }
-
-        .main-swiper {
-          border-radius: 0;
-        }
-
-        .swiper-slide {
-          height: 600px;
-        }
-      `}</style>
+          {/* Pagination Dots */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlide
+                    ? "bg-white scale-125 shadow-lg"
+                    : "bg-white/50 hover:bg-white/75"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   );
-}
+};
+
+export default BillboardCarousel;

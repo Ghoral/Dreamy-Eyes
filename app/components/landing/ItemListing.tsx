@@ -1,277 +1,219 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
-import React, { useState } from "react";
-
-const sections = [
-  {
-    title: "Featured",
-    className: "featured",
-    products: [
-      {
-        title: "Echoes of the Ancients",
-        image: "/images/product-item2.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "The Midnight Garden",
-        image: "/images/product-item1.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "Shadow of the Serpent",
-        image: "/images/product-item3.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-    ],
-  },
-  {
-    title: "Latest items",
-    className: "latest-items",
-    products: [
-      {
-        title: "Whispering Winds",
-        image: "/images/product-item4.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "The Forgotten Realm",
-        image: "/images/product-item5.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "Moonlit Secrets",
-        image: "/images/product-item6.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-    ],
-  },
-  {
-    title: "Best reviewed",
-    className: "best-reviewed",
-    products: [
-      {
-        title: "The Crystal Key",
-        image: "/images/product-item7.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "Windswept Shores",
-        image: "/images/product-item8.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "Lost Horizons",
-        image: "/images/product-item9.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-    ],
-  },
-  {
-    title: "Top sellers",
-    className: "top-sellers",
-    products: [
-      {
-        title: "Sunset Dreams",
-        image: "/images/product-item10.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "Emerald Horizon",
-        image: "/images/product-item11.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-      {
-        title: "Crimson Echo",
-        image: "/images/product-item12.png",
-        author: "Lauren Asher",
-        price: 870,
-      },
-    ],
-  },
-];
 
 const ItemListing = () => {
-  const [hoveredItem, setHoveredItem] = useState(null);
-
-  const handleItemClick = (
-    sectionIndex: any,
-    productIndex: any,
-    product: any
-  ) => {
-    console.log("Clicked:", product.title);
-    // Click logic here
-  };
+  const sections = [
+    {
+      id: 1,
+      title: "Latest Arrivals",
+      subtitle: "Fresh new styles just in",
+      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
+      category: "New",
+      description:
+        "Discover the newest fashion lens collections that just arrived",
+      price: "$29.99",
+      originalPrice: "$39.99",
+      discount: "25% OFF",
+    },
+    {
+      id: 2,
+      title: "Best Sellers",
+      subtitle: "Most loved by our customers",
+      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
+      category: "Popular",
+      description:
+        "Our top-rated lenses that customers can't stop raving about",
+      price: "$34.99",
+      originalPrice: "$44.99",
+      discount: "22% OFF",
+    },
+    {
+      id: 3,
+      title: "Top Reviews",
+      subtitle: "Highest rated products",
+      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
+      category: "Rated",
+      description: "Lenses with the best customer reviews and ratings",
+      price: "$39.99",
+      originalPrice: "$49.99",
+      discount: "20% OFF",
+    },
+    {
+      id: 4,
+      title: "Featured Collections",
+      subtitle: "Curated for you",
+      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
+      category: "Featured",
+      description: "Handpicked collections that showcase the latest trends",
+      price: "$44.99",
+      originalPrice: "$54.99",
+      discount: "18% OFF",
+    },
+  ];
 
   return (
-    <section
-      id="items-listing"
-      className="py-5"
-      style={{ backgroundColor: "#f8f9fa" }}
-    >
-      <div className="container">
-        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-          {sections.map((section, idx) => (
-            <div key={idx} className="col d-flex">
-              <div className="card shadow-sm w-100 h-100 border-0 bg-white rounded-4 overflow-hidden">
-                <div className="card-body d-flex flex-column">
-                  <h5
-                    className="card-title mb-4 fw-bold text-danger text-uppercase"
-                    style={{ fontSize: "1rem", letterSpacing: "0.5px" }}
-                  >
-                    {section.title}
-                  </h5>
+    <section className="py-20 bg-gradient-to-br from-white via-secondary-50 to-primary-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center px-4 py-2 bg-primary-100 text-primary-700 text-sm font-semibold rounded-full mb-4">
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+              />
+            </svg>
+            Collections
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6">
+            Explore Our Fashion Lens Collections
+          </h2>
+          <p className="text-xl text-secondary-600 max-w-3xl mx-auto leading-relaxed">
+            From the latest trends to customer favorites, discover the perfect
+            lenses to express your unique style
+          </p>
+        </div>
 
-                  <div className="d-flex flex-column gap-2">
-                    {section.products.map((product, pIdx) => {
-                      const itemId: any = `${idx}-${pIdx}`;
-                      const isHovered = hoveredItem === itemId;
+        {/* Collections Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {sections.map((section) => (
+            <div
+              key={section.id}
+              className="group bg-white rounded-3xl shadow-soft hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden"
+            >
+              {/* Image Container */}
+              <div className="relative h-48 bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
+                <Image
+                  src={section.image}
+                  alt={section.title}
+                  fill
+                  className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
+                />
 
-                      return (
-                        <div
-                          key={pIdx}
-                          className="d-flex align-items-start gap-3 p-3 rounded-3 position-relative bg-white"
-                          style={{
-                            cursor: "pointer",
-                            transition: "all 0.3s ease",
-                            transform: isHovered
-                              ? "translateY(-2px) scale(1.01)"
-                              : "scale(1)",
-                            boxShadow: isHovered
-                              ? "0 6px 20px rgba(0,0,0,0.1)"
-                              : "0 1px 4px rgba(0,0,0,0.05)",
-                            border: "1px solid",
-                            borderColor: isHovered ? "#dee2e6" : "#f8f9fa",
-                          }}
-                          onMouseEnter={() => setHoveredItem(itemId)}
-                          onMouseLeave={() => setHoveredItem(null)}
-                          onClick={() => handleItemClick(idx, pIdx, product)}
-                        >
-                          <div className="position-relative">
-                            <Image
-                              src={product.image}
-                              className="rounded-2"
-                              alt={product.title}
-                              width={80}
-                              height={80}
-                              style={{
-                                objectFit: "cover",
-                                flexShrink: 0,
-                                transition: "transform 0.3s ease",
-                                transform: isHovered
-                                  ? "scale(1.07)"
-                                  : "scale(1)",
-                                borderRadius: "0.5rem",
-                              }}
-                            />
-                            {isHovered && (
-                              <div
-                                className="position-absolute top-0 start-0 w-100 h-100 rounded d-flex align-items-center justify-content-center"
-                                style={{
-                                  backgroundColor: "rgba(220, 53, 69, 0.1)",
-                                  transition: "opacity 0.3s ease",
-                                }}
-                              >
-                                <div
-                                  className="bg-white rounded-circle d-flex align-items-center justify-content-center"
-                                  style={{ width: "24px", height: "24px" }}
-                                >
-                                  <span
-                                    style={{
-                                      fontSize: "12px",
-                                      color: "rgb(220, 53, 69)",
-                                    }}
-                                  >
-                                    →
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                {/* Category Badge */}
+                <div className="absolute top-4 left-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-500 text-white">
+                    {section.category}
+                  </span>
+                </div>
 
-                          <div className="flex-grow-1 min-w-0">
-                            <h6
-                              className="mb-1 fw-semibold lh-sm"
-                              style={{
-                                fontSize: "0.9rem",
-                                color: isHovered
-                                  ? "rgb(220, 53, 69)"
-                                  : "#212529",
-                                transition: "color 0.3s ease",
-                              }}
-                            >
-                              {product.title}
-                            </h6>
-                            <p
-                              className="mb-1 text-muted"
-                              style={{ fontSize: "0.75rem" }}
-                            >
-                              by {product.author}
-                            </p>
-                            <div className="d-flex align-items-center justify-content-between">
-                              <span
-                                className="fw-bold"
-                                style={{
-                                  fontSize: "0.85rem",
-                                  color: "rgb(220, 53, 69)",
-                                }}
-                              >
-                                Rs. {product.price}
-                              </span>
-                              {isHovered && (
-                                <span
-                                  className="badge bg-light text-dark"
-                                  style={{
-                                    fontSize: "0.65rem",
-                                    transition: "opacity 0.3s ease",
-                                  }}
-                                >
-                                  View Details
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                {/* Discount Badge */}
+                <div className="absolute top-4 right-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500 text-white">
+                    {section.discount}
+                  </span>
+                </div>
+              </div>
 
-                  <div className="mt-auto pt-3">
-                    <button
-                      className="btn btn-outline-danger btn-sm w-100 rounded-pill"
-                      style={{
-                        fontSize: "0.8rem",
-                        transition: "all 0.3s ease-in-out",
-                      }}
-                      onMouseEnter={(e: any) => {
-                        e.target.style.backgroundColor = "rgb(220, 53, 69)";
-                        e.target.style.borderColor = "rgb(220, 53, 69)";
-                        e.target.style.color = "white";
-                      }}
-                      onMouseLeave={(e: any) => {
-                        e.target.style.backgroundColor = "transparent";
-                        e.target.style.borderColor = "rgb(220, 53, 69)";
-                        e.target.style.color = "rgb(220, 53, 69)";
-                      }}
-                    >
-                      View All {section.title}
-                    </button>
+              {/* Content */}
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300">
+                  {section.title}
+                </h3>
+                <p className="text-secondary-600 text-sm mb-3">
+                  {section.subtitle}
+                </p>
+                <p className="text-secondary-500 text-sm mb-4 line-clamp-2">
+                  {section.description}
+                </p>
+
+                {/* Price */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-2xl font-bold text-primary-600">
+                      {section.price}
+                    </span>
+                    <span className="text-sm text-secondary-400 line-through">
+                      {section.originalPrice}
+                    </span>
                   </div>
                 </div>
+
+                {/* Action Button */}
+                <Link
+                  href="/shop"
+                  className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
+                  </svg>
+                  Shop Now
+                </Link>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="text-center">
+          <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-3xl p-8 text-white">
+            <h3 className="text-2xl font-bold mb-4">
+              Ready to Transform Your Look?
+            </h3>
+            <p className="text-lg mb-6 opacity-90">
+              Join thousands of fashion-forward customers who trust us for their
+              style needs
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/shop"
+                className="inline-flex items-center px-8 py-4 bg-white text-primary-600 hover:bg-primary-50 font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                  />
+                </svg>
+                Shop All Lenses
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center px-8 py-4 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                Get Style Advice
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </section>

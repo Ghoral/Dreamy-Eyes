@@ -1,576 +1,361 @@
 "use client";
 
-import Image from "next/image";
-import React, {
-  useState,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-} from "react";
-import ModalCart from "../modals/ModalCart";
-import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "../../context/CartContext";
-import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
+import ModalCart from "../modals/ModalCart";
 
 const Navbar = () => {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { state: cartState } = useCart();
-  const [navLinks, setNavLinks] = useState([
-    { href: "/", label: "Home", isActive: false },
-    { href: "/shop", label: "Shop", isActive: false },
-    { href: "/about", label: "About", isActive: false },
-    { href: "/contact", label: "Contact", isActive: false },
-  ]);
-  const [isOffcanvasOpen, setIsOffcanvasOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  // Debug: Log cart state changes in Navbar
-  useEffect(() => {
-    console.log("Navbar - Cart state changed:", cartState);
-  }, [cartState]);
-
-  // Get current user
-  useEffect(() => {
-    const getUser = async () => {
-      const supabase = createSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    getUser();
-  }, []);
-
-  const handleSignOut = async () => {
-    const supabase = createSupabaseClient();
-    await supabase.auth.signOut();
-    setUser(null);
-    setIsAccountDropdownOpen(false);
-    router.push("/");
-  };
-
-  const closeOffcanvas = useCallback(() => {
-    setIsOffcanvasOpen(false);
-  }, []);
-
-  useEffect(() => {
-    if (isOffcanvasOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOffcanvasOpen]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const { state: cartState } = useCart();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: any) => {
-      if (e.key === "Escape" && isOffcanvasOpen) {
-        closeOffcanvas();
-      }
-    };
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOffcanvasOpen, closeOffcanvas]);
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
-  const toggleOffcanvas = useCallback(() => {
-    setIsOffcanvasOpen((prev) => !prev);
-  }, []);
+  const openCartModal = () => {
+    setIsCartModalOpen(true);
+  };
 
-  const handleCartOpen = useCallback(() => {
-    setIsCartOpen(true);
-  }, []);
+  const closeCartModal = () => {
+    setIsCartModalOpen(false);
+  };
 
-  const handleCartClose = useCallback(() => {
-    setIsCartOpen(false);
-  }, []);
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
 
-  const handleLinkClick = useCallback(() => {
-    if (window.innerWidth < 992) {
-      closeOffcanvas();
-    }
-  }, [closeOffcanvas]);
+  const navLinks = [
+    { label: "Home", href: "/" },
+    { label: "Shop", href: "/shop" },
+    { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
+  ];
 
-  useLayoutEffect(() => {
-    setNavLinks((prevNavLinks) => {
-      const navItemIndex = prevNavLinks.findIndex(
-        (item) => item.href === pathname
-      );
-      if (navItemIndex !== -1) {
-        return prevNavLinks.map((item, index) => ({
-          ...item,
-          isActive: index === navItemIndex,
-        }));
-      }
-      return prevNavLinks;
-    });
-  }, [pathname]);
-
-  const handleClickNavItems = (value: string) => router.push(value);
+  const cartItemCount = cartState.items.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   return (
     <>
       <nav
-        id="header-nav"
-        className={`navbar navbar-expand-lg position-fixed w-100 top-0 ${
-          isScrolled ? "navbar-scrolled" : ""
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+          isScrolled
+            ? "bg-white/95 backdrop-blur-md shadow-soft"
+            : "bg-white/98 backdrop-blur-sm shadow-sm"
         }`}
-        role="navigation"
-        aria-label="Main navigation"
-        style={{
-          zIndex: 1030,
-          transition: "all 0.3s ease",
-          backgroundColor: isScrolled
-            ? "rgba(255, 255, 255, 0.95)"
-            : "rgba(255, 255, 255, 0.98)",
-          backdropFilter: isScrolled ? "blur(10px)" : "blur(5px)",
-          boxShadow: isScrolled
-            ? "0 2px 20px rgba(0,0,0,0.1)"
-            : "0 1px 10px rgba(0,0,0,0.05)",
-        }}
       >
-        <div className="container">
-          <Link
-            className="navbar-brand fw-bold d-flex align-items-center"
-            href="/"
-            aria-label="Dreamy Eyes - Home"
-          >
-            <Image
-              src="/images/main-logo.png"
-              className="logo me-2"
-              alt="Dreamy Eyes logo"
-              width={40}
-              height={40}
-              priority
-              sizes="40px"
-            />
-            <span className="text-primary">Dreamy Eyes</span>
-          </Link>
-
-          <button
-            className={`navbar-toggler border-0 d-lg-none ${
-              isOffcanvasOpen ? "active" : ""
-            }`}
-            type="button"
-            onClick={toggleOffcanvas}
-            aria-controls="bdNavbar"
-            aria-expanded={isOffcanvasOpen}
-            aria-label="Toggle navigation menu"
-          >
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
-            <span className="hamburger-line"></span>
-          </button>
-
-          {isOffcanvasOpen && (
-            <div
-              className="offcanvas-backdrop fade show d-lg-none"
-              onClick={closeOffcanvas}
-              style={{ zIndex: 1040 }}
-            />
-          )}
-
-          <div
-            className={`offcanvas offcanvas-end d-lg-none ${
-              isOffcanvasOpen ? "show" : ""
-            }`}
-            tabIndex={-1}
-            id="bdNavbar"
-            aria-labelledby="bdNavbarOffcanvasLabel"
-            style={{ zIndex: 1045 }}
-          >
-            <div className="offcanvas-header px-4 pb-3 border-bottom">
-              <Link
-                className="navbar-brand"
-                href="/"
-                aria-label="Dreamy Eyes - Home"
-                onClick={handleLinkClick}
-              >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <Link
+              href="/"
+              className="flex items-center space-x-3 group transition-transform duration-300 hover:scale-105"
+            >
+              <div className="relative w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-2 shadow-glow group-hover:shadow-glow-lg transition-all duration-300">
                 <Image
-                  src="/images/main-logo.png"
-                  className="logo"
-                  alt="Dreamy Eyes logo"
-                  width={120}
-                  height={40}
+                  src="/images/logo.png"
+                  alt="Dreamy Eyes Logo"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain"
                   priority
-                  sizes="(max-width: 768px) 120px, 150px"
                 />
-              </Link>
-              <button
-                type="button"
-                className="btn-close btn-close-enhanced"
-                onClick={closeOffcanvas}
-                aria-label="Close navigation menu"
-              />
-            </div>
-
-            <div className="offcanvas-body p-0">
-              <ul id="navbar" className="navbar-nav mobile-nav" role="menubar">
-                {navLinks.map((link) => (
-                  <li key={link.label} className="nav-item" role="none">
-                    <Link
-                      className={`nav-link px-4 py-3 ${
-                        link.isActive ? "active" : ""
-                      }`}
-                      href={link.href}
-                      role="menuitem"
-                      aria-current={link.isActive ? "page" : undefined}
-                      onClick={handleLinkClick}
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mobile-user-actions border-top mt-auto p-4">
-                <div className="d-flex gap-3 justify-content-center">
-                  {user ? (
-                    <div className="dropdown w-100">
-                      <button
-                        type="button"
-                        className="btn btn-outline-dark btn-sm flex-fill dropdown-toggle"
-                        aria-label="User account"
-                        onClick={() =>
-                          setIsAccountDropdownOpen(!isAccountDropdownOpen)
-                        }
-                        data-bs-toggle="dropdown"
-                        aria-expanded="false"
-                      >
-                        <i className="bi bi-person me-2" aria-hidden="true" />
-                        Profile
-                      </button>
-                      <ul
-                        className={`dropdown-menu ${
-                          isAccountDropdownOpen ? "show" : ""
-                        }`}
-                        style={{ minWidth: "200px" }}
-                      >
-                        <li>
-                          <Link
-                            className="dropdown-item d-flex align-items-center gap-2"
-                            href="/profile"
-                            onClick={() => {
-                              setIsAccountDropdownOpen(false);
-                              closeOffcanvas();
-                            }}
-                          >
-                            <i className="bi bi-person-circle"></i>
-                            Profile
-                          </Link>
-                        </li>
-                        <li>
-                          <hr className="dropdown-divider" />
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item d-flex align-items-center gap-2 text-danger"
-                            onClick={() => {
-                              handleSignOut();
-                              closeOffcanvas();
-                            }}
-                          >
-                            <i className="bi bi-box-arrow-right"></i>
-                            Sign Out
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                  ) : (
-                    <Link
-                      href="/login"
-                      className="btn btn-outline-dark btn-sm flex-fill"
-                      onClick={closeOffcanvas}
-                    >
-                      <i className="bi bi-person me-2" aria-hidden="true" />
-                      Sign In
-                    </Link>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-sm flex-fill"
-                    aria-label="Shopping cart"
-                    onClick={() => {
-                      handleCartOpen();
-                      closeOffcanvas();
-                    }}
-                  >
-                    <i className="bi bi-cart-check me-2" aria-hidden="true" />
-                    Cart
-                  </button>
-                </div>
               </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+                  Dreamy Eyes
+                </span>
+                <span className="text-xs text-secondary-500 font-medium -mt-1">
+                  Contact Lenses
+                </span>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="relative text-secondary-700 font-medium hover:text-primary-500 transition-colors duration-300 group"
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Right Side - Cart, Profile & Mobile Menu Button */}
+            <div className="flex items-center space-x-4">
+              {/* Cart Icon */}
+              <button
+                onClick={openCartModal}
+                className="relative p-3 rounded-full bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 transition-all duration-300 group"
+              >
+                <svg
+                  className="w-6 h-6 text-primary-600 group-hover:text-primary-700 transition-colors duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                  />
+                </svg>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {cartItemCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Profile/Account Icon */}
+              <div className="relative">
+                <button
+                  onClick={toggleProfileMenu}
+                  className="p-3 rounded-full bg-gradient-to-r from-secondary-50 to-secondary-100 hover:from-secondary-100 hover:to-secondary-200 transition-all duration-300 group"
+                >
+                  <svg
+                    className="w-6 h-6 text-secondary-600 group-hover:text-secondary-700 transition-colors duration-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-secondary-100 py-2 z-50">
+                    <Link
+                      href="/profile"
+                      className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      <svg
+                        className="w-5 h-5 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      Profile
+                    </Link>
+                    <Link
+                      href="/shipping-address"
+                      className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      <svg
+                        className="w-5 h-5 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      Addresses
+                    </Link>
+                    <Link
+                      href="/checkout"
+                      className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      <svg
+                        className="w-5 h-5 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
+                      </svg>
+                      Orders
+                    </Link>
+                    <div className="border-t border-secondary-100 my-2"></div>
+                    <button
+                      className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      <svg
+                        className="w-5 h-5 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={toggleMobileMenu}
+                className="lg:hidden p-2 rounded-lg bg-secondary-50 hover:bg-secondary-100 transition-colors duration-300"
+                aria-label="Toggle mobile menu"
+              >
+                <svg
+                  className={`w-6 h-6 text-secondary-600 transition-transform duration-300 ${
+                    isMobileMenuOpen ? "rotate-90" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {isMobileMenuOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="collapse navbar-collapse d-none d-lg-flex justify-content-center flex-grow-1">
-            <ul className="navbar-nav text-uppercase">
+        {/* Mobile Menu */}
+        <div
+          className={`lg:hidden transition-all duration-300 ease-in-out ${
+            isMobileMenuOpen
+              ? "max-h-96 opacity-100"
+              : "max-h-0 opacity-0 pointer-events-none"
+          }`}
+        >
+          <div className="bg-white border-t border-secondary-100 shadow-lg">
+            <div className="px-4 py-6 space-y-4">
               {navLinks.map((link) => (
-                <li key={link.label} className="nav-item">
-                  <Link
-                    className={`nav-link me-4 ${link.isActive ? "active" : ""}`}
-                    href={link.href}
-                    aria-current={link.isActive ? "page" : undefined}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="user-items d-none d-lg-flex">
-            <ul className="d-flex justify-content-end list-unstyled mb-0 align-items-center">
-              <li className="pe-3">
-                <div className="dropdown">
-                  <button
-                    type="button"
-                    className="btn btn-link p-2 text-dark position-relative dropdown-toggle"
-                    aria-label="User account"
-                    onClick={() =>
-                      setIsAccountDropdownOpen(!isAccountDropdownOpen)
-                    }
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    <i
-                      className="bi bi-person"
-                      style={{ fontSize: 20 }}
-                      aria-hidden="true"
-                    />
-                  </button>
-                  <ul
-                    className={`dropdown-menu ${
-                      isAccountDropdownOpen ? "show" : ""
-                    }`}
-                    style={{ minWidth: "200px" }}
-                  >
-                    {user ? (
-                      <>
-                        <li>
-                          <Link
-                            className="dropdown-item d-flex align-items-center gap-2"
-                            href="/profile"
-                            onClick={() => setIsAccountDropdownOpen(false)}
-                          >
-                            <i className="bi bi-person-circle"></i>
-                            Profile
-                          </Link>
-                        </li>
-                        <li>
-                          <hr className="dropdown-divider" />
-                        </li>
-                        <li>
-                          <button
-                            className="dropdown-item d-flex align-items-center gap-2 text-danger"
-                            onClick={handleSignOut}
-                          >
-                            <i className="bi bi-box-arrow-right"></i>
-                            Sign Out
-                          </button>
-                        </li>
-                      </>
-                    ) : (
-                      <>
-                        <li>
-                          <Link
-                            className="dropdown-item d-flex align-items-center gap-2"
-                            href="/login"
-                            onClick={() => setIsAccountDropdownOpen(false)}
-                          >
-                            <i className="bi bi-box-arrow-in-right"></i>
-                            Sign In
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            className="dropdown-item d-flex align-items-center gap-2"
-                            href="/register"
-                            onClick={() => setIsAccountDropdownOpen(false)}
-                          >
-                            <i className="bi bi-person-plus"></i>
-                            Register
-                          </Link>
-                        </li>
-                      </>
-                    )}
-                  </ul>
-                </div>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  className="btn btn-link p-2 text-dark position-relative"
-                  aria-label="Shopping cart"
-                  onClick={handleCartOpen}
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  onClick={closeMobileMenu}
+                  className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
                 >
-                  <i
-                    className="bi bi-cart-check"
-                    style={{ fontSize: 20 }}
-                    aria-hidden="true"
-                  />
-                  {cartState.itemCount > 0 && (
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-                      {cartState.itemCount}
-                      <span className="visually-hidden">items in cart</span>
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-4 border-t border-secondary-100 space-y-2">
+                <button
+                  onClick={() => {
+                    closeMobileMenu();
+                    openCartModal();
+                  }}
+                  className="w-full flex items-center justify-between py-3 px-4 bg-primary-50 text-primary-700 font-semibold rounded-lg hover:bg-primary-100 transition-colors duration-300"
+                >
+                  <span>View Cart</span>
+                  {cartItemCount > 0 && (
+                    <span className="bg-primary-500 text-white text-sm font-bold px-2 py-1 rounded-full">
+                      {cartItemCount}
                     </span>
                   )}
                 </button>
-              </li>
-            </ul>
+                <Link
+                  href="/profile"
+                  onClick={closeMobileMenu}
+                  className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                >
+                  Profile
+                </Link>
+                <Link
+                  href="/shipping-address"
+                  onClick={closeMobileMenu}
+                  className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                >
+                  Addresses
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </nav>
 
+      {/* Cart Modal */}
       <ModalCart
-        isOpen={isCartOpen}
-        onCheckout={() => console.log("Checkout clicked")}
-        onClose={handleCartClose}
-        onViewCart={() => console.log("View cart clicked")}
+        isOpen={isCartModalOpen}
+        onClose={closeCartModal}
+        onViewCart={() => {
+          closeCartModal();
+          window.location.href = "/checkout";
+        }}
+        onCheckout={() => {
+          closeCartModal();
+          window.location.href = "/checkout";
+        }}
       />
 
-      <style jsx>{`
-        .hamburger-menu {
-          position: relative;
-          width: 30px;
-          height: 30px;
-          border: none;
-          background: transparent;
-          cursor: pointer;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          transition: all 0.3s ease;
-        }
-
-        .hamburger-line {
-          width: 25px;
-          height: 3px;
-          background-color: #000;
-          margin: 2px 0;
-          transition: all 0.3s ease;
-          transform-origin: center;
-        }
-
-        .navbar-toggler.active .hamburger-line:nth-child(1) {
-          transform: rotate(45deg) translate(6px, 6px);
-        }
-
-        .navbar-toggler.active .hamburger-line:nth-child(2) {
-          opacity: 0;
-        }
-
-        .navbar-toggler.active .hamburger-line:nth-child(3) {
-          transform: rotate(-45deg) translate(6px, -6px);
-        }
-
-        .navbar-toggler:hover .hamburger-line {
-          background-color: #007bff;
-        }
-
-        .navbar-scrolled {
-          backdrop-filter: blur(15px);
-        }
-
-        .offcanvas {
-          transition: transform 0.3s ease-in-out;
-          width: 320px !important;
-        }
-
-        @media (min-width: 992px) {
-          .offcanvas,
-          .offcanvas-backdrop {
-            display: none !important;
-          }
-        }
-
-        .offcanvas-backdrop {
-          background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .mobile-nav .nav-link {
-          font-size: 1.1rem;
-          font-weight: 500;
-          color: #333;
-          border-bottom: 1px solid #f8f9fa;
-          transition: all 0.3s ease;
-          position: relative;
-        }
-
-        .mobile-nav .nav-link:hover,
-        .mobile-nav .nav-link.active {
-          background-color: #f8f9fa;
-        }
-
-        .mobile-nav .nav-link.active::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 4px;
-          height: 60%;
-          background-color: #007bff;
-        }
-
-        .navbar-nav .nav-link {
-          position: relative;
-          transition: color 0.3s ease;
-          font-weight: 500;
-        }
-
-        .navbar-nav .nav-link::after {
-          content: "";
-          position: absolute;
-          width: 0;
-          height: 2px;
-          bottom: -5px;
-          left: 50%;
-          transition: all 0.3s ease;
-          transform: translateX(-50%);
-          background-color: #007bff;
-        }
-
-        .navbar-nav .nav-link:hover::after,
-        .navbar-nav .nav-link.active::after {
-          width: 100%;
-        }
-
-        .btn-link {
-          transition: all 0.2s ease;
-        }
-
-        .btn-link:hover {
-          transform: translateY(-2px);
-        }
-
-        .logo {
-          transition: transform 0.3s ease;
-        }
-
-        .navbar-brand:hover .logo {
-          transform: scale(1.1);
-        }
-      `}</style>
+      {/* Click outside to close profile menu */}
+      {isProfileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setIsProfileMenuOpen(false)}
+        />
+      )}
     </>
   );
 };

@@ -8,7 +8,7 @@ import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 
 export default function Home() {
   return (
-    <div>
+    <div className="min-h-screen bg-white">
       <GlobalSupabaseListenerWrapper />
       <BillboardCarousel />
       <ItemListing />

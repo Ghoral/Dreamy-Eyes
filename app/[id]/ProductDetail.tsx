@@ -198,25 +198,31 @@ const ProductDetail = ({ product }: { product: any }) => {
 
   // Initialize quantity based on cart state when component mounts or color changes
   useEffect(() => {
-    if (selectedColor) {
-      const currentCartQuantity = getCurrentCartQuantity();
-      // If item is already in cart, start with 1 (to add more)
-      // If not in cart, start with 1
-      setQuantity(1);
+    const maxQuantity = getMaxQuantityForThisSession();
+    if (quantity > maxQuantity && maxQuantity > 0) {
+      setQuantity(maxQuantity);
     }
   }, [selectedColor, cartState.items]);
 
-  // Reset quantity when cart changes to ensure proper limits
-  useEffect(() => {
-    if (selectedColor) {
-      const maxForSession = getMaxQuantityForThisSession();
-      if (quantity > maxForSession && maxForSession > 0) {
-        setQuantity(maxForSession);
-      } else if (maxForSession === 0) {
-        setQuantity(1);
-      }
+  const handleColorSelect = (colorOption: any) => {
+    console.log("Color selected:", colorOption);
+    setSelectedColor(colorOption);
+
+    // Immediately update main image for the selected color
+    const colorImage = getImageUrlForColor(colorOption.color);
+    console.log("Setting main image to:", colorImage);
+    setMainImage(colorImage);
+
+    // Reset quantity to 1 when color changes
+    setQuantity(1);
+  };
+
+  const handleQuantityChange = (newQuantity: number) => {
+    const maxQuantity = getMaxQuantityForThisSession();
+    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
+      setQuantity(newQuantity);
     }
-  }, [cartState.items, selectedColor, quantity]);
+  };
 
   const handleAddToCart = () => {
     if (!selectedColor) {
@@ -224,461 +230,489 @@ const ProductDetail = ({ product }: { product: any }) => {
       return;
     }
 
-    const currentCartQuantity = getCurrentCartQuantity();
+    const cartItem = {
+      id: product.id || product.title,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      quantity: quantity,
+      color: selectedColor.label,
+      colorHex: selectedColor.color,
+      image: getImageUrlForColor(selectedColor.color),
+      maxQuantity: parseInt(selectedColor.quantity),
+    };
 
-    if (currentCartQuantity > 0) {
-      // Update existing item quantity
-      const newTotalQuantity = currentCartQuantity + quantity;
-      updateQuantity(
-        product.id || product.title,
-        newTotalQuantity,
-        selectedColor.label
-      );
-    } else {
-      // Add new item
-      addItem({
-        id: product.id || product.title,
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        quantity: quantity,
-        color: selectedColor.label,
-        colorHex: selectedColor.color,
-        image: getImageUrlForColor(selectedColor.color),
-        maxQuantity: parseInt(selectedColor.quantity),
-      });
-    }
-
+    addItem(cartItem);
     setShowToast(true);
   };
 
   const handleRemoveFromCart = () => {
     if (!selectedColor) return;
 
-    removeItem(product.id || product.title, selectedColor.label);
-  };
+    const existingItem = cartState.items.find(
+      (item) =>
+        item.id === (product.id || product.title) &&
+        item.color === selectedColor.label
+    );
 
-  const handleColorSelect = (colorOption: any) => {
-    console.log("=== handleColorSelect called ===");
-    console.log("Color selected:", colorOption);
-    console.log("Color hex:", colorOption.color);
-
-    // Update selected color first
-    setSelectedColor(colorOption);
-
-    // Reset quantity when color changes
-    setQuantity(1);
-
-    // Get and set the image for the new color
-    const colorImage = getImageUrlForColor(colorOption.color);
-    console.log("Image URL for color:", colorImage);
-
-    // Update the main image
-    setMainImage(colorImage);
-
-    console.log("=== handleColorSelect completed ===");
-  };
-
-  const handleQuantityChange = (newQuantity: number) => {
-    if (selectedColor) {
-      const maxForSession = getMaxQuantityForThisSession();
-      const validQuantity = Math.min(Math.max(1, newQuantity), maxForSession);
-
-      console.log("Quantity Change:", {
-        requested: newQuantity,
-        maxForSession,
-        validQuantity,
-      });
-
-      setQuantity(validQuantity);
+    if (existingItem) {
+      removeItem(existingItem.id, existingItem.color);
     }
   };
 
   const getMaxQuantity = () => {
-    return selectedColor ? parseInt(selectedColor.quantity) : 1;
+    return selectedColor ? parseInt(selectedColor.quantity) : 0;
   };
 
   return (
-    <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
-      <div className="container py-5">
-        <div className="row g-5">
+    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column - Product Images */}
-          <div className="col-lg-6">
-            <div className="product-gallery">
-              {/* Main Image */}
-              <div className="main-image-container mb-4">
-                <div
-                  className="position-relative rounded-4 overflow-hidden shadow-lg"
-                  style={{ backgroundColor: "white" }}
-                >
-                  {hasValidImages() ? (
-                    <img
-                      src={mainImage}
-                      alt={product.title}
-                      className="w-100"
-                      style={{
-                        height: "500px",
-                        objectFit: "contain",
-                        padding: "20px",
-                        backgroundColor: "white",
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className="w-100 d-flex align-items-center justify-content-center"
-                      style={{
-                        height: "500px",
-                        backgroundColor: "white",
-                        color: "#6c757d",
-                      }}
-                    >
-                      <div className="text-center">
-                        <i
-                          className="bi bi-image"
-                          style={{ fontSize: "3rem" }}
-                        ></i>
-                        <p className="mt-2 mb-0">No image available</p>
-                      </div>
+          <div className="space-y-6">
+            {/* Main Image */}
+            <div className="relative">
+              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                {hasValidImages() ? (
+                  <img
+                    src={mainImage}
+                    alt={product.title}
+                    className="w-full h-[500px] object-contain p-8 transition-transform duration-500 hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-[500px] bg-white flex items-center justify-center">
+                    <div className="text-center text-secondary-400">
+                      <svg
+                        className="w-24 h-24 mx-auto mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <p className="text-lg font-medium">No image available</p>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Thumbnail Images */}
-              <div className="thumbnail-container">
-                {hasValidImages() && (
-                  <div className="d-flex gap-3 justify-content-center">
-                    {selectedColor
-                      ? // Show images for the selected color
-                        getImagesForColor(selectedColor.color).length > 0
-                        ? getImagesForColor(selectedColor.color).map(
-                            (image, i) => {
-                              const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${image}`;
-                              return (
-                                <div
-                                  key={i}
-                                  className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
-                                    mainImage === imageUrl
-                                      ? "border-3 border-primary"
-                                      : "border border-light"
-                                  }`}
-                                  style={{
-                                    width: "80px",
-                                    height: "80px",
-                                    transition: "all 0.3s ease",
-                                    cursor: "pointer",
-                                  }}
-                                  onClick={() => setMainImage(imageUrl)}
-                                >
-                                  <img
-                                    src={imageUrl}
-                                    alt={`Thumbnail ${i + 1}`}
-                                    className="w-100 h-100"
-                                    style={{ objectFit: "contain" }}
-                                  />
-                                </div>
-                              );
-                            }
-                          )
-                        : // Show all available images if selected color has no images
-                          availableImages.map((img, i) => (
-                            <div
-                              key={i}
-                              className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
-                                mainImage === img
-                                  ? "border-3 border-primary"
-                                  : "border border-light"
-                              }`}
-                              style={{
-                                width: "80px",
-                                height: "80px",
-                                transition: "all 0.3s ease",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => setMainImage(img)}
-                            >
-                              <img
-                                src={img}
-                                alt={`Thumbnail ${i + 1}`}
-                                className="w-100 h-100"
-                                style={{ objectFit: "contain" }}
-                              />
-                            </div>
-                          ))
-                      : // Show all available images if no color is selected
-                        availableImages.map((img, i) => (
-                          <div
-                            key={i}
-                            className={`thumbnail-item rounded-3 overflow-hidden cursor-pointer ${
-                              mainImage === img
-                                ? "border-3 border-primary"
-                                : "border border-light"
-                            }`}
-                            style={{
-                              width: "80px",
-                              height: "80px",
-                              transition: "all 0.3s ease",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => setMainImage(img)}
-                          >
-                            <img
-                              src={img}
-                              alt={`Thumbnail ${i + 1}`}
-                              className="w-100 h-100"
-                              style={{ objectFit: "contain" }}
-                            />
-                          </div>
-                        ))}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Thumbnail Images */}
+            {hasValidImages() && (
+              <div className="flex justify-center space-x-4">
+                {selectedColor
+                  ? // Show images for the selected color
+                    getImagesForColor(selectedColor.color).length > 0
+                    ? getImagesForColor(selectedColor.color).map((image, i) => {
+                        const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${image}`;
+                        return (
+                          <div
+                            key={i}
+                            className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
+                              mainImage === imageUrl
+                                ? "ring-4 ring-primary-500 ring-offset-2"
+                                : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                            }`}
+                            onClick={() => setMainImage(imageUrl)}
+                          >
+                            <img
+                              src={imageUrl}
+                              alt={`Thumbnail ${i + 1}`}
+                              className="w-full h-full object-contain bg-white"
+                            />
+                          </div>
+                        );
+                      })
+                    : // Show all available images if selected color has no images
+                      availableImages.map((img, i) => (
+                        <div
+                          key={i}
+                          className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
+                            mainImage === img
+                              ? "ring-4 ring-primary-500 ring-offset-2"
+                              : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                          }`}
+                          onClick={() => setMainImage(img)}
+                        >
+                          <img
+                            src={img}
+                            alt={`Thumbnail ${i + 1}`}
+                            className="w-full h-full object-contain bg-white"
+                          />
+                        </div>
+                      ))
+                  : // Show all available images if no color is selected
+                    availableImages.map((img, i) => (
+                      <div
+                        key={i}
+                        className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
+                          mainImage === img
+                            ? "ring-4 ring-primary-500 ring-offset-2"
+                            : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                        }`}
+                        onClick={() => setMainImage(img)}
+                      >
+                        <img
+                          src={img}
+                          alt={`Thumbnail ${i + 1}`}
+                          className="w-full h-full object-contain bg-white"
+                        />
+                      </div>
+                    ))}
+              </div>
+            )}
           </div>
 
           {/* Right Column - Product Info */}
-          <div className="col-lg-6">
-            <div className="product-info">
-              {/* Product Title */}
-              <h1 className="display-6 fw-bold text-dark mb-3">
+          <div className="space-y-8">
+            {/* Product Title */}
+            <div>
+              <h1 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-4 leading-tight">
                 {product.title}
               </h1>
-
-              {/* Subtitle */}
               {product.sub_title && (
-                <p className="text-success fw-semibold fs-5 mb-3">
+                <p className="text-primary-600 font-semibold text-xl mb-4">
                   {product.sub_title}
                 </p>
               )}
+            </div>
 
-              {/* Rating */}
-              <div className="rating-section mb-4">
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <div className="stars">
-                    {[...Array(5)].map((_, i) => (
-                      <i
-                        key={i}
-                        className="bi bi-star-fill text-warning fs-5"
-                      ></i>
-                    ))}
-                  </div>
-                  <span className="text-muted">4.5</span>
-                  <span className="text-muted">(120 reviews)</span>
-                </div>
-                <div className="text-success fw-semibold">
-                  <i className="bi bi-check-circle me-2"></i>
-                  In Stock
-                </div>
+            {/* Rating */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className="w-6 h-6 text-yellow-400 fill-current"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+                <span className="text-secondary-600 font-medium">4.9</span>
+                <span className="text-secondary-500">(120 reviews)</span>
               </div>
-
-              {/* Price */}
-              <div className="price-section mb-4">
-                <div className="d-flex align-items-baseline gap-3">
-                  <span className="display-5 fw-bold text-primary">
-                    ${product.price}
-                  </span>
-                </div>
+              <div className="flex items-center space-x-2 text-green-600 font-semibold">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span>In Stock</span>
               </div>
+            </div>
 
-              {/* Description */}
-              <div className="description-section mb-4">
-                <h6 className="fw-semibold mb-2">Description</h6>
-                <p
-                  className="text-muted lh-base"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
-              </div>
+            {/* Price */}
+            <div className="bg-gradient-to-r from-primary-50 to-secondary-50 p-6 rounded-2xl border border-primary-100">
+              <span className="text-5xl font-bold text-primary-600">
+                ${product.price}
+              </span>
+            </div>
 
-              {/* Color Selection */}
-              <div className="color-section mb-4">
-                <h6 className="fw-semibold mb-3">Color</h6>
-                <div className="d-flex gap-3 flex-wrap">
-                  {product?.color_quantity.map(
-                    (colorOption: any, index: number) => {
-                      const isAvailable = parseInt(colorOption.quantity) > 0;
-                      const isSelected =
-                        selectedColor?.label === colorOption.label;
-                      const isDisabled = !isAvailable;
+            {/* Description */}
+            <div>
+              <h3 className="text-xl font-semibold text-secondary-800 mb-3">
+                Description
+              </h3>
+              <div
+                className="text-secondary-600 leading-relaxed prose prose-secondary max-w-none"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            </div>
 
-                      return (
-                        <div key={index} className="text-center">
-                          <input
-                            type="radio"
-                            className="btn-check"
-                            name="color"
-                            id={colorOption.label}
-                            autoComplete="off"
-                            checked={isSelected}
-                            onChange={() => {
-                              console.log(
-                                "Radio button clicked for:",
-                                colorOption
-                              );
+            {/* Color Selection */}
+            <div>
+              <h3 className="text-xl font-semibold text-secondary-800 mb-4">
+                Choose Color
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {product?.color_quantity.map(
+                  (colorOption: any, index: number) => {
+                    const isAvailable = parseInt(colorOption.quantity) > 0;
+                    const isSelected =
+                      selectedColor?.label === colorOption.label;
+                    const isDisabled = !isAvailable;
+
+                    return (
+                      <div key={index} className="relative">
+                        <input
+                          type="radio"
+                          className="sr-only"
+                          name="color"
+                          id={colorOption.label}
+                          checked={isSelected}
+                          onChange={() => handleColorSelect(colorOption)}
+                          disabled={isDisabled}
+                        />
+                        <label
+                          htmlFor={colorOption.label}
+                          className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                            isSelected
+                              ? "border-primary-500 bg-primary-50 shadow-glow"
+                              : isDisabled
+                              ? "border-secondary-200 bg-secondary-100 cursor-not-allowed opacity-60"
+                              : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                          }`}
+                          onClick={() => {
+                            if (!isDisabled) {
                               handleColorSelect(colorOption);
-                            }}
-                            disabled={isDisabled}
-                          />
-                          <label
-                            className={`btn rounded-pill px-4 py-2 ${
-                              isSelected
-                                ? "btn-primary"
-                                : isDisabled
-                                ? "btn-secondary disabled"
-                                : "btn-outline-secondary"
-                            }`}
-                            htmlFor={colorOption.label}
-                            onClick={() => {
-                              if (!isDisabled) {
-                                console.log("Label clicked for:", colorOption);
-                                handleColorSelect(colorOption);
-                              }
-                            }}
-                            style={{
-                              minWidth: "80px",
-                              transition: "all 0.3s ease",
-                              opacity: isDisabled ? 0.6 : 1,
-                              cursor: isDisabled ? "not-allowed" : "pointer",
-                            }}
-                          >
-                            <div className="d-flex align-items-center gap-2">
-                              <div
-                                className="rounded-circle"
-                                style={{
-                                  width: "20px",
-                                  height: "20px",
-                                  backgroundColor: colorOption.color,
-                                  border: "2px solid #fff",
-                                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                                }}
-                              ></div>
-                              <span>{colorOption.label}</span>
+                            }
+                          }}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div
+                              className="w-6 h-6 rounded-full border-2 border-white shadow-md"
+                              style={{ backgroundColor: colorOption.color }}
+                            />
+                            <div className="flex-1 text-left">
+                              <span
+                                className={`font-medium ${
+                                  isSelected
+                                    ? "text-primary-700"
+                                    : "text-secondary-700"
+                                }`}
+                              >
+                                {colorOption.label}
+                              </span>
+                              <div className="text-sm text-secondary-500">
+                                {isAvailable
+                                  ? `${colorOption.quantity} available`
+                                  : "Out of stock"}
+                              </div>
                             </div>
-                          </label>
-                        </div>
-                      );
+                          </div>
+                        </label>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            </div>
+
+            {/* Quantity */}
+            <div>
+              <h3 className="text-xl font-semibold text-secondary-800 mb-4">
+                Quantity
+              </h3>
+
+              {/* Cart Summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                <div className="bg-primary-50 border border-primary-200 rounded-xl p-3">
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className="w-5 h-5 text-primary-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                      />
+                    </svg>
+                    <span className="text-sm text-secondary-600">
+                      In Cart:{" "}
+                      <strong className="text-primary-700">
+                        {getCurrentCartQuantity()}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className="w-5 h-5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                      />
+                    </svg>
+                    <span className="text-sm text-secondary-600">
+                      Can Add:{" "}
+                      <strong className="text-green-700">
+                        {getMaxQuantityForThisSession()}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Cart Quantity Display */}
+              {getCurrentCartQuantity() > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-center space-x-2 text-blue-700">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="font-medium">
+                      You currently have{" "}
+                      <strong>{getCurrentCartQuantity()}</strong> of this item
+                      in your cart
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Quantity Selector */}
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center border border-secondary-200 rounded-xl overflow-hidden bg-white">
+                  <button
+                    className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => handleQuantityChange(quantity - 1)}
+                    disabled={quantity <= 1}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M20 12H4"
+                      />
+                    </svg>
+                  </button>
+                  <input
+                    type="number"
+                    className="w-20 text-center border-0 focus:ring-0 text-lg font-semibold text-secondary-800"
+                    value={quantity}
+                    min={1}
+                    max={getMaxQuantityForThisSession()}
+                    onChange={(e) =>
+                      handleQuantityChange(Number(e.target.value))
                     }
+                  />
+                  <button
+                    className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => handleQuantityChange(quantity + 1)}
+                    disabled={
+                      quantity >= getMaxQuantityForThisSession() ||
+                      getMaxQuantityForThisSession() === 0
+                    }
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div className="text-sm text-secondary-500">
+                  <div>{getMaxQuantityForThisSession()} more can be added</div>
+                  <div>Total available: {getMaxQuantity()}</div>
+                  {getMaxQuantityForThisSession() === 0 && (
+                    <div className="text-amber-600 font-medium">
+                      Maximum quantity reached
+                    </div>
                   )}
                 </div>
               </div>
+            </div>
 
-              {/* Quantity */}
-              <div className="quantity-section mb-4">
-                <h6 className="fw-semibold mb-3">Quantity</h6>
-
-                {/* Cart Summary */}
-                <div className="cart-summary mb-3">
-                  <div className="row g-2">
-                    <div className="col-md-6">
-                      <div className="d-flex align-items-center p-2 bg-light rounded">
-                        <i className="bi bi-cart-check text-primary me-2"></i>
-                        <small className="text-muted">
-                          In Cart: <strong>{getCurrentCartQuantity()}</strong>
-                        </small>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="d-flex align-items-center p-2 bg-light rounded">
-                        <i className="bi bi-box text-success me-2"></i>
-                        <small className="text-muted">
-                          Can Add:{" "}
-                          <strong>{getMaxQuantityForThisSession()}</strong>
-                        </small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Current Cart Quantity Display */}
-                {getCurrentCartQuantity() > 0 && (
-                  <div className="alert alert-info mb-3" role="alert">
-                    <i className="bi bi-cart-check me-2"></i>
-                    You currently have{" "}
-                    <strong>{getCurrentCartQuantity()}</strong> of this item in
-                    your cart
-                  </div>
-                )}
-
-                <div className="d-flex align-items-center gap-3">
-                  <div className="input-group" style={{ width: "150px" }}>
-                    <button
-                      className="btn btn-outline-secondary"
-                      type="button"
-                      onClick={() => handleQuantityChange(quantity - 1)}
-                      disabled={quantity <= 1}
-                    >
-                      <i className="bi bi-dash"></i>
-                    </button>
-                    <input
-                      type="number"
-                      className="form-control text-center border-start-0 border-end-0"
-                      value={quantity}
-                      min={1}
-                      max={getMaxQuantityForThisSession()}
-                      onChange={(e) =>
-                        handleQuantityChange(Number(e.target.value))
-                      }
-                      style={{ borderLeft: "none", borderRight: "none" }}
-                    />
-                    <button
-                      className="btn btn-outline-secondary"
-                      type="button"
-                      onClick={() => handleQuantityChange(quantity + 1)}
-                      disabled={
-                        quantity >= getMaxQuantityForThisSession() ||
-                        getMaxQuantityForThisSession() === 0
-                      }
-                    >
-                      <i className="bi bi-plus"></i>
-                    </button>
-                  </div>
-                  <div className="d-flex flex-column">
-                    <small className="text-muted">
-                      {getMaxQuantityForThisSession()} more can be added
-                    </small>
-                    <small className="text-muted">
-                      Total available: {getMaxQuantity()}
-                    </small>
-                    {getMaxQuantityForThisSession() === 0 && (
-                      <small className="text-warning">
-                        <i className="bi bi-exclamation-triangle me-1"></i>
-                        Maximum quantity reached
-                      </small>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="action-buttons mb-4">
-                <div className="d-grid gap-2">
-                  <button
-                    className="btn btn-primary btn-lg py-3 fw-semibold"
-                    onClick={handleAddToCart}
-                    disabled={
-                      !selectedColor || getMaxQuantityForThisSession() === 0
-                    }
+            {/* Action Buttons */}
+            <div className="space-y-4">
+              <button
+                className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                  !selectedColor || getMaxQuantityForThisSession() === 0
+                    ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
+                    : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
+                }`}
+                onClick={handleAddToCart}
+                disabled={
+                  !selectedColor || getMaxQuantityForThisSession() === 0
+                }
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <i className="bi bi-cart-plus me-2"></i>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                    />
+                  </svg>
+                  <span>
                     {!selectedColor
                       ? "Select Color First"
                       : getCurrentCartQuantity() > 0
                       ? `Add ${quantity} More to Cart`
                       : "Add to Cart"}
-                  </button>
-
-                  {/* Show Remove from Cart button if item is already in cart */}
-                  {getCurrentCartQuantity() > 0 && (
-                    <button
-                      className="btn btn-outline-danger btn-lg py-3 fw-semibold"
-                      onClick={handleRemoveFromCart}
-                      disabled={!selectedColor}
-                    >
-                      <i className="bi bi-cart-dash me-2"></i>
-                      Remove from Cart ({getCurrentCartQuantity()})
-                    </button>
-                  )}
+                  </span>
                 </div>
-              </div>
+              </button>
+
+              {/* Show Remove from Cart button if item is already in cart */}
+              {getCurrentCartQuantity() > 0 && (
+                <button
+                  className="w-full py-4 px-6 bg-white border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
+                  onClick={handleRemoveFromCart}
+                  disabled={!selectedColor}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                      />
+                    </svg>
+                    <span>Remove from Cart ({getCurrentCartQuantity()})</span>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -686,35 +720,38 @@ const ProductDetail = ({ product }: { product: any }) => {
         {/* Specifications Section */}
         {product.specifications &&
           Object.keys(product.specifications).length > 0 && (
-            <div className="specifications-section mt-5">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="fw-bold mb-4 text-dark">Specifications</h4>
-                  <div className="row g-4">
-                    {Object.entries(product.specifications).map(
-                      ([key, value], index) => (
-                        <div key={index} className="col-md-6">
-                          <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                            <span className="fw-semibold text-muted">
-                              {key.charAt(0).toUpperCase() +
-                                key.slice(1).replace(/([A-Z])/g, " $1")}
-                            </span>
-                            <span className="fw-medium">{String(value)}</span>
-                          </div>
-                        </div>
-                      )
-                    )}
-                    {product.power && (
-                      <div className="col-md-6">
-                        <div className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                          <span className="fw-semibold text-muted">
-                            Power Rating
-                          </span>
-                          <span className="fw-medium">{product.power}W</span>
-                        </div>
+            <div className="mt-20">
+              <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
+                <h3 className="text-3xl font-bold text-secondary-800 mb-8 text-center">
+                  Specifications
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Object.entries(product.specifications).map(
+                    ([key, value], index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center py-4 border-b border-secondary-100 last:border-b-0"
+                      >
+                        <span className="font-semibold text-secondary-600 capitalize">
+                          {key.charAt(0).toUpperCase() +
+                            key.slice(1).replace(/([A-Z])/g, " $1")}
+                        </span>
+                        <span className="font-medium text-secondary-800">
+                          {String(value)}
+                        </span>
                       </div>
-                    )}
-                  </div>
+                    )
+                  )}
+                  {product.power && (
+                    <div className="flex justify-between items-center py-4 border-b border-secondary-100 last:border-b-0">
+                      <span className="font-semibold text-secondary-600">
+                        Power Rating
+                      </span>
+                      <span className="font-medium text-secondary-800">
+                        {product.power}W
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -735,37 +772,6 @@ const ProductDetail = ({ product }: { product: any }) => {
         isVisible={showToast}
         onClose={() => setShowToast(false)}
       />
-
-      <style jsx>{`
-        .cursor-pointer {
-          cursor: pointer;
-        }
-
-        .thumbnail-item:hover {
-          transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .main-image-container img:hover {
-          transform: scale(1.02);
-          transition: transform 0.3s ease;
-        }
-
-        .btn-outline-secondary.active {
-          background-color: #6c757d;
-          border-color: #6c757d;
-          color: white;
-        }
-
-        .breadcrumb-item + .breadcrumb-item::before {
-          content: "›";
-          color: #6c757d;
-        }
-
-        .disabled {
-          pointer-events: none;
-        }
-      `}</style>
     </div>
   );
 };
