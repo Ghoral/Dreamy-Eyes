@@ -1,32 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
 
 export default function ForgotPasswordPage() {
-  const [step, setStep] = useState<"email" | "otp" | "newPassword">("email");
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const router = useRouter();
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSendReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+    setSuccess("");
 
     try {
       const supabase = createSupabaseClient();
-
-      // Send password reset email
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -34,72 +25,11 @@ export default function ForgotPasswordPage() {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess("OTP has been sent to your email address");
-        setStep("otp");
+        setSuccess(
+          "We sent a secure link to your email. Open it to set a new password."
+        );
       }
-    } catch (error) {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // For demo purposes, we'll use a simple OTP validation
-      // In production, you would verify the OTP with your backend
-      if (otp === "123456") {
-        // Demo OTP
-        setStep("newPassword");
-        setSuccess("OTP verified successfully");
-      } else {
-        setError("Invalid OTP. Please try again.");
-      }
-    } catch (error) {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters long");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const supabase = createSupabaseClient();
-
-      // Update password
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccess("Password updated successfully! Redirecting to login...");
-        setTimeout(() => {
-          router.push("/login");
-        }, 2000);
-      }
-    } catch (error) {
+    } catch (err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -107,258 +37,119 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div
-      className="min-vh-100 d-flex align-items-center justify-content-center"
-      style={{ backgroundColor: "#f8f9fa" }}
-    >
-      <div className="container">
-        <div className="row justify-content-center">
-          <div className="col-md-6 col-lg-5 col-xl-4">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body p-5">
-                {/* Header */}
-                <div className="text-center mb-4">
-                  <h2 className="fw-bold text-primary mb-2">Reset Password</h2>
-                  <p className="text-muted">
-                    {step === "email" && "Enter your email to receive OTP"}
-                    {step === "otp" && "Enter the OTP sent to your email"}
-                    {step === "newPassword" && "Enter your new password"}
-                  </p>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-secondary-800 mb-2">
+              Forgot Password
+            </h1>
+            <p className="text-secondary-600">
+              Enter your email address and we'll send you a reset link.
+            </p>
+          </div>
 
-                {/* Error Message */}
-                {error && (
-                  <div className="alert alert-danger" role="alert">
-                    <i className="bi bi-exclamation-triangle me-2"></i>
-                    {error}
-                  </div>
-                )}
-
-                {/* Success Message */}
-                {success && (
-                  <div className="alert alert-success" role="alert">
-                    <i className="bi bi-check-circle me-2"></i>
-                    {success}
-                  </div>
-                )}
-
-                {/* Step 1: Email Input */}
-                {step === "email" && (
-                  <form onSubmit={handleSendOTP}>
-                    <div className="mb-4">
-                      <label htmlFor="email" className="form-label fw-semibold">
-                        Email Address
-                      </label>
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <i className="bi bi-envelope"></i>
-                        </span>
-                        <input
-                          type="email"
-                          className="form-control"
-                          id="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="Enter your email"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="d-grid mb-4">
-                      <button
-                        type="submit"
-                        className="btn btn-primary btn-lg py-2 fw-semibold"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-2"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            Sending OTP...
-                          </>
-                        ) : (
-                          "Send OTP"
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Step 2: OTP Verification */}
-                {step === "otp" && (
-                  <form onSubmit={handleVerifyOTP}>
-                    <div className="mb-4">
-                      <label htmlFor="otp" className="form-label fw-semibold">
-                        OTP Code
-                      </label>
-                      <div className="input-group">
-                        <span className="input-group-text">
-                          <i className="bi bi-shield-lock"></i>
-                        </span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="otp"
-                          value={otp}
-                          onChange={(e) => setOtp(e.target.value)}
-                          placeholder="Enter 6-digit OTP"
-                          maxLength={6}
-                          required
-                        />
-                      </div>
-                      <small className="text-muted">
-                        Demo OTP: <strong>123456</strong>
-                      </small>
-                    </div>
-
-                    <div className="d-grid mb-4">
-                      <button
-                        type="submit"
-                        className="btn btn-primary btn-lg py-2 fw-semibold"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-2"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            Verifying OTP...
-                          </>
-                        ) : (
-                          "Verify OTP"
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        className="btn btn-link text-decoration-none"
-                        onClick={() => setStep("email")}
-                      >
-                        <i className="bi bi-arrow-left me-1"></i>
-                        Back to Email
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Step 3: New Password */}
-                {step === "newPassword" && (
-                  <form onSubmit={handleResetPassword}>
-                    <div className="mb-3">
-                      <label
-                        htmlFor="newPassword"
-                        className="form-label fw-semibold"
-                      >
-                        New Password
-                      </label>
-                      <div className="input-group">
-                        <input
-                          type={showNewPassword ? "text" : "password"}
-                          className="form-control"
-                          id="newPassword"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Enter new password"
-                          required
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                        >
-                          <i
-                            className={`bi ${
-                              showNewPassword ? "bi-eye-slash" : "bi-eye"
-                            }`}
-                          ></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <label
-                        htmlFor="confirmPassword"
-                        className="form-label fw-semibold"
-                      >
-                        Confirm New Password
-                      </label>
-                      <div className="input-group">
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          className="form-control"
-                          id="confirmPassword"
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Confirm new password"
-                          required
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-outline-secondary"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                        >
-                          <i
-                            className={`bi ${
-                              showConfirmPassword ? "bi-eye-slash" : "bi-eye"
-                            }`}
-                          ></i>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="d-grid mb-4">
-                      <button
-                        type="submit"
-                        className="btn btn-primary btn-lg py-2 fw-semibold"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <span
-                              className="spinner-border spinner-border-sm me-2"
-                              role="status"
-                              aria-hidden="true"
-                            ></span>
-                            Updating Password...
-                          </>
-                        ) : (
-                          "Update Password"
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="text-center">
-                      <button
-                        type="button"
-                        className="btn btn-link text-decoration-none"
-                        onClick={() => setStep("otp")}
-                      >
-                        <i className="bi bi-arrow-left me-1"></i>
-                        Back to OTP
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Back to Login */}
-                <div className="text-center mt-4">
-                  <Link href="/login" className="text-decoration-none">
-                    <i className="bi bi-arrow-left me-1"></i>
-                    Back to Login
-                  </Link>
-                </div>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+              <div className="flex items-center space-x-3 text-red-700">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{error}</span>
               </div>
             </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
+              <div className="flex items-center space-x-3 text-green-700">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span className="text-sm font-medium">{success}</span>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSendReset} className="space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-secondary-700 mb-3">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-secondary-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full pl-12 pr-4 py-4 border border-secondary-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                  placeholder="Enter your email"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                isLoading
+                  ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
+              }`}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Sending link...</span>
+                </div>
+              ) : (
+                "Send Reset Link"
+              )}
+            </button>
+          </form>
+
+          <div className="text-center mt-6">
+            <Link
+              href="/login"
+              className="text-primary-600 hover:text-primary-700 font-medium"
+            >
+              Back to Login
+            </Link>
           </div>
         </div>
       </div>

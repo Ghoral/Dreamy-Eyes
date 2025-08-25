@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
+import { supabaseBrowserClient } from "../services/supabase/client/supabaseBrowserClient";
 
 interface Address {
   id: number;
@@ -41,11 +41,10 @@ export default function ShippingAddressPage() {
 
   const loadAddresses = async () => {
     try {
-      const supabase = createSupabaseClient();
       const {
         data: { user },
         error: userError,
-      } = await supabase.auth.getUser();
+      } = await supabaseBrowserClient.auth.getUser();
 
       if (userError || !user) {
         router.push("/login");
@@ -53,7 +52,7 @@ export default function ShippingAddressPage() {
       }
 
       const { data: addressesData, error: addressesError } = await (
-        supabase as any
+        supabaseBrowserClient as any
       )
         .from("address")
         .select("*")
@@ -104,11 +103,10 @@ export default function ShippingAddressPage() {
     setSuccess("");
 
     try {
-      const supabase = createSupabaseClient();
       const {
         data: { user },
         error: userError,
-      } = await supabase.auth.getUser();
+      } = await supabaseBrowserClient.auth.getUser();
 
       if (userError || !user) {
         setError("User not authenticated");
@@ -117,7 +115,7 @@ export default function ShippingAddressPage() {
 
       // If setting as primary, update all other addresses to not be primary
       if (addressForm.isPrimary) {
-        await (supabase as any)
+        await (supabaseBrowserClient as any)
           .from("address")
           .update({ is_primary: false })
           .eq("user_id", user.id);
@@ -125,7 +123,7 @@ export default function ShippingAddressPage() {
 
       if (editingAddress) {
         // Update existing address
-        const { error: updateError } = await (supabase as any)
+        const { error: updateError } = await (supabaseBrowserClient as any)
           .from("address")
           .update({
             street: addressForm.street,
@@ -144,8 +142,9 @@ export default function ShippingAddressPage() {
 
         setSuccess("Address updated successfully!");
       } else {
-        // Create new address
-        const { error: insertError } = await (supabase as any)
+        console.log("user.id", user.id);
+
+        const { error: insertError } = await (supabaseBrowserClient as any)
           .from("address")
           .insert({
             user_id: user.id,
@@ -156,6 +155,7 @@ export default function ShippingAddressPage() {
             country: addressForm.country,
             is_primary: addressForm.isPrimary,
           });
+        console.log("insertError", insertError);
 
         if (insertError) {
           setError("Failed to add address");
@@ -165,18 +165,19 @@ export default function ShippingAddressPage() {
         setSuccess("Address added successfully!");
 
         // Mark profile as complete when first address is added
-        const { data: addressesData } = await (supabase as any)
+        const { data: addressesData } = await (supabaseBrowserClient as any)
           .from("address")
           .select("id")
           .eq("user_id", user.id);
 
         if (addressesData && addressesData.length === 1) {
           // This is the first address, mark profile as complete
-          await (supabase as any).from("profiles").upsert({
-            id: user.id,
-            profile_completed: true,
-            updated_at: new Date().toISOString(),
-          });
+          await (supabaseBrowserClient as any)
+            .from("profiles")
+            .update({
+              profile_completed: true,
+            })
+            .eq("id", user.id);
         }
       }
 
@@ -207,8 +208,7 @@ export default function ShippingAddressPage() {
     }
 
     try {
-      const supabase = createSupabaseClient();
-      const { error } = await (supabase as any)
+      const { error } = await (supabaseBrowserClient as any)
         .from("address")
         .delete()
         .eq("id", addressId);
@@ -227,16 +227,19 @@ export default function ShippingAddressPage() {
 
   const handleSetPrimary = async (addressId: number) => {
     try {
-      const supabase = createSupabaseClient();
-
       // Update all other addresses to not be primary
-      await (supabase as any)
+      await (supabaseBrowserClient as any)
         .from("address")
         .update({ is_primary: false })
-        .eq("user_id", (await supabase.auth.getUser()).data.user?.id);
+        .eq(
+          "user_id",
+          (
+            await supabaseBrowserClient.auth.getUser()
+          ).data.user?.id
+        );
 
       // Update the selected address to be primary
-      const { error } = await (supabase as any)
+      const { error } = await (supabaseBrowserClient as any)
         .from("address")
         .update({ is_primary: true })
         .eq("id", addressId);
