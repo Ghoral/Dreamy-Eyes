@@ -7,15 +7,13 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  console.log("id", id);
 
   const { data, error } = await supabaseBrowserClient.rpc(
     "get_product_details",
     {
-      product_id: "9cce49bc-7837-4f94-bb07-d6121fe0f4c1",
+      product_id: id,
     }
   );
-  console.log("data", data, error);
 
   if (error || !data) {
     return <div>Product not found</div>;
