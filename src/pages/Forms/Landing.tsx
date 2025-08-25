@@ -1,161 +1,128 @@
 import { useEffect, useState } from "react";
 import DropzoneComponent from "../../components/form/form-elements/DropZone";
 import ComponentCard from "../../components/common/ComponentCard";
+import { TrashBinIcon } from "../../icons";
 import { supabaseClient } from "../../service/supabase";
 
+type BannerItem = { url: string; originalPath: string };
+
 const LandingForm = () => {
-  const [logo, setLogo] = useState<any>([]);
-  const [banner, setBanner] = useState<any>([]);
+  const [banners, setBanners] = useState<BannerItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkFileExists = async (url: string): Promise<boolean> => {
-      try {
-        const response = await fetch(url, { method: "HEAD" });
-        return response.ok && response.status !== 404;
-      } catch (error) {
-        console.error("Error checking file existence:", error);
-        return false;
-      }
-    };
-
-    const loadFiles = async () => {
+    const loadBanners = async () => {
       setIsLoading(true);
-
       try {
-        const files = ["logo.png", "banner.png"];
-        const results = await Promise.all(
-          files.map(async (filePath) => {
-            const { data } = supabaseClient.storage
-              .from("config")
-              .getPublicUrl(filePath);
+        const { data, error } = await supabaseClient.storage
+          .from("banner")
+          .list(undefined, { limit: 100 });
+        if (error) throw error;
+        const items: BannerItem[] = [];
+        console.log("data", data);
 
-            const publicUrl = data.publicUrl;
-            const exists = await checkFileExists(publicUrl);
-
-            return {
-              path: filePath,
-              url: publicUrl,
-              exists,
-            };
-          })
-        );
-
-        // Only set URLs for files that actually exist
-        const logoFile = results.find((file) => file.path === "logo.png");
-        if (logoFile && logoFile.exists) {
-          setLogo([logoFile.url]);
-        } else {
-          setLogo([]);
+        for (const f of data || []) {
+          if (!f.name) continue;
+          const { data: urlData } = supabaseClient.storage
+            .from("banner")
+            .getPublicUrl(f.name);
+          items.push({ url: urlData.publicUrl, originalPath: f.name });
         }
-
-        const bannerFile = results.find((file) => file.path === "banner.png");
-        if (bannerFile && bannerFile.exists) {
-          setBanner([bannerFile.url]);
-        } else {
-          setBanner([]);
-        }
-      } catch (error) {
-        console.error("Error loading files:", error);
-        setLogo([]);
-        setBanner([]);
+        setBanners(items);
+      } catch (e) {
+        console.error("Error loading banners", e);
+        setBanners([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadFiles();
+    loadBanners();
   }, []);
 
-  const uploadLogo = async (files: File[]) => {
-    if (!files || files.length === 0) {
-      setLogo([]);
-      return;
-    }
-
-    const fileToUpload = files[0];
-
+  const uploadBanners = async (files: File[]) => {
+    if (!files || files.length === 0) return;
     try {
-      if (fileToUpload.name !== "logo.png") {
-        console.error("File must be named logo.png");
-        alert("Please upload a file named logo.png");
-        return;
+      setIsUploading(true);
+      for (const file of files) {
+        const { error } = await supabaseClient.storage
+          .from("banner")
+          .upload(file.name, file, { upsert: true });
+        if (error) throw error;
       }
-
-      const { data, error } = await supabaseClient.storage
-        .from("config")
-        .upload("logo.png", fileToUpload, { upsert: true });
-
-      if (error) {
-        console.error("Error uploading logo:", error);
-        return;
+      // refresh list
+      const { data } = await supabaseClient.storage
+        .from("banner")
+        .list(undefined, { limit: 100 });
+      const items: BannerItem[] = [];
+      for (const f of data || []) {
+        if (!f.name) continue;
+        const { data: urlData } = supabaseClient.storage
+          .from("banner")
+          .getPublicUrl(f.name);
+        items.push({ url: urlData.publicUrl, originalPath: f.name });
       }
-
-      const { data: urlData } = supabaseClient.storage
-        .from("config")
-        .getPublicUrl("logo.png");
-
-      setLogo([urlData.publicUrl]);
-    } catch (error) {
-      console.error("Error in logo upload process:", error);
+      setBanners(items);
+    } catch (e) {
+      console.error("Upload error", e);
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const uploadBanner = async (files: File[]) => {
-    if (!files || files.length === 0) {
-      setBanner([]);
-      return;
-    }
-
-    const fileToUpload = files[0];
-
+  const deleteBanner = async (originalPath: string) => {
     try {
-      if (fileToUpload.name !== "banner.png") {
-        console.error("File must be named banner.png");
-        alert("Please upload a file named banner.png");
-        return;
-      }
-
-      const { data, error } = await supabaseClient.storage
-        .from("config")
-        .upload("banner.png", fileToUpload, { upsert: true });
-
-      if (error) {
-        console.error("Error uploading banner:", error);
-        return;
-      }
-
-      const { data: urlData } = supabaseClient.storage
-        .from("config")
-        .getPublicUrl("banner.png");
-
-      setBanner([urlData.publicUrl]);
-    } catch (error) {
-      console.error("Error in banner upload process:", error);
+      const { error } = await supabaseClient.storage
+        .from("banner")
+        .remove([originalPath]);
+      if (error) throw error;
+      setBanners((prev) => prev.filter((b) => b.originalPath !== originalPath));
+    } catch (e) {
+      console.error("Delete error", e);
     }
   };
 
   return (
-    <ComponentCard title="Dashboard">
-      <div className="flex gap-2">
-        <div className="w-full h-80">
-          <DropzoneComponent
-            file={logo}
-            setFile={uploadLogo}
-            title="Logo (must be named logo.png)"
-            multiple={false}
-          />
-        </div>
-        <div className="w-full h-80">
-          <DropzoneComponent
-            file={banner}
-            setFile={uploadBanner}
-            title="Banner (must be named banner.png)"
-            multiple={false}
-          />
-        </div>
+    <ComponentCard title="Landing Banners">
+      <div className="w-full">
+        <DropzoneComponent
+          file={[]}
+          setFile={uploadBanners}
+          title="Upload banners"
+          multiple={true}
+          uploading={isUploading}
+        />
       </div>
-      {isLoading && <div className="text-center mt-4">Loading files...</div>}
+      {isLoading && <div className="text-center mt-4">Loading banners...</div>}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {banners.map((item) => (
+          <div
+            key={item.originalPath}
+            className="border rounded p-3 flex flex-col gap-3"
+          >
+            <img
+              src={item.url}
+              alt="Banner"
+              className="w-full h-40 object-cover rounded"
+            />
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => deleteBanner(item.originalPath)}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-400"
+                aria-label="Delete banner"
+                title="Delete banner"
+              >
+                <TrashBinIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+        {!isLoading && banners.length === 0 && (
+          <div className="text-gray-500">No banners uploaded yet.</div>
+        )}
+      </div>
     </ComponentCard>
   );
 };

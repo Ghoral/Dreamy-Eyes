@@ -7,7 +7,7 @@ import { Editor } from "@tinymce/tinymce-react";
 import SpecificationsForm from "../Components/SpecificationForm";
 import { IProduct } from "../../interface/product";
 import { productValidationSchema } from "../../validation/product";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabaseClient } from "../../service/supabase";
 import { showCustomToastError } from "../../utils/toast";
 import MultiColorSelector from "../../components/common/ColorPicker";
@@ -51,6 +51,21 @@ const ProductForm = () => {
     try {
       const { color, ...rest } = values;
 
+      // Validate: every selected color must have at least one image
+      const missingImageColors = (values.color || []).filter(
+        (c: string) =>
+          !Array.isArray(colorImageMap[c]) || colorImageMap[c]?.length === 0
+      );
+      if (missingImageColors.length > 0) {
+        formik.setFieldError(
+          "images",
+          `Please upload at least one image for: ${missingImageColors.join(
+            ", "
+          )}`
+        );
+        return;
+      }
+
       const color_quantity = values.color_quantity;
 
       const body = {
@@ -83,8 +98,11 @@ const ProductForm = () => {
     }
   };
 
+  const [uploading, setUploading] = useState(false);
+
   const handleImageChangeColor = async (files: File[]) => {
     try {
+      setUploading(true);
       await handleImageChange(files);
       if (selectedColor) {
         setColorImageMap((prev: any) => {
@@ -106,6 +124,8 @@ const ProductForm = () => {
       }
     } catch (error) {
       showCustomToastError(error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -139,6 +159,11 @@ const ProductForm = () => {
 
       return updated;
     });
+  };
+
+  const handleColorSelectedLabel = (name: string) => {
+    if (!selectedColor) return;
+    updateColorQuantity(selectedColor, "label", name || "");
   };
 
   const handleColorChange = (colors: string[]) => {
@@ -371,6 +396,7 @@ const ProductForm = () => {
             setFile={handleImageChangeColor}
             title="Product Images"
             multiple
+            uploading={uploading}
             setFieldValue={(index: number) =>
               removeImageFromColor(selectedColor, index)
             }
@@ -396,7 +422,7 @@ const ProductForm = () => {
         {/* Color Quantities Section */}
         {selectedColor && formik.values.color.includes(selectedColor) && (
           <div className="mb-6" style={{ width: 200 }}>
-            <Label>Color Quantities for Selected Color</Label>
+            <Label>Selected Color</Label>
             <div className="space-y-4 mt-3">
               <div className="flex items-center gap-4">
                 <div
@@ -404,40 +430,6 @@ const ProductForm = () => {
                   style={{ backgroundColor: selectedColor }}
                 ></div>
                 <div className="flex-1 space-y-2">
-                  <div>
-                    <Label htmlFor="color-label" className="text-sm">
-                      Color Name
-                    </Label>
-                    <Input
-                      type="text"
-                      id="color-label"
-                      name="color-label"
-                      value={colorQuantities[selectedColor]?.label || ""}
-                      onChange={(e) =>
-                        updateColorQuantity(
-                          selectedColor,
-                          "label",
-                          e.target.value
-                        )
-                      }
-                      placeholder="e.g. Red"
-                    />
-                    {/* Show validation error for label */}
-                    {formik.errors.color_quantity &&
-                      Array.isArray(formik.errors.color_quantity) &&
-                      formik.errors.color_quantity[
-                        formik.values.color.indexOf(selectedColor)
-                      ]?.label && (
-                        <div className="text-red-500 text-sm mt-1">
-                          {
-                            formik.errors.color_quantity[
-                              formik.values.color.indexOf(selectedColor)
-                            ].label
-                          }
-                        </div>
-                      )}
-                  </div>
-
                   <div>
                     <Label htmlFor="color-quantity" className="text-sm">
                       Quantity

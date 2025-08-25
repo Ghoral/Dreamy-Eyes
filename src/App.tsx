@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
-import SignUp from "./pages/AuthPages/SignUp";
+// import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
 import Videos from "./pages/UiElements/Videos";
@@ -14,7 +14,7 @@ import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import Orders from "./pages/Tables/Orders";
-import FormElements from "./pages/Forms/FormElements";
+// import FormElements from "./pages/Forms/FormElements";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -22,6 +22,11 @@ import Home from "./pages/Dashboard/Home";
 import LandingForm from "./pages/Forms/Landing";
 import ProductForm from "./pages/Forms/Product";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import Accounts from "./pages/Accounts";
+import Admins from "./pages/Admins";
+import Users from "./pages/Users";
+import InviteAdmin from "./pages/InviteAdmin";
+import ResetPassword from "./pages/AuthPages/ResetPassword";
 
 function AppRoutes() {
   const { session, loading } = useAuth();
@@ -32,36 +37,25 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Redirect to dashboard if logged in */}
+      {/* Redirect based on session */}
       <Route
         path="/"
-        element={
-          session ? (
-            <Navigate to="/dashboard" replace />
-          ) : (
-            <Navigate to="/signin" replace />
-          )
-        }
+        element={<Navigate to={session ? "/dashboard" : "/signin"} replace />}
       />
-      <Route
-        path="/signin"
-        element={session ? <Navigate to="/dashboard" replace /> : <SignIn />}
-      />
-      <Route
-        path="/signup"
-        element={session ? <Navigate to="/dashboard" replace /> : <SignUp />}
-      />
+      <Route path="/signin" element={<SignIn />} />
+      {/* Sign up removed */}
 
       {/* Protected Dashboard Routes */}
       <Route
         element={session ? <AppLayout /> : <Navigate to="/signin" replace />}
       >
         <Route path="/dashboard" element={<Home />} />
-        <Route path="/profile" element={<UserProfiles />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/blank" element={<Blank />} />
+        <Route path="/accounts" element={<Accounts />} />
+        <Route path="/admins" element={<Admins />} />
+        <Route path="/users" element={<Users />} />
+        <Route path="/invite-admin" element={<InviteAdmin />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         {/* Forms */}
-        <Route path="/form-elements" element={<FormElements />} />
         <Route path="/form/landing" element={<LandingForm />} />
         <Route path="/form/product" element={<ProductForm />} />
         {/* Tables */}

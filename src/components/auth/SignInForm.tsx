@@ -7,6 +7,7 @@ import Button from "../ui/button/Button";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Link, useNavigate } from "react-router";
+import { showCustomToastError } from "../../utils/toast";
 import { supabaseClient } from "../../service/supabase";
 import { Loader2 } from "lucide-react";
 
@@ -41,45 +42,33 @@ export default function SignInForm() {
         email: values.email,
         password: values.password,
       });
-      
+
       if (res.error) {
         throw res.error;
       }
-      
+      // Check admin role BEFORE navigating
+      const { data: profile, error: roleErr } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("email", values.email)
+        .single();
+      if (roleErr || profile?.role !== "admin") {
+        await supabaseClient.auth.signOut();
+        navigate("/signin");
+        throw new Error("Only admins can sign in.");
+      }
+      console.log("error no here common ");
+
       setLoading(false);
       navigate("/dashboard");
     } catch (error) {
       setLoading(false);
-      console.error("Sign in error:", error);
-      // You could show a toast notification here
+      showCustomToastError(error, "Sign in failed");
     }
   };
 
   return (
     <div className="flex flex-col flex-1">
-      <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
-        <Link
-          to="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <svg
-            className="size-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          Back to dashboard
-        </Link>
-      </div>
-
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -147,11 +136,7 @@ export default function SignInForm() {
             </Link>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
+          <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />
@@ -162,17 +147,7 @@ export default function SignInForm() {
             )}
           </Button>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="font-medium text-brand-600 hover:text-brand-500 dark:text-brand-400 dark:hover:text-brand-300"
-              >
-                Sign up
-              </Link>
-            </p>
-          </div>
+          {/* Sign up removed */}
         </form>
       </div>
     </div>

@@ -10,6 +10,7 @@ const DropzoneComponent = ({
   multiple = false,
   onReorder,
   setFieldValue = () => {},
+  uploading = false,
 }: {
   bucket?: string;
   title?: string;
@@ -18,10 +19,12 @@ const DropzoneComponent = ({
   multiple?: boolean;
   onReorder?: (files: any[]) => void;
   setFieldValue?: (index: number) => void;
+  uploading?: boolean;
 }) => {
   const [previews, setPreviews] = useState<
     { id: string; url: string; file: File | string }[]
   >([]);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     previews.forEach((preview) => {
@@ -101,6 +104,7 @@ const DropzoneComponent = ({
     const fileToRemove = file[indexToRemove];
 
     try {
+      setRemoving(true);
       const { error } = await supabaseClient.storage
         .from(bucket)
         .remove([fileToRemove.name]);
@@ -110,6 +114,8 @@ const DropzoneComponent = ({
       }
     } catch (err) {
       console.error("Failed to remove file from storage:", err);
+    } finally {
+      setRemoving(false);
     }
 
     const newFiles = [...file];
@@ -122,6 +128,9 @@ const DropzoneComponent = ({
     onDrop,
     accept: {
       "image/png": [],
+      "image/jpeg": [],
+      "image/webp": [],
+      "image/svg+xml": [],
     },
     multiple,
   });
@@ -188,6 +197,11 @@ const DropzoneComponent = ({
           </div>
         </form>
       )}
+      {(uploading || removing) && (
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-xl">
+          <div className="h-8 w-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
 
       {/* Single file preview (original behavior) */}
       {showSinglePreview && (
@@ -226,6 +240,11 @@ const DropzoneComponent = ({
                   reorderPreviews(startIndex, index);
                 }}
               >
+                {(uploading || removing) && (
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center rounded-lg z-10">
+                    <div className="h-6 w-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
                 <button
                   onClick={() => removeFile(index)}
                   className="absolute top-2 right-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white rounded-full w-7 h-7 flex items-center justify-center shadow hover:bg-red-500 hover:text-white transition"

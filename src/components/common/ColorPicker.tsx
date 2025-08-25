@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Button from "./Button";
 import { supabaseClient } from "../../service/supabase";
 
 interface MultiColorSelectorProps {
@@ -9,6 +8,7 @@ interface MultiColorSelectorProps {
   label?: string;
   setSelectedColor: any;
   selectedColor?: string | null;
+  onColorSelectedLabel?: (name: string) => void;
 }
 
 const MultiColorSelector = ({
@@ -17,8 +17,9 @@ const MultiColorSelector = ({
   onChange,
   setSelectedColor,
   label = "Colors",
+  onColorSelectedLabel,
 }: MultiColorSelectorProps) => {
-  const [currentColor, setCurrentColor] = useState<string>("#2563eb");
+  const [currentColor] = useState<string>("#2563eb");
   const [dbColors, setDbColors] = useState<
     { id: string; name: string; value: string }[]
   >([]);
@@ -54,30 +55,13 @@ const MultiColorSelector = ({
     }
   };
 
-  const handleRemoveColor = (indexToRemove: number) => {
-    const newColors = values.filter((_, index) => index !== indexToRemove);
-    onChange(newColors);
-  };
-
   return (
-    <div className="mb-6">
+    <div className="my-6">
       <label className="block text-sm font-medium mb-2 dark:text-white">
         {label}
       </label>
 
-      <div className="flex flex-col gap-4">
-        {/* Color input with add button */}
-        <div className="flex items-center gap-3">
-          <input
-            type="color"
-            className="p-1 h-10 w-14 block bg-white border border-gray-200 cursor-pointer rounded-lg disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700"
-            value={currentColor}
-            title="Choose a color"
-            onChange={(e) => setCurrentColor(e.target.value)}
-          />
-          <Button onClick={() => handleAddColor()} />
-        </div>
-
+      <div className="flex flex-col gap-2">
         {loading ? (
           <div className="flex items-center gap-3">
             <div className="p-1 h-10 w-14 block bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 animate-pulse" />
@@ -85,51 +69,56 @@ const MultiColorSelector = ({
           </div>
         ) : (
           <>
-            {/* Database colors selector */}
-            <div className="flex flex-wrap gap-2">
+            {/* Database colors selector only */}
+            <div className="flex flex-wrap gap-4 mt-1">
               {dbColors.map((color) => {
                 const isSelected = selectedColor === color.value;
                 const isAlreadySelected = values.includes(color.value);
 
                 return (
-                  <div
+                  <button
                     key={color.id}
-                    className={`relative inline-block rounded-full p-[2px] ${
+                    type="button"
+                    title={`${color.name} (${color.value})`}
+                    className={`relative w-8 h-8 rounded-full border mt-1 ${
                       isSelected ? "ring-2 ring-blue-500" : ""
                     }`}
+                    style={{
+                      backgroundColor: color.value,
+                      borderColor: "rgba(0,0,0,0.1)",
+                    }}
+                    onClick={() => {
+                      if (!isAlreadySelected) {
+                        handleAddColor(color.value);
+                      }
+                      // Always focus/select this color for quantity/images, without unselecting
+                      setSelectedColor(color.value);
+                      if (onColorSelectedLabel) {
+                        onColorSelectedLabel(color.name);
+                      }
+                    }}
                   >
-                    <div
-                      className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700 cursor-pointer"
-                      style={{ backgroundColor: color.value }}
-                      title={`${color.name} (${color.value})`}
-                      onClick={() => {
-                        if (!isAlreadySelected) {
-                          handleAddColor(color.value);
-                        }
-                        setSelectedColor(color.value);
-                      }}
-                    />
                     {isAlreadySelected && (
                       <button
                         type="button"
-                        onClick={() => {
+                        aria-label={`Unselect ${color.name}`}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-white text-gray-600 flex items-center justify-center shadow hover:bg-red-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const newColors = values.filter(
                             (c: string) => c !== color.value
                           );
                           onChange(newColors);
-                          // If we're removing the selected color, select the first one or reset
                           if (selectedColor === color.value) {
                             setSelectedColor(
                               newColors.length > 0 ? newColors[0] : ""
                             );
                           }
                         }}
-                        className="absolute -top-1 -right-1 bg-white dark:bg-gray-800 rounded-full w-4 h-4 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
-                        aria-label={`Remove ${color.name} color`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-3 w-3 text-gray-500 hover:text-red-500"
+                          className="w-3 h-3"
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -137,61 +126,30 @@ const MultiColorSelector = ({
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            strokeWidth={2}
+                            strokeWidth="2.5"
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
                       </button>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
 
-            {/* Selected colors display */}
+            {/* Selected color chips */}
             {values.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {values.map((color, index) => {
-                  const isSelected = selectedColor === color;
-
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {values.map((color) => {
+                  const chip = dbColors.find((c) => c.value === color);
+                  const name = chip?.name || color;
                   return (
-                    <div
-                      key={`${color}-${index}`}
-                      className={`relative inline-block rounded-full p-[2px] ${
-                        isSelected ? "ring-2 ring-blue-500" : ""
-                      }`}
-                      onClick={() => setSelectedColor(color)}
+                    <span
+                      key={color}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-xs dark:bg-white/10 dark:text-white/80"
                     >
-                      <div
-                        className="w-8 h-8 rounded-full border border-gray-200 dark:border-gray-700"
-                        style={{ backgroundColor: color }}
-                        title={color}
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveColor(index);
-                        }}
-                        className="absolute -top-1 -right-1 bg-white dark:bg-gray-800 rounded-full w-4 h-4 flex items-center justify-center shadow-sm hover:bg-red-100 transition-colors"
-                        aria-label="Remove color"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-3 w-3 text-gray-500 hover:text-red-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
+                      {name}
+                    </span>
                   );
                 })}
               </div>

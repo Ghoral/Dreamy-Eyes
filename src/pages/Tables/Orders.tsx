@@ -33,16 +33,24 @@ export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [page]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await supabaseClient.rpc("get_orders");
-      setOrders(res?.data || []);
+      const res = await supabaseClient.rpc("get_orders", {
+        limit_value: pageSize,
+        offset_value: (page - 1) * pageSize,
+      });
+      const rows = (res?.data as Order[]) || [];
+      setOrders(rows);
+      setHasMore(rows.length === pageSize);
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -71,8 +79,8 @@ export default function Orders() {
   return (
     <>
       <PageMeta
-        title="Orders Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is the Orders Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="Orders | Dreamy Eyes Admin"
+        description="Orders overview for Dreamy Eyes Admin"
       />
       <PageBreadcrumb pageTitle="Orders" />
       <div className="space-y-6">
@@ -143,6 +151,16 @@ export default function Orders() {
 
                 {/* Table Body */}
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {orders.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        className="px-5 py-6 text-center text-gray-500"
+                        colSpan={9}
+                      >
+                        No orders found.
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {orders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="px-5 py-4 sm:px-6 text-start">
@@ -194,6 +212,25 @@ export default function Orders() {
             </div>
           </div>
         </ComponentCard>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          {Array.from(
+            { length: page + (hasMore ? 1 : 0) },
+            (_, i) => i + 1
+          ).map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1 border rounded text-sm ${
+                p === page
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              disabled={loading}
+              onClick={() => setPage(p)}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
       </div>
     </>
   );
