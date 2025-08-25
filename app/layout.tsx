@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
 import Header from "./components/landing/Header";
+import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
+import { AddressGuard } from "./hooks/AddressGuard";
+import { CartProvider } from "./context/CartContext";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -23,9 +24,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={nunito.variable} style={{ margin: 0, padding: 0 }}>
-        <Header />
-        {children}
+      <body className={`${nunito.variable} font-nunito antialiased`}>
+        <CartProvider>
+          <GlobalSupabaseListenerWrapper />
+          <AddressGuard />
+          <Header />
+          {children}
+        </CartProvider>
       </body>
     </html>
   );

@@ -1,281 +1,282 @@
+"use client";
+
+import { getFirstImageUrl } from "@/app/util";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useState } from "react";
+import { useCart } from "../../context/CartContext";
+import Toast from "../ui/Toast";
+import { useRouter } from "next/navigation";
 
-const products = [
-  {
-    title: "House of Sky Breath",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item1.png",
-    discount: "10% off",
-  },
-  {
-    title: "Heartland Stars",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item2.png",
-  },
-  {
-    title: "Heavenly Bodies",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item3.png",
-  },
-  {
-    title: "His Saving Grace",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item4.png",
-    discount: "10% off",
-  },
-  {
-    title: "House of Sky Breath",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item1.png",
-    discount: "10% off",
-  },
-  {
-    title: "Heartland Stars",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item2.png",
-  },
-  {
-    title: "Heavenly Bodies",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item3.png",
-  },
-  {
-    title: "His Saving Grace",
-    author: "Lauren Asher",
-    price: "$870",
-    image: "/images/product-item4.png",
-    discount: "10% off",
-  },
-];
-
-const ProductItems = () => {
+const ProductItems = ({ data }: { data: any }) => {
   const [hoveredItem, setHoveredItem] = useState<any>(null);
+  const [toastConfig, setToastConfig] = useState<{
+    message: string;
+    isVisible: boolean;
+  }>({ message: "", isVisible: false });
+  const { addItem } = useCart();
+  const router = useRouter();
 
   const handleProductClick = (product: any) => {
-    console.log("Clicked product:", product.title);
-    // Add your click handler logic here
+    const productId = product.id || product.title;
+    router.push(`/${encodeURIComponent(productId)}`);
+  };
+
+  const handleAddToCart = (e: React.MouseEvent, product: any) => {
+    e.stopPropagation();
+
+    let maxQuantity = 1;
+    if (product.colors) {
+      try {
+        const colorData = JSON.parse(product.colors);
+        if (colorData.length > 0) {
+          maxQuantity = parseInt(colorData[0].quantity) || 1;
+        }
+      } catch (error) {
+        console.error("Error parsing color data:", error);
+      }
+    }
+
+    addItem({
+      id: product.id || product.title,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      quantity: 1,
+      image: getFirstImageUrl(product.images) || undefined,
+      maxQuantity: maxQuantity,
+    });
+
+    setToastConfig({
+      message: `${product.title} added to cart!`,
+      isVisible: true,
+    });
   };
 
   return (
-    <section
-      id="best-selling-items"
-      className="position-relative"
-      style={{
-        backgroundColor: "#f8f9fa",
-        padding: "32px 0px",
-      }}
-    >
-      <div className="container">
-        <div className="section-title d-md-flex justify-content-between align-items-center mb-4">
-          <h3 className="d-flex align-items-center">Our Products</h3>
-          <a href="index.html" className="btn">
-            View All
-          </a>
+    <section className="w-full py-20 bg-gradient-to-b from-white to-secondary-50 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-20 right-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+        <div
+          className="absolute bottom-20 left-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
+          style={{ animationDelay: "1s" }}
+        ></div>
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="text-center mb-16 animate-slide-up">
+          <div className="inline-flex items-center px-4 py-2 bg-primary-100 text-primary-700 text-sm font-semibold rounded-full mb-4">
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+              />
+            </svg>
+            Premium Collection
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6">
+            Our Products
+          </h2>
+          <p className="text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed">
+            Discover our premium selection of contact lenses designed for
+            comfort, clarity, and style
+          </p>
         </div>
 
-        <div className="row g-3">
-          {products.map((product, index: number) => {
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+          {data?.map((product: any, index: number) => {
             const isHovered = hoveredItem === index;
+            const imageUrl = getFirstImageUrl(product.images);
 
             return (
-              <div key={index} className="col-6 col-sm-4 col-md-3 col-lg-2">
-                <div
-                  className="card position-relative p-3 border-0 rounded-3 h-100 bg-white shadow-sm d-flex flex-column"
-                  style={{
-                    cursor: "pointer",
-                    transition: "all 0.3s ease-in-out",
-                    transform: isHovered ? "translateY(-8px)" : "translateY(0)",
-                    boxShadow: isHovered
-                      ? "0 12px 24px rgba(0,0,0,0.15)"
-                      : "0 2px 8px rgba(0,0,0,0.1)",
-                  }}
-                  onMouseEnter={() => setHoveredItem(index)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  onClick={() => handleProductClick(product)}
-                >
-                  {product.discount && (
-                    <div className="position-absolute top-0 end-0 z-3 m-2">
-                      <p
-                        className="py-1 px-2 fs-6 text-white rounded-2 mb-0"
-                        style={{
-                          backgroundColor: "rgb(220, 53, 69)",
-                          fontSize: "0.7rem",
-                          fontWeight: "600",
-                        }}
+              <div
+                key={index}
+                className="group relative bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
+                onMouseEnter={() => setHoveredItem(index)}
+                onMouseLeave={() => setHoveredItem(null)}
+                onClick={() => handleProductClick(product)}
+              >
+                {/* Discount Badge */}
+                {product.discount && (
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className="inline-flex items-center px-2 py-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-bold rounded-full shadow-lg">
+                      {product.discount}
+                    </span>
+                  </div>
+                )}
+
+                {/* Product Image */}
+                <div className="relative h-48 bg-gradient-to-br from-secondary-50 to-primary-50 overflow-hidden">
+                  {imageUrl ? (
+                    <Image
+                      src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${imageUrl}`}
+                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                      alt={product.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg
+                        className="w-16 h-16 text-secondary-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {product.discount}
-                      </p>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
                     </div>
                   )}
 
-                  <div className="position-relative overflow-hidden rounded-2 mb-2 d-flex justify-content-center align-items-center">
-                    <Image
-                      src={product.image}
-                      className="img-fluid"
-                      height={120}
-                      width={120}
-                      style={{
-                        objectFit: "contain",
-                        transition: "transform 0.3s ease-in-out",
-                        transform: isHovered ? "scale(1.05)" : "scale(1)",
-                      }}
-                      alt={product.title}
-                    />
-
-                    {/* Hover overlay */}
-                    {isHovered && (
-                      <div
-                        className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-                        style={{
-                          backgroundColor: "rgba(220, 53, 69, 0.1)",
-                          transition: "opacity 0.3s ease-in-out",
-                        }}
-                      >
-                        <div
-                          className="bg-white rounded-circle d-flex align-items-center justify-content-center shadow"
-                          style={{ width: "40px", height: "40px" }}
+                  {/* Hover Overlay */}
+                  {isHovered && (
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent flex items-center justify-center">
+                      <div className="bg-white rounded-full p-3 shadow-2xl transform scale-100 animate-fade-in">
+                        <svg
+                          className="w-6 h-6 text-primary-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <span
-                            style={{
-                              fontSize: "16px",
-                              color: "rgb(220, 53, 69)",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            →
-                          </span>
-                        </div>
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                          />
+                        </svg>
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Info */}
+                <div className="p-4">
+                  {/* Title */}
+                  <h3 className="text-base font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300">
+                    {product.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p
+                    className="text-secondary-600 text-sm mb-3 line-clamp-2 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
+
+                  {/* Rating */}
+                  <div className="flex items-center mb-3">
+                    <div className="flex items-center space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <svg
+                          key={i}
+                          className="w-3 h-3 text-yellow-400 fill-current"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-xs text-secondary-500 ml-2">
+                      4.9 (120)
+                    </span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xl font-bold text-primary-600">
+                      ${product.price}
+                    </span>
+                    {product.discount && (
+                      <span className="text-sm text-secondary-500 line-through">
+                        ${(parseFloat(product.price) * 1.2).toFixed(2)}
+                      </span>
                     )}
                   </div>
 
-                  <div className="card-body p-0 flex-grow-1 d-flex flex-column">
-                    <h6
-                      className="mt-1 mb-2 fw-bold lh-sm"
-                      style={{
-                        color: isHovered ? "rgb(220, 53, 69)" : "#212529",
-                        transition: "color 0.2s ease-in-out",
-                        fontSize: "0.9rem",
-                      }}
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={(e) => handleAddToCart(e, product)}
+                      className="flex-1 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg text-sm"
                     >
-                      {product.title}
-                    </h6>
-
-                    {/* Author & Rating */}
-                    <div className="review-content d-flex align-items-center justify-content-between mb-2">
-                      <p
-                        className="mb-0 text-muted"
-                        style={{ fontSize: "0.75rem" }}
+                      <svg
+                        className="w-4 h-4 mr-1 inline"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        by {product.author}
-                      </p>
-                      <div className="rating text-warning d-flex align-items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              fontSize: "12px",
-                              color: "#ffc107",
-                            }}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Price */}
-                    <div className="mb-2">
-                      <span
-                        className="price fw-bold"
-                        style={{
-                          color: "rgb(220, 53, 69)",
-                          fontSize: "1rem",
-                        }}
-                      >
-                        {product.price}
-                      </span>
-                    </div>
-
-                    {/* Side by side buttons - Always visible */}
-                    <div className="mt-auto d-flex gap-2">
-                      <button
-                        className="btn btn-outline-danger btn-sm flex-fill"
-                        style={{
-                          fontSize: "0.75rem",
-                          transition: "all 0.2s ease-in-out",
-                          padding: "6px 8px",
-                        }}
-                        onMouseEnter={(e: any) => {
-                          e.target.style.backgroundColor = "rgb(220, 53, 69)";
-                          e.target.style.borderColor = "rgb(220, 53, 69)";
-                          e.target.style.color = "white";
-                        }}
-                        onMouseLeave={(e: any) => {
-                          e.target.style.backgroundColor = "transparent";
-                          e.target.style.borderColor = "rgb(220, 53, 69)";
-                          e.target.style.color = "rgb(220, 53, 69)";
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log("Add to cart:", product.title);
-                        }}
-                      >
-                        🛒 Cart
-                      </button>
-                      <button
-                        className="btn btn-outline-danger btn-sm flex-fill"
-                        style={{
-                          fontSize: "0.75rem",
-                          transition: "all 0.2s ease-in-out",
-                          padding: "6px 8px",
-                        }}
-                        onMouseEnter={(e: any) => {
-                          e.target.style.backgroundColor = "rgb(220, 53, 69)";
-                          e.target.style.borderColor = "rgb(220, 53, 69)";
-                          e.target.style.color = "white";
-                        }}
-                        onMouseLeave={(e: any) => {
-                          e.target.style.backgroundColor = "transparent";
-                          e.target.style.borderColor = "rgb(220, 53, 69)";
-                          e.target.style.color = "rgb(220, 53, 69)";
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log("Add to wishlist:", product.title);
-                        }}
-                      >
-                        ❤️ Wishlist
-                      </button>
-                    </div>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                        />
+                      </svg>
+                      Add to Cart
+                    </button>
                   </div>
                 </div>
+
+                {/* Hover Border Effect */}
+                <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary-200 transition-all duration-500"></div>
               </div>
             );
           })}
         </div>
+
+        {/* View All Button */}
+        <div className="text-center mt-12">
+          <Link
+            href="/shop"
+            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 text-white font-semibold text-lg rounded-2xl shadow-soft hover:shadow-glow transition-all duration-300 transform hover:scale-105 group"
+          >
+            View All Products
+            <svg
+              className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </Link>
+        </div>
       </div>
 
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(5px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
+      {/* Toast Notification */}
+      <Toast
+        message={toastConfig.message}
+        type="success"
+        isVisible={toastConfig.isVisible}
+        onClose={() => setToastConfig({ message: "", isVisible: false })}
+        duration={2000}
+      />
     </section>
   );
 };
