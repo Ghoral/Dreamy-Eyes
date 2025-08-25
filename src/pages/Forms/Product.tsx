@@ -75,7 +75,7 @@ const ProductForm = () => {
         color_quantity: color_quantity,
       };
 
-      await supabaseClient.from("products").insert(body);
+      await supabaseClient.from("product-image").insert(body);
     } catch (error) {}
   };
 
@@ -86,7 +86,7 @@ const ProductForm = () => {
       if (files?.length) {
         const fileToUpload = files[files.length - 1];
         const { error } = await supabaseClient.storage
-          .from("products-image")
+          .from("product-image")
           .upload(fileToUpload.name, fileToUpload, { upsert: true });
 
         if (error) {
