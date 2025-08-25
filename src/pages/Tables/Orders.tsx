@@ -153,10 +153,7 @@ export default function Orders() {
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                   {orders.length === 0 && (
                     <TableRow>
-                      <TableCell
-                        className="px-5 py-6 text-center text-gray-500"
-                        colSpan={9}
-                      >
+                      <TableCell className="px-5 py-6 text-center text-gray-500">
                         No orders found.
                       </TableCell>
                     </TableRow>
