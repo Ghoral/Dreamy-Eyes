@@ -2,19 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
 
 const BillboardCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [images, setImages] = useState<string[]>([]);
-
-  // Fallback if no images in storage
-  const fallbackImages = [
-    "/images/logo.png",
-    "/images/logo.png",
-    "/images/logo.png",
-  ];
 
   useEffect(() => {
     const supabase = createSupabaseClient();
@@ -28,16 +20,17 @@ const BillboardCarousel = () => {
         const urls = data
           .filter((f) => !f.name.startsWith(".") && f.id)
           .map((file) => `${baseUrl}/${encodeURIComponent(file.name)}`);
-        if (urls.length > 0) setImages(urls);
+        setImages(urls);
       }
     };
     loadBanners();
   }, []);
 
   useEffect(() => {
-    const total = images.length > 0 ? images.length : fallbackImages.length;
+    if (images.length === 0) return;
+
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % total);
+      setCurrentSlide((prev) => (prev + 1) % images.length);
     }, 5000);
     return () => clearInterval(timer);
   }, [images.length]);
@@ -47,13 +40,11 @@ const BillboardCarousel = () => {
   };
 
   const goToPrevious = () => {
-    const total = images.length > 0 ? images.length : fallbackImages.length;
-    setCurrentSlide((prev) => (prev - 1 + total) % total);
+    setCurrentSlide((prev) => (prev - 1 + images.length) % images.length);
   };
 
   const goToNext = () => {
-    const total = images.length > 0 ? images.length : fallbackImages.length;
-    setCurrentSlide((prev) => (prev + 1) % total);
+    setCurrentSlide((prev) => (prev + 1) % images.length);
   };
 
   return (
@@ -74,7 +65,7 @@ const BillboardCarousel = () => {
       <div className="relative">
         {/* Carousel Container */}
         <div className="relative h-[320px] sm:h-[380px] md:h-[440px] lg:h-[500px] overflow-hidden">
-          {(images.length > 0 ? images : fallbackImages).map((src, index) => (
+          {images.map((src, index) => (
             <div
               key={index}
               className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -135,7 +126,7 @@ const BillboardCarousel = () => {
 
         {/* Pagination Dots */}
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
-          {(images.length > 0 ? images : fallbackImages).map((_, index) => (
+          {images.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
