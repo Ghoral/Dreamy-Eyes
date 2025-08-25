@@ -6,7 +6,6 @@ export const productValidationSchema = Yup.object({
   description: Yup.string().required("Description is required"),
   images: Yup.array().min(1, "At least one image is required"),
   price: Yup.number().required("Price is required"),
-  quantity: Yup.number().required("Quantity is required"),
   power: Yup.number().required("Power is required"),
   color_quantity: Yup.array()
     .of(

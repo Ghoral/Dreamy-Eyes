@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabaseClient } from "../../service/supabase";
 
 interface MultiColorSelectorProps {
+  dbColors: any[];
+  isLoading: boolean;
   values: string[];
   disabled: boolean;
   onChange: (colors: string[]) => void;
@@ -12,6 +14,8 @@ interface MultiColorSelectorProps {
 }
 
 const MultiColorSelector = ({
+  dbColors = [],
+  isLoading = true,
   selectedColor,
   values = [],
   onChange,
@@ -20,31 +24,6 @@ const MultiColorSelector = ({
   onColorSelectedLabel,
 }: MultiColorSelectorProps) => {
   const [currentColor] = useState<string>("#2563eb");
-  const [dbColors, setDbColors] = useState<
-    { id: string; name: string; value: string }[]
-  >([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchColors();
-  }, []);
-
-  const fetchColors = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabaseClient
-        .from("colors")
-        .select("id, name, value")
-        .order("name");
-
-      if (error) throw error;
-      setDbColors(data || []);
-    } catch (error) {
-      console.error("Error fetching colors:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddColor = (colorValue?: string) => {
     const colorToAdd = colorValue || currentColor;
@@ -62,7 +41,7 @@ const MultiColorSelector = ({
       </label>
 
       <div className="flex flex-col gap-2">
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center gap-3">
             <div className="p-1 h-10 w-14 block bg-white border border-gray-200 rounded-lg dark:bg-neutral-900 dark:border-neutral-700 animate-pulse" />
             <div className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />

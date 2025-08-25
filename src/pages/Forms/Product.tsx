@@ -7,7 +7,7 @@ import { Editor } from "@tinymce/tinymce-react";
 import SpecificationsForm from "../Components/SpecificationForm";
 import { IProduct } from "../../interface/product";
 import { productValidationSchema } from "../../validation/product";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabaseClient } from "../../service/supabase";
 import { showCustomToastError } from "../../utils/toast";
 import MultiColorSelector from "../../components/common/ColorPicker";
@@ -21,7 +21,33 @@ const ProductForm = () => {
   const [colorQuantities, setColorQuantities] = useState<{
     [color: string]: { quantity: string; label: string };
   }>({});
+  const [dbColors, setDbColors] = useState<
+    { id: string; name: string; value: string }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  console.log("colorImageMap", colorImageMap);
+
+  useEffect(() => {
+    fetchColors();
+  }, []);
+
+  const fetchColors = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabaseClient
+        .from("colors")
+        .select("id, name, value")
+        .order("name");
+
+      if (error) throw error;
+      setDbColors(data || []);
+    } catch (error) {
+      console.error("Error fetching colors:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formik: any = useFormik({
     initialValues: {
@@ -30,7 +56,6 @@ const ProductForm = () => {
       description: "",
       images: [],
       price: undefined,
-      quantity: undefined,
       power: undefined,
       color: [],
       color_quantity: [],
@@ -56,10 +81,15 @@ const ProductForm = () => {
         (c: string) =>
           !Array.isArray(colorImageMap[c]) || colorImageMap[c]?.length === 0
       );
+
       if (missingImageColors.length > 0) {
+        const missingColorLabels = missingImageColors.map(
+          (hex: any) => dbColors.find((clr) => clr.value === hex)?.name || hex
+        );
+
         formik.setFieldError(
           "images",
-          `Please upload at least one image for: ${missingImageColors.join(
+          `Please upload at least one image for: ${missingColorLabels.join(
             ", "
           )}`
         );
@@ -116,10 +146,34 @@ const ProductForm = () => {
             (file) => !existingFileNames.has(file.name)
           );
 
-          return {
+          const updatedMap = {
             ...prev,
             [selectedColor]: [...existingFiles, ...newUniqueFiles],
-          };
+          } as any;
+
+          // Dynamic inline error: compute missing color images
+          const missingImageColors = (formik.values.color || []).filter(
+            (c: string) =>
+              !Array.isArray(updatedMap[c]) || updatedMap[c]?.length === 0
+          );
+
+          if (missingImageColors.length > 0) {
+            const missingColorLabels = missingImageColors.map(
+              (hex: any) =>
+                dbColors.find((clr) => clr.value === hex)?.name || hex
+            );
+
+            formik.setFieldError(
+              "images",
+              `Please upload at least one image for: ${missingColorLabels.join(
+                ", "
+              )}`
+            );
+          } else {
+            formik.setFieldError("images", undefined as any);
+          }
+
+          return updatedMap;
         });
       }
     } catch (error) {
@@ -161,11 +215,6 @@ const ProductForm = () => {
     });
   };
 
-  const handleColorSelectedLabel = (name: string) => {
-    if (!selectedColor) return;
-    updateColorQuantity(selectedColor, "label", name || "");
-  };
-
   const handleColorChange = (colors: string[]) => {
     formik.setFieldValue("color", colors);
 
@@ -177,10 +226,14 @@ const ProductForm = () => {
     // Initialize quantity and label for new colors
     colors.forEach((color) => {
       if (!(color in colorQuantities)) {
+        const dbColorObj = dbColors.find((c) => c.value === color);
         setColorQuantities((prev) => {
           const updated = {
             ...prev,
-            [color]: { quantity: "0", label: "" },
+            [color]: {
+              quantity: "0",
+              label: dbColorObj?.name || "", // map label from dbColors
+            },
           };
 
           // Sync to formik on adding new color
@@ -216,6 +269,25 @@ const ProductForm = () => {
 
       return newQuantities;
     });
+
+    // Recompute image validation dynamically for all selected colors
+    const missingImageColors = (colors || []).filter(
+      (c: string) =>
+        !Array.isArray(colorImageMap[c]) || colorImageMap[c]?.length === 0
+    );
+
+    if (missingImageColors.length > 0) {
+      const missingColorLabels = missingImageColors.map(
+        (hex) => dbColors.find((clr) => clr.value === hex)?.name || hex
+      );
+
+      formik.setFieldError(
+        "images",
+        `Please upload at least one image for: ${missingColorLabels.join(", ")}`
+      );
+    } else {
+      formik.setFieldError("images", undefined as any);
+    }
   };
 
   const removeImageFromColor = (color: string, index: number) => {
@@ -365,23 +437,6 @@ const ProductForm = () => {
           )}
         </div>
 
-        {/* Quantity */}
-        <div className="mb-6">
-          <Label htmlFor="quantity">Quantity</Label>
-          <Input
-            type="number"
-            id="quantity"
-            name="quantity"
-            value={formik.values.quantity}
-            onChange={formik.handleChange}
-          />
-          {formik.touched.quantity && formik.errors.quantity && (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.quantity}
-            </div>
-          )}
-        </div>
-
         {/* Specification */}
         <div className="mb-6">
           <Label htmlFor="quantity">Specification</Label>
@@ -402,12 +457,14 @@ const ProductForm = () => {
             }
             onReorder={(items: any) => formik.setFieldValue("images", items)}
           />
-          {formik.touched.images && formik.errors.images && (
+          {formik.errors.images && (
             <div className="text-red-500 text-sm mt-1">
               {formik.errors.images}
             </div>
           )}
           <MultiColorSelector
+            dbColors={dbColors}
+            isLoading={loading}
             disabled={
               !!!formik?.values?.images?.length ||
               formik.values.color.length === formik.values.images.length
