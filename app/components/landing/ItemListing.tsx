@@ -2,53 +2,67 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { get_all_products_with_types } from "@/app/api/product";
+import { getFirstImageUrl } from "@/app/util";
+
+type Product = {
+  id: string;
+  images: string;
+  title: string;
+  description: string; // HTML
+  price: number | string;
+};
+
+type SectionKey = "latest_arrival" | "top_seller" | "best_reviewed";
 
 const ItemListing = () => {
-  const sections = [
-    {
-      id: 1,
-      title: "Latest Arrivals",
-      subtitle: "Fresh new styles just in",
-      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
-      category: "New",
-      description:
-        "Discover the newest fashion lens collections that just arrived",
-      price: "$29.99",
-    },
-    {
-      id: 2,
-      title: "Best Sellers",
-      subtitle: "Most loved by our customers",
-      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
-      category: "Popular",
-      description:
-        "Our top-rated lenses that customers can't stop raving about",
-      price: "$34.99",
-    },
-    {
-      id: 3,
-      title: "Top Reviews",
-      subtitle: "Highest rated products",
-      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
-      category: "Rated",
-      description: "Lenses with the best customer reviews and ratings",
-      price: "$39.99",
-    },
-    {
-      id: 4,
-      title: "Featured Collections",
-      subtitle: "Curated for you",
-      image: "/images/logo.png", // Placeholder - replace with your fashion lens image
-      category: "Featured",
-      description: "Handpicked collections that showcase the latest trends",
-      price: "$44.99",
-    },
-  ];
+  const [sectionsData, setSectionsData] = useState<
+    Partial<Record<SectionKey, Product[]>>
+  >({});
+  const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchData = async () => {
+      setLoading(true);
+      const res = await get_all_products_with_types();
+      if (mounted && res?.status && res?.data) {
+        const raw = Array.isArray(res.data) ? res.data[0] : res.data;
+        const normalized: Partial<Record<SectionKey, Product[]>> = {
+          latest_arrival:
+            raw?.latest_arrival || raw?.latestArrivals || raw?.latest || [],
+          top_seller:
+            raw?.top_seller || raw?.top_sellers || raw?.topSeller || [],
+          best_reviewed:
+            raw?.best_reviewed || raw?.bestReviewed || raw?.best || [],
+        };
+        setSectionsData(normalized);
+      }
+      setLoading(false);
+    };
+    fetchData();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const orderedSections = useMemo(() => {
+    const entries: Array<{ key: SectionKey; label: string }> = [
+      { key: "latest_arrival", label: "Latest Arrivals" },
+      { key: "top_seller", label: "Best Sellers" },
+      { key: "best_reviewed", label: "Top Reviews" },
+    ];
+    return entries.filter(
+      (e) =>
+        Array.isArray(sectionsData[e.key]) &&
+        (sectionsData[e.key]?.length || 0) > 0
+    );
+  }, [sectionsData]);
 
   return (
     <section className="py-20 bg-gradient-to-br from-white via-secondary-50 to-primary-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center px-4 py-2 bg-primary-100 text-primary-700 text-sm font-semibold rounded-full mb-4">
             <svg
@@ -75,75 +89,101 @@ const ItemListing = () => {
           </p>
         </div>
 
-        {/* Collections Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-          {sections.map((section) => (
-            <div
-              key={section.id}
-              className="group bg-white rounded-3xl shadow-soft hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden"
-            >
-              {/* Image Container */}
-              <div className="relative h-48 bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
-                <Image
-                  src={section.image}
-                  alt={section.title}
-                  fill
-                  className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
-                />
-
-                {/* Category Badge */}
-                <div className="absolute top-4 left-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-500 text-white">
-                    {section.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300">
-                  {section.title}
-                </h3>
-                <p className="text-secondary-600 text-sm mb-3">
-                  {section.subtitle}
-                </p>
-                <p className="text-secondary-500 text-sm mb-4 line-clamp-2">
-                  {section.description}
-                </p>
-
-                {/* Price */}
-                <div className="mb-4">
-                  <span className="text-2xl font-bold text-primary-600">
-                    {section.price}
-                  </span>
-                </div>
-
-                {/* Action Button */}
-                <Link
-                  href="/shop"
-                  className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    />
-                  </svg>
-                  Shop Now
-                </Link>
-              </div>
+        <div className="flex flex-wrap justify-center gap-8 mb-12">
+          {loading && (
+            <div className="col-span-full text-center text-secondary-500">
+              Loading...
             </div>
-          ))}
+          )}
+
+          {!loading && orderedSections.length === 0 && (
+            <div className="col-span-full text-center text-secondary-500">
+              No collections to display
+            </div>
+          )}
+
+          {!loading &&
+            orderedSections.map((section) => {
+              console.log("section", section);
+
+              const products = (sectionsData[section.key] || []).slice(0, 3);
+              const first = products[0];
+              const firstImage = first ? getFirstImageUrl(first.images) : null;
+
+              return (
+                <div
+                  key={section.key}
+                  className="group bg-white rounded-3xl shadow-soft hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden max-w-sm w-full"
+                >
+                  <div className="relative h-48 bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
+                    {firstImage ? (
+                      <Image
+                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${firstImage}`}
+                        alt={first?.title || section.label}
+                        fill
+                        className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <Image
+                        src="/images/logo.png"
+                        alt={section.label}
+                        fill
+                        className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
+                      />
+                    )}
+                    <div className="absolute top-4 left-4">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-500 text-white">
+                        {section.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300">
+                      {first?.title || section.label}
+                    </h3>
+                    <div
+                      className="text-secondary-500 text-sm mb-4 line-clamp-2"
+                      dangerouslySetInnerHTML={{
+                        __html: first?.description || "",
+                      }}
+                    />
+                    <div className="mb-4">
+                      {first && (
+                        <span className="text-2xl font-bold text-primary-600">
+                          $
+                          {typeof first.price === "number"
+                            ? first.price
+                            : first.price}
+                        </span>
+                      )}
+                    </div>
+
+                    <Link
+                      href="/shop"
+                      className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        />
+                      </svg>
+                      Shop Now
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
         </div>
 
-        {/* Bottom CTA */}
         <div className="text-center">
           <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-3xl p-8 text-white">
             <h3 className="text-2xl font-bold mb-4">
