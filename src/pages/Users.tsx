@@ -3,6 +3,7 @@ import ComponentCard from "../components/common/ComponentCard";
 import { supabaseClient } from "../service/supabase";
 import { Modal } from "../components/ui/modal";
 import { showCustomToastError, showCustomToastSuccess } from "../utils/toast";
+import { useAuth } from "../context/AuthContext";
 import { TrashBinIcon } from "../icons";
 
 type Profile = {
@@ -14,6 +15,8 @@ type Profile = {
 };
 
 export default function Users() {
+  const { user } = useAuth();
+  const [role, setRole] = useState<string | null>(null);
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -40,6 +43,23 @@ export default function Users() {
   useEffect(() => {
     fetchUsers();
   }, [page]);
+
+  useEffect(() => {
+    const loadRole = async () => {
+      try {
+        if (!user?.id) return;
+        const { data } = await supabaseClient
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+        setRole((data as any)?.role ?? null);
+      } catch (e) {
+        setRole(null);
+      }
+    };
+    loadRole();
+  }, [user?.id]);
 
   const openConfirm = (id: string) => {
     setPendingDeleteId(id);
@@ -86,10 +106,18 @@ export default function Users() {
                 <td className="py-3 pr-4">
                   <button
                     type="button"
-                    onClick={() => openConfirm(p.id)}
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
-                    aria-label="Delete user"
-                    disabled={loading}
+                    onClick={() => role === "super_admin" && openConfirm(p.id)}
+                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
+                      role === "super_admin"
+                        ? "bg-red-100 text-red-600 hover:bg-red-200"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    }`}
+                    aria-label={
+                      role === "super_admin"
+                        ? "Delete user"
+                        : "Delete disabled for admin"
+                    }
+                    disabled={loading || role !== "super_admin"}
                   >
                     <TrashBinIcon className="w-4 h-4" />
                   </button>

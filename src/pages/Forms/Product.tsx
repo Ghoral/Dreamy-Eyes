@@ -26,6 +26,7 @@ const ProductForm = () => {
   >([]);
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [primaryThumbnail, setPrimaryThumbnail] = useState<string | null>(null);
 
   useEffect(() => {
     fetchColors();
@@ -100,6 +101,7 @@ const ProductForm = () => {
       const body = {
         ...rest,
         images: getColorFileNameMap(colorImageMap),
+        primary_thumbnail: primaryThumbnail,
         specifications: specifications.keyValuePairs,
         color_quantity: color_quantity,
       };
@@ -514,6 +516,7 @@ const ProductForm = () => {
             title="Product Images"
             multiple
             uploading={uploading}
+            onPrimaryChange={(name) => setPrimaryThumbnail(name)}
             setFieldValue={(index: number) =>
               removeImageFromColor(selectedColor ?? "", index)
             }

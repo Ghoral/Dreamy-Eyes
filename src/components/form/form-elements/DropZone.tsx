@@ -13,6 +13,8 @@ const DropzoneComponent = ({
   setFieldValue = () => {},
   uploading = false,
   disabled = false, // New prop to control disabled state
+  primaryIndex,
+  onPrimaryChange,
 }: {
   bucket?: string;
   title?: string;
@@ -23,11 +25,14 @@ const DropzoneComponent = ({
   setFieldValue?: (index: number) => void;
   uploading?: boolean;
   disabled?: boolean; // Add disabled prop type
+  primaryIndex?: number;
+  onPrimaryChange?: (fileName: string) => void;
 }) => {
   const [previews, setPreviews] = useState<
     { id: string; url: string; file: File | string }[]
   >([]);
   const [removing, setRemoving] = useState(false);
+  const [localPrimary, setLocalPrimary] = useState<number | null>(null);
 
   useEffect(() => {
     previews.forEach((preview) => {
@@ -75,6 +80,17 @@ const DropzoneComponent = ({
     }
 
     setPreviews(newPreviews);
+
+    // Initialize primary selection
+    if (newPreviews.length > 0) {
+      const initIdx = typeof primaryIndex === "number" ? primaryIndex : 0;
+      setLocalPrimary(initIdx);
+      const f: any = newPreviews[initIdx]?.file;
+      const name = f?.name ?? (typeof f === "string" ? f : "");
+      onPrimaryChange?.(name);
+    } else {
+      setLocalPrimary(null);
+    }
 
     return () => {
       newPreviews.forEach((preview) => {
@@ -295,6 +311,31 @@ const DropzoneComponent = ({
                   alt={`Upload ${index + 1}`}
                   className="w-full h-40 object-contain rounded"
                 />
+                {/* Primary selector */}
+                {multiple && (
+                  <div className="absolute top-2 left-2">
+                    <label className="inline-flex items-center gap-1 text-[11px] bg-white/85 dark:bg-gray-800/80 px-2 py-1 rounded shadow">
+                      <input
+                        type="radio"
+                        name="primary-thumbnail"
+                        checked={
+                          (typeof primaryIndex === "number"
+                            ? primaryIndex
+                            : localPrimary) === index
+                        }
+                        onChange={() => {
+                          setLocalPrimary(index);
+                          const f: any = previews[index]?.file;
+                          const name =
+                            f?.name ?? (typeof f === "string" ? f : "");
+                          onPrimaryChange?.(name);
+                        }}
+                        disabled={disabled}
+                      />
+                      Primary
+                    </label>
+                  </div>
+                )}
                 <div className="flex justify-end">
                   <button
                     type="button"

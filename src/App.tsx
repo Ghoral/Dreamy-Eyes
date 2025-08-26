@@ -27,6 +27,8 @@ import Admins from "./pages/Admins";
 import Users from "./pages/Users";
 import InviteAdmin from "./pages/InviteAdmin";
 import ResetPassword from "./pages/AuthPages/ResetPassword";
+import TikTok from "./pages/Social/TikTok";
+import ProductsTable from "./pages/Tables/Products";
 
 function AppRoutes() {
   const { session, loading } = useAuth();
@@ -55,6 +57,8 @@ function AppRoutes() {
         <Route path="/users" element={<Users />} />
         <Route path="/invite-admin" element={<InviteAdmin />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/social/tiktok" element={<TikTok />} />
+        <Route path="/products" element={<ProductsTable />} />
         {/* Forms */}
         <Route path="/form/landing" element={<LandingForm />} />
         <Route path="/form/product" element={<ProductForm />} />
