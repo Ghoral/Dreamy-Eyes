@@ -4,7 +4,7 @@ import ProductItems from "../landing/ProductItems";
 const ProductWrapper = async () => {
   const { data } = await get_all_products();
 
-  return <ProductItems data={data} />;
+  return <div id="products-section"><ProductItems data={data} /></div>;
 };
 
 export default ProductWrapper;

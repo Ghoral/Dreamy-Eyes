@@ -160,7 +160,7 @@ const ItemListing = () => {
                     </div>
 
                     <Link
-                      href="/shop"
+                      href={`/shop?type=${section.key}`}
                       className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
                     >
                       <svg
@@ -194,8 +194,10 @@ const ItemListing = () => {
               style needs
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/shop"
+              <button
+                onClick={() => {
+                  document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="inline-flex items-center px-8 py-4 bg-white text-primary-600 hover:bg-primary-50 font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
               >
                 <svg
@@ -212,7 +214,7 @@ const ItemListing = () => {
                   />
                 </svg>
                 Shop All Lenses
-              </Link>
+              </button>
             </div>
           </div>
         </div>
