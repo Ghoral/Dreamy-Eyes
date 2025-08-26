@@ -18,7 +18,8 @@ export interface CartItem {
   color?: string;
   colorHex?: string;
   image?: string;
-  maxQuantity?: number; // Add maximum quantity limit
+  maxQuantity?: number; 
+  primary_thumbnail?:string// Add maximum quantity limit
 }
 
 interface CartState {

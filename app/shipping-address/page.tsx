@@ -47,7 +47,10 @@ export default function ShippingAddressPage() {
       } = await supabaseBrowserClient.auth.getUser();
 
       if (userError || !user) {
-        router.push("/login");
+        // Small delay to ensure auth state is updated in Navbar
+        setTimeout(() => {
+          router.push("/login");
+        }, 100);
         return;
       }
 

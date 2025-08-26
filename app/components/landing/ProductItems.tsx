@@ -1,8 +1,7 @@
 "use client";
 
-import { getFirstImageUrl } from "@/app/util";
+import { getThumbnailUrl } from "@/app/util";
 import Image from "next/image";
-import Link from "next/link";
 import React, { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
@@ -43,7 +42,8 @@ const ProductItems = ({ data }: { data: any }) => {
       description: product.description,
       price: product.price,
       quantity: 1,
-      image: getFirstImageUrl(product.images) || undefined,
+      image: getThumbnailUrl(product) || undefined,
+      primary_thumbnail: product.primary_thumbnail || undefined,
       maxQuantity: maxQuantity,
     });
 
@@ -96,7 +96,7 @@ const ProductItems = ({ data }: { data: any }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
           {data?.map((product: any, index: number) => {
             const isHovered = hoveredItem === index;
-            const imageUrl = getFirstImageUrl(product.images);
+            const imageUrl = getThumbnailUrl(product);
 
             return (
               <div
@@ -243,29 +243,6 @@ const ProductItems = ({ data }: { data: any }) => {
               </div>
             );
           })}
-        </div>
-
-        {/* View All Button */}
-        <div className="text-center mt-12">
-          <Link
-            href="/shop"
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 text-white font-semibold text-lg rounded-2xl shadow-soft hover:shadow-glow transition-all duration-300 transform hover:scale-105 group"
-          >
-            View All Products
-            <svg
-              className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </Link>
         </div>
       </div>
 

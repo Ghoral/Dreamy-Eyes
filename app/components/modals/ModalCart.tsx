@@ -153,7 +153,13 @@ const ModalCart = ({
                     <div className="flex items-start space-x-4">
                       {/* Item Image */}
                       <div className="w-20 h-20 bg-gradient-to-br from-secondary-50 to-primary-50 rounded-xl overflow-hidden flex-shrink-0">
-                        {item.image ? (
+                        {item.primary_thumbnail ? (
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${item.primary_thumbnail}`}
+                            alt={item.title}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : item.image ? (
                           <img
                             src={item.image}
                             alt={item.title}
@@ -196,9 +202,9 @@ const ModalCart = ({
                             </span>
                           </div>
                         )}
-                        <p className="text-secondary-600 text-sm mb-3 line-clamp-2">
-                          {item.description}
-                        </p>
+                        <div className="text-secondary-600 text-sm mb-3 line-clamp-2">
+                          <div dangerouslySetInnerHTML={{ __html: item.description ??'' }} />
+                        </div>
 
                         {/* Price and Quantity */}
                         <div className="flex items-center justify-between">

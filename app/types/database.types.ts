@@ -58,6 +58,27 @@ export type Database = {
           },
         ]
       }
+      app_detail: {
+        Row: {
+          created_at: string
+          follow_us_tiktok: string | null
+          id: number
+          tiktok_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          follow_us_tiktok?: string | null
+          id?: number
+          tiktok_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          follow_us_tiktok?: string | null
+          id?: number
+          tiktok_link?: string | null
+        }
+        Relationships: []
+      }
       colors: {
         Row: {
           created_at: string
@@ -85,10 +106,10 @@ export type Database = {
           color: string | null
           created_at: string
           id: string
-          order_number: number | null
+          order_number: string | null
           product_id: string | null
           quantity: number | null
-          status: string | null
+          status: number | null
           total_amount: number | null
           user_id: string | null
         }
@@ -97,10 +118,10 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
-          order_number?: number | null
+          order_number?: string | null
           product_id?: string | null
           quantity?: number | null
-          status?: string | null
+          status?: number | null
           total_amount?: number | null
           user_id?: string | null
         }
@@ -109,10 +130,10 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
-          order_number?: number | null
+          order_number?: string | null
           product_id?: string | null
           quantity?: number | null
-          status?: string | null
+          status?: number | null
           total_amount?: number | null
           user_id?: string | null
         }
@@ -129,6 +150,13 @@ export type Database = {
             columns: ["address_id"]
             isOneToOne: false
             referencedRelation: "address"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_status_fkey"
+            columns: ["status"]
+            isOneToOne: false
+            referencedRelation: "slug"
             referencedColumns: ["id"]
           },
           {
@@ -149,7 +177,7 @@ export type Database = {
           images: string | null
           power: number | null
           price: number | null
-          quantity: number | null
+          primary_thumbnail: string | null
           specifications: Json | null
           sub_title: string | null
           title: string | null
@@ -162,7 +190,7 @@ export type Database = {
           images?: string | null
           power?: number | null
           price?: number | null
-          quantity?: number | null
+          primary_thumbnail?: string | null
           specifications?: Json | null
           sub_title?: string | null
           title?: string | null
@@ -175,7 +203,7 @@ export type Database = {
           images?: string | null
           power?: number | null
           price?: number | null
-          quantity?: number | null
+          primary_thumbnail?: string | null
           specifications?: Json | null
           sub_title?: string | null
           title?: string | null
@@ -218,6 +246,38 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          created_at: string
+          id: number
+          product_id: string | null
+          rating: number | null
+          review: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          product_id?: string | null
+          rating?: number | null
+          review?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          product_id?: string | null
+          rating?: number | null
+          review?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       slug: {
         Row: {
           created_at: string
@@ -246,14 +306,22 @@ export type Database = {
     Functions: {
       create_orders_and_update_stock: {
         Args: {
-          p_address_id: string
+          p_address_id: number
           p_items: Json
           p_order_number: string
           p_user_id: string
         }
         Returns: undefined
       }
+      get_all_products_with_types: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_available_products: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_my_orders: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
@@ -266,7 +334,20 @@ export type Database = {
         Returns: Json
       }
       get_product_details: {
-        Args: { product_id?: string }
+        Args: { product_id: string }
+        Returns: Json
+      }
+      get_products_by_type: {
+        Args: {
+          p_filter?: Json
+          p_limit?: number
+          p_page?: number
+          p_type: string
+        }
+        Returns: Json
+      }
+      get_profiles_by_role: {
+        Args: { p_limit?: number; p_page?: number; p_role: string }
         Returns: Json
       }
     }

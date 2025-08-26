@@ -61,7 +61,10 @@ export default function LoginPage() {
       }
 
       // Profile is complete, redirect to home
-      router.push("/");
+      // Small delay to ensure auth state is updated in Navbar
+      setTimeout(() => {
+        router.push("/");
+      }, 100);
     } catch (error) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
