@@ -1,16 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import PaginatedProductList from "@/app/components/product/PaginatedProductList";
 import { useSearchParams } from "next/navigation";
 
-const Shop = () => {
+// Component that uses useSearchParams hook
+function ProductListWithParams() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type") || "latest_arrival";
   
+  return <PaginatedProductList type={type} />;
+}
+
+const Shop = () => {
   return (
     <div className="pt-20 min-h-screen"> {/* Added padding-top for navbar and min-height for full height */}
-      <PaginatedProductList type={type} />
+      <Suspense fallback={<div className="flex justify-center items-center h-96">Loading products...</div>}>
+        <ProductListWithParams />
+      </Suspense>
     </div>
   );
 };

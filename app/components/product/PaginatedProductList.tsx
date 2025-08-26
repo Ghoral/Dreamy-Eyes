@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { get_products_by_type } from "@/app/api/product";
-import { getFirstImageUrl, getThumbnailUrl } from "@/app/util";
+import { getThumbnailUrl } from "@/app/util";
 import Image from "next/image";
-import Link from "next/link";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 

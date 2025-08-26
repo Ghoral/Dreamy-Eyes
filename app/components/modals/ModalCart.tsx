@@ -203,7 +203,7 @@ const ModalCart = ({
                           </div>
                         )}
                         <div className="text-secondary-600 text-sm mb-3 line-clamp-2">
-                          <div dangerouslySetInnerHTML={{ __html: item.description }} />
+                          <div dangerouslySetInnerHTML={{ __html: item.description ??'' }} />
                         </div>
 
                         {/* Price and Quantity */}

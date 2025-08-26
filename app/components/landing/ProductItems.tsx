@@ -1,8 +1,7 @@
 "use client";
 
-import { getFirstImageUrl, getThumbnailUrl } from "@/app/util";
+import { getThumbnailUrl } from "@/app/util";
 import Image from "next/image";
-import Link from "next/link";
 import React, { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
