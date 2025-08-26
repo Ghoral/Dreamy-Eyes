@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { get_all_products_with_types } from "@/app/api/product";
-import { getFirstImageUrl } from "@/app/util";
+import { getFirstImageUrl, getThumbnailUrl } from "@/app/util";
 
 type Product = {
   id: string;
@@ -31,11 +31,11 @@ const ItemListing = () => {
         const raw = Array.isArray(res.data) ? res.data[0] : res.data;
         const normalized: Partial<Record<SectionKey, Product[]>> = {
           latest_arrival:
-            raw?.latest_arrival || raw?.latestArrivals || raw?.latest || [],
+            (raw as any)?.latest_arrival || (raw as any)?.latestArrivals || (raw as any)?.latest || [],
           top_seller:
-            raw?.top_seller || raw?.top_sellers || raw?.topSeller || [],
+            (raw as any)?.top_seller || (raw as any)?.top_sellers || (raw as any)?.topSeller || [],
           best_reviewed:
-            raw?.best_reviewed || raw?.bestReviewed || raw?.best || [],
+            (raw as any)?.best_reviewed || (raw as any)?.bestReviewed || (raw as any)?.best || [],
         };
         setSectionsData(normalized);
       }
@@ -108,7 +108,7 @@ const ItemListing = () => {
 
               const products = (sectionsData[section.key] || []).slice(0, 3);
               const first = products[0];
-              const firstImage = first ? getFirstImageUrl(first.images) : null;
+              const firstImage = first ? getThumbnailUrl(first) : null;
 
               return (
                 <div

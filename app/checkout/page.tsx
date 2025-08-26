@@ -449,7 +449,13 @@ export default function CheckoutPage() {
                   >
                     {/* Item Image */}
                     <div className="w-16 h-16 bg-gradient-to-br from-secondary-100 to-primary-100 rounded-xl overflow-hidden flex-shrink-0">
-                      {item.image ? (
+                      {item.primary_thumbnail ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${item.primary_thumbnail}`}
+                          alt={item.title}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : item.image ? (
                         <img
                           src={item.image}
                           alt={item.title}

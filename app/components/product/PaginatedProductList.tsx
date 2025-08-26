@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { get_products_by_type } from "@/app/api/product";
-import { getFirstImageUrl } from "@/app/util";
+import { getFirstImageUrl, getThumbnailUrl } from "@/app/util";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "../../context/CartContext";
@@ -51,7 +51,7 @@ const Pagination = ({
   );
 
   return (
-    <div className="flex items-center justify-center space-x-2 mt-8">
+    <div className="flex items-center justify-center space-x-2 mt-8 w-full bg-secondary-50 py-6 rounded-lg shadow-sm">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
@@ -149,7 +149,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       description: product.description,
       price: product.price,
       quantity: 1,
-      image: getFirstImageUrl(product.images) || undefined,
+      image: getThumbnailUrl(product) || undefined,
       maxQuantity: maxQuantity,
     });
 
@@ -159,7 +159,7 @@ const ProductCard = ({ product }: { product: Product }) => {
     });
   };
 
-  const imageUrl = getFirstImageUrl(product.images);
+  const imageUrl = getThumbnailUrl(product);
 
   return (
     <div
@@ -330,7 +330,7 @@ const PaginatedProductList = ({ type }: { type: string }) => {
 
           // Check if response.data is an array (direct products array)
           if (Array.isArray(response.data)) {
-            productsData = response.data;
+            productsData = response.data as Product[];
             total = response.data.length;
           }
           // Check if response.data is an object with type keys (like in task description)
@@ -340,7 +340,7 @@ const PaginatedProductList = ({ type }: { type: string }) => {
           ) {
             // If the type key exists in the response data, use that
             if (type in response.data) {
-              productsData = response.data[type] || [];
+              productsData = (response.data[type] || []) as Product[];
               total = productsData.length;
             }
             // If there's a products array directly
@@ -348,8 +348,8 @@ const PaginatedProductList = ({ type }: { type: string }) => {
               "products" in response.data &&
               Array.isArray(response.data.products)
             ) {
-              productsData = response.data.products;
-              total = response.data.total || productsData.length;
+              productsData = response.data.products as Product[];
+              total = (response.data.total as number) || productsData.length;
             }
             // Otherwise treat the whole object as a single product
             else {
@@ -396,7 +396,7 @@ const PaginatedProductList = ({ type }: { type: string }) => {
   }
 
   return (
-    <section className="w-full py-10 bg-gradient-to-b from-white to-secondary-50">
+    <section className="w-full py-10 bg-gradient-to-b from-white to-secondary-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {loading ? (
           <div className="text-center py-10">

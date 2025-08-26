@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import Toast from "../components/ui/Toast";
+import { getThumbnailUrl } from "../util";
 
 const ProductDetail = ({ product }: { product: any }) => {
   // Get images for a specific color from product.images
@@ -76,9 +77,9 @@ const ProductDetail = ({ product }: { product: any }) => {
       return imageUrl;
     }
 
-    // Fallback to first available image or default
+    // Fallback to primary_thumbnail or first available image or default
     const fallbackUrl =
-      getFirstImageUrl(product.images) || "/images/product-default.jpg";
+      getThumbnailUrl(product) || "/images/product-default.jpg";
     console.log("Using fallback URL:", fallbackUrl);
     return fallbackUrl;
   };
@@ -239,6 +240,7 @@ const ProductDetail = ({ product }: { product: any }) => {
       color: selectedColor.label,
       colorHex: selectedColor.color,
       image: getImageUrlForColor(selectedColor.color),
+      primary_thumbnail: product.primary_thumbnail || undefined,
       maxQuantity: parseInt(selectedColor.quantity),
     };
 

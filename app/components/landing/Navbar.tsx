@@ -14,6 +14,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { state: cartState } = useCart();
 
   useEffect(() => {
@@ -23,6 +24,33 @@ const Navbar = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const supabase = createSupabaseClient();
+        const { data } = await supabase.auth.getUser();
+        setIsAuthenticated(!!data.user);
+      } catch (error) {
+        console.error("Error checking authentication status:", error);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuthStatus();
+    
+    // Set up auth state change listener
+    const supabase = createSupabaseClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Update authentication state when it changes
+      setIsAuthenticated(!!session?.user);
+    });
+    
+    // Clean up subscription when component unmounts
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const toggleMobileMenu = () => {
@@ -49,6 +77,7 @@ const Navbar = () => {
     try {
       const supabase = createSupabaseClient();
       await supabase.auth.signOut();
+      setIsAuthenticated(false);
       setIsProfileMenuOpen(false);
       router.push("/login");
     } catch (error) {
@@ -63,10 +92,7 @@ const Navbar = () => {
     { label: "Contact", href: "/contact" },
   ];
 
-  const cartItemCount = cartState.items.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  const cartItemCount = cartState.itemCount;
 
   return (
     <>
@@ -84,7 +110,7 @@ const Navbar = () => {
               href="/"
               className="flex items-center space-x-3 group transition-transform duration-300 hover:scale-105"
             >
-              <div className="relative w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-2 shadow-glow group-hover:shadow-glow-lg transition-all duration-300">
+              <div className="relative w-12 h-12 rounded-2xl p-2 shadow-sm group-hover:shadow-md transition-all duration-300">
                 <Image
                   src="/images/logo.png"
                   alt="Dreamy Eyes Logo"
@@ -169,92 +195,139 @@ const Navbar = () => {
                 {/* Profile Dropdown Menu */}
                 {isProfileMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-secondary-100 py-2 z-50">
-                    <Link
-                      href="/profile"
-                      className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      <svg
-                        className="w-5 h-5 mr-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                      Profile
-                    </Link>
-                    <Link
-                      href="/shipping-address"
-                      className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      <svg
-                        className="w-5 h-5 mr-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      Addresses
-                    </Link>
-                    <Link
-                      href="/orders"
-                      className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
-                      onClick={() => setIsProfileMenuOpen(false)}
-                    >
-                      <svg
-                        className="w-5 h-5 mr-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                        />
-                      </svg>
-                      Orders
-                    </Link>
-                    <div className="border-t border-secondary-100 my-2"></div>
-                    <button
-                      className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200"
-                      onClick={handleLogout}
-                    >
-                      <svg
-                        className="w-5 h-5 mr-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
-                      Logout
-                    </button>
+                    {isAuthenticated ? (
+                      <>
+                        <Link
+                          href="/profile"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          <svg
+                            className="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          Profile
+                        </Link>
+                        <Link
+                          href="/shipping-address"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          <svg
+                            className="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          Addresses
+                        </Link>
+                        <Link
+                          href="/orders"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          <svg
+                            className="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                            />
+                          </svg>
+                          Orders
+                        </Link>
+                        <div className="border-t border-secondary-100 my-2"></div>
+                        <button
+                          className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                          onClick={handleLogout}
+                        >
+                          <svg
+                            className="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
+                          </svg>
+                          Logout
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/login"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          <svg
+                            className="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                            />
+                          </svg>
+                          Login
+                        </Link>
+                        <Link
+                          href="/register"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          <svg
+                            className="w-5 h-5 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                            />
+                          </svg>
+                          Register
+                        </Link>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -329,27 +402,58 @@ const Navbar = () => {
                     </span>
                   )}
                 </button>
-                <Link
-                  href="/profile"
-                  onClick={closeMobileMenu}
-                  className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
-                >
-                  Profile
-                </Link>
-                <Link
-                  href="/shipping-address"
-                  onClick={closeMobileMenu}
-                  className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
-                >
-                  Addresses
-                </Link>
-                <Link
-                  href="/orders"
-                  onClick={closeMobileMenu}
-                  className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
-                >
-                  Orders
-                </Link>
+                
+                {isAuthenticated ? (
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      href="/shipping-address"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                    >
+                      Addresses
+                    </Link>
+                    <Link
+                      href="/orders"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                    >
+                      Orders
+                    </Link>
+                    <button
+                      onClick={() => {
+                        closeMobileMenu();
+                        handleLogout();
+                      }}
+                      className="w-full text-left py-3 px-4 text-red-600 font-medium hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-300"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={closeMobileMenu}
+                      className="block py-3 px-4 text-secondary-700 font-medium hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-all duration-300"
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
