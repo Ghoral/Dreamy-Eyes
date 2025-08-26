@@ -81,13 +81,6 @@ export async function get_products_by_type(
   p_limit: number = 10,
   p_filter: any = {}
 ) {
-  console.log("p_type", {
-    p_type,
-    p_page,
-    p_limit,
-    p_filter: null,
-  });
-
   const { data, error } = await supabaseBrowserClient.rpc(
     "get_products_by_type",
     {
@@ -97,7 +90,6 @@ export async function get_products_by_type(
       p_filter: p_filter || {},
     }
   );
-  console.log("data", data);
 
   if (error) {
     return {
