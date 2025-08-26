@@ -2,8 +2,42 @@
 
 import { TikTokEmbed } from "react-social-media-embed";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { get_app_details } from "@/app/api/product";
 
 const TikTokCarousel = () => {
+  const [appDetails, setAppDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAppDetails = async () => {
+      try {
+        const response = await get_app_details();
+        if (response.status) {
+          setAppDetails(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching app details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAppDetails();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="relative py-20 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center">
+            <p className="text-secondary-600">Loading...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative py-20 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
       {/* Background Animated Elements */}
@@ -127,7 +161,10 @@ const TikTokCarousel = () => {
             {/* Call to Action Buttons */}
             <div className="space-y-4">
               <a
-                href="https://www.tiktok.com/@yourfashionlens" // Replace with your actual TikTok handle
+                href={
+                  appDetails?.follow_us_tiktok ||
+                  "https://www.tiktok.com/@yourfashionlens"
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
@@ -169,7 +206,10 @@ const TikTokCarousel = () => {
             <div className="bg-white rounded-3xl shadow-soft p-6 border border-secondary-100">
               <div className="w-full max-w-sm">
                 <TikTokEmbed
-                  url="https://www.tiktok.com/@yourfashionlens/video/1234567890" // Replace with your actual TikTok video URL
+                  url={
+                    appDetails?.tiktok_link ||
+                    "https://www.tiktok.com/@yourfashionlens/video/1234567890"
+                  }
                   width={325}
                 />
               </div>
