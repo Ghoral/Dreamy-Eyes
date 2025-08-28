@@ -32,10 +32,8 @@ export default function ProductsTable() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabaseClient
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabaseClient.rpc("get_products");
+
       if (error) throw error;
       console.log("data", data);
 
