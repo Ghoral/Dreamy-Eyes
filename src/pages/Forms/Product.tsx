@@ -9,7 +9,11 @@ import { IProduct } from "../../interface/product";
 import { productValidationSchema } from "../../validation/product";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "../../service/supabase";
-import { showCustomToastError } from "../../utils/toast";
+import {
+  showCustomToastError,
+  showCustomToastSuccess,
+} from "../../utils/toast";
+import { useLocation } from "react-router";
 import MultiColorSelector from "../../components/common/ColorPicker";
 import { getColorFileNameMap } from "../../utils";
 import Button from "../../components/common/Button";
@@ -27,10 +31,25 @@ const ProductForm = () => {
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [primaryThumbnail, setPrimaryThumbnail] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [productId, setProductId] = useState<string | null>(null);
+
+  // Get product ID from URL if present
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const idFromUrl = params.get("id");
+  console.log("idFromUrl", idFromUrl);
 
   useEffect(() => {
     fetchColors();
-  }, []);
+
+    // If ID is present in URL, fetch product data
+    if (idFromUrl) {
+      setProductId(idFromUrl);
+      setIsEditMode(true);
+      fetchProductData(idFromUrl);
+    }
+  }, [idFromUrl]);
 
   const fetchColors = async () => {
     try {
@@ -44,6 +63,90 @@ const ProductForm = () => {
       setDbColors(data || []);
     } catch (error) {
       console.error("Error fetching colors:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch product data by ID
+  const fetchProductData = async (id: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabaseClient.rpc("get_product_by_id", {
+        pid: id,
+      });
+
+      if (error) throw error;
+      if (data) {
+        const product = data;
+        // Prefill form with product data
+        formik.setValues({
+          title: product.title || "",
+          sub_title: product.sub_title || "",
+          description: product.description || "",
+          images: [], // Will be handled separately
+          price: product.price,
+          power: product.power,
+          color: [], // Will be handled separately
+          color_quantity: [], // Will be handled separately
+        });
+
+        // Set primary thumbnail
+        if (product.primary_thumbnail) {
+          setPrimaryThumbnail(product.primary_thumbnail);
+        }
+
+        // Handle specifications
+        if (product.specifications) {
+          const specs = product.specifications;
+          const specArray = Object.keys(specs).map((key) => ({
+            label: key,
+            value: specs[key],
+          }));
+
+          setSpecifications({
+            keyValuePairs: specs,
+            specifications: specArray,
+          });
+        }
+
+        // Handle colors and images
+        if (product.images && product.color_quantity) {
+          const images = product.images;
+          const colorQuantity = product.color_quantity;
+
+          // Set colors
+          const colors = colorQuantity.map((cq: any) => cq.color);
+          formik.setFieldValue("color", colors);
+
+          // Set color quantities
+          const colorQuantitiesObj: {
+            [color: string]: { quantity: string; label: string };
+          } = {};
+          colorQuantity.forEach((cq: any) => {
+            colorQuantitiesObj[cq.color] = {
+              quantity: cq.quantity.toString(),
+              label: cq.label,
+            };
+          });
+          setColorQuantities(colorQuantitiesObj);
+          formik.setFieldValue("color_quantity", colorQuantity);
+
+          // Set color image map
+          const colorImageMapObj: { [color: string]: any } = {};
+          Object.keys(images).forEach((color) => {
+            colorImageMapObj[color] = images[color];
+          });
+          setColorImageMap(colorImageMapObj);
+
+          // Select first color
+          if (colors.length > 0) {
+            setSelectedColor(colors[0]);
+          }
+        }
+      }
+    } catch (error) {
+      showCustomToastError(error, "Failed to load product data");
     } finally {
       setLoading(false);
     }
@@ -66,6 +169,7 @@ const ProductForm = () => {
       try {
         await onSubmit(values);
       } catch (error) {
+        showCustomToastError(error, "Failed to save product");
       } finally {
         setIsLoading(false);
       }
@@ -106,8 +210,24 @@ const ProductForm = () => {
         color_quantity: color_quantity,
       };
 
-      await supabaseClient.from("products").insert(body);
-    } catch (error) {}
+      if (isEditMode && productId) {
+        // Update existing product
+        const { error } = await supabaseClient
+          .from("products")
+          .update(body)
+          .eq("id", productId);
+
+        if (error) throw error;
+        showCustomToastSuccess("Product updated successfully");
+      } else {
+        // Insert new product
+        const { error } = await supabaseClient.from("products").insert(body);
+        if (error) throw error;
+        showCustomToastSuccess("Product created successfully");
+      }
+    } catch (error) {
+      showCustomToastError(error, "Failed to save product");
+    }
   };
 
   const handleImageChange = async (files: File[]) => {
@@ -441,7 +561,10 @@ const ProductForm = () => {
         {/* Specification */}
         <div className="mb-6">
           <Label htmlFor="quantity">Specification</Label>
-          <SpecificationsForm setSpecifications={setSpecifications} />
+          <SpecificationsForm
+            setSpecifications={setSpecifications}
+            initialSpecifications={specifications.specifications || []}
+          />
         </div>
 
         {/* Dropzone & Color Selector */}
@@ -535,7 +658,7 @@ const ProductForm = () => {
         </div>
 
         <Button onClick={formik.handleSubmit} loading={isLoading}>
-          Save Product
+          {isEditMode ? "Update Product" : "Save Product"}
         </Button>
       </ComponentCard>
     </form>

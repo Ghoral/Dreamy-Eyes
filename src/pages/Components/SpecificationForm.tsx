@@ -7,8 +7,10 @@ import Input from "../../components/form/input/InputField";
 
 const SpecificationsForm = ({
   setSpecifications,
+  initialSpecifications = [],
 }: {
   setSpecifications: any;
+  initialSpecifications?: Array<{label: string, value: string}>;
 }) => {
   const validationSchema = Yup.object({
     specifications: Yup.array().of(
@@ -21,7 +23,7 @@ const SpecificationsForm = ({
 
   const formik: any = useFormik({
     initialValues: {
-      specifications: [],
+      specifications: initialSpecifications,
     },
     validationSchema,
     onSubmit: (values) => {
