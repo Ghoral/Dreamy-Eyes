@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 
 export default function UserDropdown() {
@@ -156,7 +156,7 @@ export default function UserDropdown() {
             </DropdownItem>
           </li>
         </ul>
-        
+
         <button
           onClick={handleSignOut}
           disabled={isSigningOut}

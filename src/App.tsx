@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import SignIn from "./pages/AuthPages/SignIn";
 // import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
-import UserProfiles from "./pages/UserProfiles";
 import Videos from "./pages/UiElements/Videos";
 import Images from "./pages/UiElements/Images";
 import Alerts from "./pages/UiElements/Alerts";
@@ -11,24 +10,21 @@ import Avatars from "./pages/UiElements/Avatars";
 import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
-import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import Orders from "./pages/Tables/Orders";
 // import FormElements from "./pages/Forms/FormElements";
-import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import LandingForm from "./pages/Forms/Landing";
 import ProductForm from "./pages/Forms/Product";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import Accounts from "./pages/Accounts";
-import Admins from "./pages/Admins";
-import Users from "./pages/Users";
+import Users from "./pages/Tables/Users";
 import InviteAdmin from "./pages/InviteAdmin";
 import ResetPassword from "./pages/AuthPages/ResetPassword";
 import TikTok from "./pages/Social/TikTok";
 import ProductsTable from "./pages/Tables/Products";
+import Admins from "./pages/Tables/Admins";
 
 function AppRoutes() {
   const { session, loading } = useAuth();
@@ -52,7 +48,6 @@ function AppRoutes() {
         element={session ? <AppLayout /> : <Navigate to="/signin" replace />}
       >
         <Route path="/dashboard" element={<Home />} />
-        <Route path="/accounts" element={<Accounts />} />
         <Route path="/admins" element={<Admins />} />
         <Route path="/users" element={<Users />} />
         <Route path="/invite-admin" element={<InviteAdmin />} />
