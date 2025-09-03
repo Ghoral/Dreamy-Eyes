@@ -15,12 +15,15 @@ import {
   showCustomToastError,
   showCustomToastSuccess,
 } from "../../utils/toast";
+import PermissionGate from "../../components/common/PermissionGate";
+import { useUserRole } from "../../hooks/useUserRole";
 
 type Product = {
   id: string;
   title: string;
   price: number;
   updated_at: string;
+  created_at: string;
 };
 
 export default function ProductsTable() {
@@ -28,6 +31,7 @@ export default function ProductsTable() {
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const { isSuperAdmin } = useUserRole();
 
   const fetchProducts = async () => {
     try {
@@ -116,10 +120,11 @@ export default function ProductsTable() {
               {rows.length === 0 && !loading && (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
                     className="px-5 py-6 text-center text-gray-500"
                   >
-                    No products found.
+                    <div className="col-span-4">
+                      No products found.
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -136,22 +141,37 @@ export default function ProductsTable() {
                   </TableCell>
                   <TableCell className="px-5 py-4 text-end">
                     <div className="inline-flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200"
                         onClick={() =>
                           (window.location.href = `/form/product?id=${p.id}`)
                         }
+                        aria-label="Edit product"
                       >
                         <PencilIcon className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => openConfirm(p.id)}
+                      </button>
+                      <PermissionGate
+                        fallback={
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-400 cursor-not-allowed"
+                            aria-label="Delete disabled for admin"
+                            disabled
+                          >
+                            <TrashBinIcon className="w-4 h-4" />
+                          </button>
+                        }
                       >
-                        <TrashBinIcon className="w-4 h-4" />
-                      </Button>
+                        <button
+                          type="button"
+                          onClick={() => openConfirm(p.id)}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
+                          aria-label="Delete product"
+                        >
+                          <TrashBinIcon className="w-4 h-4" />
+                        </button>
+                      </PermissionGate>
                     </div>
                   </TableCell>
                 </TableRow>
