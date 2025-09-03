@@ -81,7 +81,6 @@ const DropzoneComponent = ({
         })
         .filter(Boolean) as { id: string; url: string; file: File | string }[];
     }
-    console.log("newPreviews", newPreviews);
 
     setPreviews(newPreviews);
 
@@ -111,7 +110,8 @@ const DropzoneComponent = ({
     const filesWithTimestamp = acceptedFiles.map((file) => {
       const timestamp = Date.now();
       const fileExtension = file.name.split(".").pop();
-      const fileName = file.name.replace(/\.[^/.]+$/, "");
+
+      const fileName = file?.name?.replace(/\.[^/.]+$/, "");
       const newFileName = `${fileName}_${timestamp}.${fileExtension}`;
 
       return new File([file], newFileName, { type: file.type });
@@ -142,6 +142,7 @@ const DropzoneComponent = ({
     if (!fileName) {
       return;
     }
+    console.log("fileName", fileName);
 
     try {
       setRemoving(true);
@@ -160,6 +161,7 @@ const DropzoneComponent = ({
 
     const newFiles = [...file];
     newFiles.splice(indexToRemove, 1);
+
     setFile?.(newFiles);
     setFieldValue?.(indexToRemove);
   };

@@ -125,6 +125,7 @@ const ProductForm = () => {
 
           const colors = colorQuantity.map((cq: any) => cq.color);
           let colorToSelect = colors[0];
+
           formik.setFieldValue("images", JSON.parse(images)[colorToSelect]);
           setColorImageMap(JSON.parse(images));
           formik.setFieldValue("color", colors);
@@ -260,6 +261,8 @@ const ProductForm = () => {
   };
 
   const handleImageChange = async (files: File[]) => {
+    console.log("files", files);
+
     formik.setFieldValue("images", files);
 
     try {
@@ -274,7 +277,7 @@ const ProductForm = () => {
         }
       }
     } catch (error) {
-      showCustomToastError(error);
+      console.log("error", error);
     }
   };
 
@@ -283,7 +286,7 @@ const ProductForm = () => {
   const handleImageChangeColor = async (files: File[]) => {
     try {
       setUploading(true);
-      await handleImageChange(files);
+
       if (selectedColor) {
         // Handle new file uploads in colorImageMap
         setColorImageMap((prev: any) => {
@@ -559,8 +562,8 @@ const ProductForm = () => {
         [color]: updatedFiles,
       };
 
-      // Update Formik state with the array of files for the current color
-      formik.setFieldValue("images", updatedFiles);
+      formik.setFieldValue("images", mappedValue);
+      setColorImageMap(mappedValue);
       return mappedValue;
     });
 
@@ -797,7 +800,10 @@ const ProductForm = () => {
                   : colorImageMap[selectedColor] || []
                 : []
             }
-            setFile={handleImageChangeColor}
+            setFile={(file: any) => {
+              handleImageChangeColor(file);
+              handleImageChange(file);
+            }}
             title="Product Images"
             multiple
             uploading={uploading}
