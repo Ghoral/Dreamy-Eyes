@@ -24,7 +24,6 @@ export default function InviteAdmin() {
           body: JSON.stringify({ data: invite }),
         }
       );
-      console.log("data", data);
 
       if (error) throw error;
       showCustomToastSuccess("Invite email sent (if not existing)");

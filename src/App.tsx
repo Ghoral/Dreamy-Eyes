@@ -25,6 +25,7 @@ import ResetPassword from "./pages/AuthPages/ResetPassword";
 import TikTok from "./pages/Social/TikTok";
 import ProductsTable from "./pages/Tables/Products";
 import Admins from "./pages/Tables/Admins";
+import ActivityLogs from "./pages/Tables/ActivityLogs";
 
 function AppRoutes() {
   const { session, loading } = useAuth();
@@ -60,6 +61,7 @@ function AppRoutes() {
         {/* Tables */}
         <Route path="/basic-tables" element={<BasicTables />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/activity-logs" element={<ActivityLogs />} />
         {/* UI Elements */}
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/avatars" element={<Avatars />} />

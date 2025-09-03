@@ -40,3 +40,13 @@ export const formatSpecifications = (obj: Record<string, string>) => {
     })),
   };
 };
+
+export function toCamelCase(str: string) {
+  if (!str) return "-";
+  return str
+    .toString()
+    .split("_") // split by underscores
+    .filter(Boolean) // remove empty strings
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // capitalize each word
+    .join(" ");
+}
