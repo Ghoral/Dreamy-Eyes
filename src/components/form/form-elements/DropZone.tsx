@@ -44,7 +44,10 @@ const DropzoneComponent = ({
     let newPreviews: { id: string; url: string; file: File | string }[] = [];
 
     if (multiple && Array.isArray(file)) {
-      newPreviews = file.map((f) => {
+      // Filter out any 'http' strings or empty strings
+      const filteredFiles = file.filter((f) => f !== "http" && f !== "");
+
+      newPreviews = filteredFiles.map((f) => {
         if (f instanceof File) {
           const previewUrl = URL.createObjectURL(f);
           return {
@@ -61,7 +64,10 @@ const DropzoneComponent = ({
         }
       });
     } else if (!multiple && Array.isArray(file)) {
-      newPreviews = file.map((f: any) => {
+      // Filter out any 'http' strings or empty strings
+      const filteredFiles = file.filter((f: any) => f !== "http" && f !== "");
+
+      newPreviews = filteredFiles.map((f: any) => {
         if (f instanceof File) {
           const previewUrl = URL.createObjectURL(f);
           return {
