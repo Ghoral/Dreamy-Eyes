@@ -11,6 +11,8 @@ export const getColorFileNameMap = (
       result[color] = files
         .map((file) => {
           if (typeof file === "string") {
+            // skip if it's a URL
+            if (file.startsWith("http")) return "";
             return file;
           }
           if (file?.name) {
@@ -21,7 +23,7 @@ export const getColorFileNameMap = (
           }
           return "";
         })
-        .filter(Boolean);
+        .filter(Boolean); // remove empty entries
     }
 
     return result;
