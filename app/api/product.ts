@@ -3,7 +3,7 @@
 import { supabaseBrowserClient } from "../services/supabase/client/supabaseBrowserClient";
 
 export async function get_all_products() {
-  const { data, error } = await await supabaseBrowserClient.rpc(
+  const { data, error } = await supabaseBrowserClient.rpc(
     "get_available_products"
   );
 
@@ -19,7 +19,7 @@ export async function get_all_products() {
 
   return {
     data: data,
-    message: "Auction deleted successfully.",
+    message: "Products fetched successfully.", // Fixed message
     status: true,
     statusCode: 200,
     error: null,
@@ -27,7 +27,7 @@ export async function get_all_products() {
 }
 
 export async function get_all_products_with_types() {
-  const { data, error } = await await supabaseBrowserClient.rpc(
+  const { data, error } = await supabaseBrowserClient.rpc(
     "get_all_products_with_types"
   );
 
