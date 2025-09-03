@@ -7,6 +7,7 @@ import {
   showCustomToastSuccess,
   showCustomToastError,
 } from "../../utils/toast";
+import { appStore } from "../../store";
 
 type Profile = {
   id: string;
@@ -17,6 +18,8 @@ type Profile = {
 };
 
 export default function Admins() {
+  const { userData } = appStore();
+  const role = userData?.role || "user";
   const [admins, setAdmins] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -88,10 +91,18 @@ export default function Admins() {
                 <td className="py-3 pr-4">
                   <button
                     type="button"
-                    onClick={() => openConfirm(p.id)}
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-200"
-                    aria-label="Delete admin"
-                    disabled={loading}
+                    onClick={() => role === "super_admin" && openConfirm(p.id)}
+                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
+                      role === "super_admin"
+                        ? "bg-red-100 text-red-600 hover:bg-red-200"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    }`}
+                    aria-label={
+                      role === "super_admin"
+                        ? "Delete user"
+                        : "Delete disabled for admin"
+                    }
+                    disabled={loading || role !== "super_admin"}
                   >
                     <TrashBinIcon className="w-4 h-4" />
                   </button>
