@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
-import { supabaseClient } from "../../service/supabase";
+import { useState } from "react";
 
 interface MultiColorSelectorProps {
   dbColors: any[];
   isLoading: boolean;
   values: string[];
   disabled: boolean;
-  onChange: (colors: string[]) => void;
+  onChange: (colors: string[], index: number) => void;
   label?: string;
   setSelectedColor: any;
   selectedColor?: string | null;
@@ -25,11 +24,11 @@ const MultiColorSelector = ({
 }: MultiColorSelectorProps) => {
   const [currentColor] = useState<string>("#2563eb");
 
-  const handleAddColor = (colorValue?: string) => {
+  const handleAddColor = (index: number, colorValue?: string) => {
     const colorToAdd = colorValue || currentColor;
     if (!values.includes(colorToAdd)) {
       const newColors = [...values, colorToAdd];
-      onChange(newColors);
+      onChange(newColors, index);
     }
   };
 
@@ -49,7 +48,7 @@ const MultiColorSelector = ({
           <>
             {/* Database colors selector only */}
             <div className="flex flex-wrap gap-4 mt-1">
-              {dbColors.map((color) => {
+              {dbColors.map((color, index: number) => {
                 const isSelected = selectedColor === color.value;
                 const isAlreadySelected = values.includes(color.value);
 
@@ -67,10 +66,10 @@ const MultiColorSelector = ({
                     }}
                     onClick={() => {
                       if (!isAlreadySelected) {
-                        handleAddColor(color.value);
+                        handleAddColor(index, color.value);
                       }
                       // Always focus/select this color for quantity/images, without unselecting
-                      setSelectedColor(color.value);
+                      setSelectedColor(index, color.value);
                       if (onColorSelectedLabel) {
                         onColorSelectedLabel(color.name);
                       }
@@ -86,9 +85,10 @@ const MultiColorSelector = ({
                           const newColors = values.filter(
                             (c: string) => c !== color.value
                           );
-                          onChange(newColors);
+                          onChange(newColors, index);
                           if (selectedColor === color.value) {
                             setSelectedColor(
+                              index,
                               newColors.length > 0 ? newColors[0] : ""
                             );
                           }

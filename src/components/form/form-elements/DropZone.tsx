@@ -15,6 +15,7 @@ const DropzoneComponent = ({
   disabled = false,
   primaryIndex,
   onPrimaryChange,
+  selectedColorIndex = 0,
 }: {
   bucket?: string;
   title?: string;
@@ -27,6 +28,7 @@ const DropzoneComponent = ({
   disabled?: boolean; // Add disabled prop type
   primaryIndex?: number;
   onPrimaryChange?: (fileName: string) => void;
+  selectedColorIndex?: number;
 }) => {
   const [previews, setPreviews] = useState<
     { id: string; url: string; file: File | string }[]
@@ -318,7 +320,7 @@ const DropzoneComponent = ({
                   className="w-full h-40 object-contain rounded"
                 />
 
-                {multiple && (
+                {multiple && selectedColorIndex === 0 && (
                   <div className="absolute top-2 left-2">
                     <label className="inline-flex items-center gap-1 text-[11px] bg-white/85 dark:bg-gray-800/80 px-2 py-1 rounded shadow">
                       <input

@@ -31,3 +31,12 @@ export const getColorFileNameMap = (
     throw new Error(error.message || "Error in getColorFileNameMap");
   }
 };
+
+export const formatSpecifications = (obj: Record<string, string>) => {
+  return {
+    specifications: Object.entries(obj).map(([key, value]) => ({
+      label: key,
+      value: value,
+    })),
+  };
+};

@@ -9,7 +9,7 @@ const SpecificationsForm = ({
   setSpecifications,
   initialSpecifications = [],
 }: {
-  setSpecifications: any;
+  setSpecifications: (specs: Array<{ label: string; value: string }>) => void;
   initialSpecifications?: Array<{ label: string; value: string }>;
 }) => {
   const validationSchema = Yup.object({
@@ -22,31 +22,26 @@ const SpecificationsForm = ({
   });
 
   const formik: any = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      specifications: initialSpecifications,
+      specifications:
+        initialSpecifications.length > 0
+          ? initialSpecifications
+          : [{ label: "", value: "" }],
     },
     validationSchema,
-    onSubmit: (values) => {
-      setSpecifications(values);
-    },
+    onSubmit: () => {},
   });
 
   useEffect(() => {
-    const keyValuePairs = formik.values.specifications.reduce(
-      (acc: any, item: any) => {
-        if (item.label) {
-          acc[item.label] = item.value;
-        }
-        return acc;
-      },
-      {}
+    const validSpecifications = formik.values.specifications.filter(
+      (spec: any) => spec.label.trim() && spec.value.trim()
     );
 
-    setSpecifications({
-      keyValuePairs,
-    });
-  }, [formik.values.specifications, setSpecifications]);
-  console.log("setSpecifications", setSpecifications);
+    if (validSpecifications.length > 0) {
+      setSpecifications(validSpecifications);
+    }
+  }, [formik.values.specifications]);
 
   return (
     <FormikProvider value={formik}>
@@ -103,9 +98,10 @@ const SpecificationsForm = ({
                       <div className="w-full md:w-2/12 flex items-end pt-6 md:pt-5">
                         <button
                           type="button"
-                          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md"
+                          className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => arrayHelpers.remove(index)}
-                          aria-label="Remove"
+                          disabled={formik.values.specifications.length === 1}
+                          aria-label="Remove specification"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -147,47 +143,51 @@ const SpecificationsForm = ({
                         d="M12 4v16m8-8H4"
                       />
                     </svg>
-                    Add More
+                    Add Specification
                   </button>
                 </div>
               </div>
             )}
           />
 
-          <div className="mt-8 border rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Specification
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Value
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {formik.values.specifications.map(
-                  (spec: any, index: number) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {spec.label || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {spec.value || "-"}
-                      </td>
-                    </tr>
-                  )
-                )}
-              </tbody>
-            </table>
-          </div>
+          {formik.values.specifications.length > 0 && (
+            <div className="mt-8 border rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Specification
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Value
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {formik.values.specifications
+                    .filter(
+                      (spec: any) => spec.label.trim() || spec.value.trim()
+                    ) // Only show rows with content
+                    .map((spec: any, index: number) => (
+                      <tr key={index}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {spec.label || "-"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {spec.value || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </ComponentCard>
       </form>
     </FormikProvider>

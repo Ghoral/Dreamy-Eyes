@@ -14,12 +14,11 @@ import {
 } from "../../utils/toast";
 import { useLocation } from "react-router";
 import MultiColorSelector from "../../components/common/ColorPicker";
-import { getColorFileNameMap } from "../../utils";
+import { formatSpecifications, getColorFileNameMap } from "../../utils";
 import Button from "../../components/common/Button";
 import { productValidationSchema } from "../../validation/product";
 
 const ProductForm = () => {
-  const [specifications, setSpecifications] = useState<any>({});
   const [colorImageMap, setColorImageMap] = useState<any>({});
   const [updatedColorImageMap, setUpdateColorImageMap] = useState<any>({});
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -35,6 +34,7 @@ const ProductForm = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
   const [primaryIndex, setPrimaryIndex] = useState<number>(0);
+  const [selectedColorIndex, setSelectedColorIndex] = useState<number>(0);
 
   // Get product ID from URL if present
   const location = useLocation();
@@ -87,23 +87,11 @@ const ProductForm = () => {
           power: product.power,
           color: [],
           color_quantity: [],
+          specifications:
+            product?.specifications?.length > 0 ? product?.specifications : [],
         });
 
         product.primary_thumbnail || null;
-
-        if (product.specifications) {
-          const specs = product.specifications;
-          const specArray = Object.keys(specs).map((key) => ({
-            label: key,
-            value: specs[key],
-          }));
-
-          setSpecifications({
-            keyValuePairs: specs,
-            specifications: specArray,
-          });
-        }
-
         if (product.images && product.color_quantity) {
           const images = product.images;
           const colorQuantity = product.color_quantity;
@@ -216,15 +204,17 @@ const ProductForm = () => {
         return;
       }
 
-      const color_quantity = values.color_quantity;
+      const color_quantity = rest.color_quantity;
+      console.log("values", rest);
 
       const body = {
         ...rest,
         images: getColorFileNameMap(colorImageMap),
         primary_thumbnail: primaryThumbnail,
-        specifications: specifications.keyValuePairs,
+        specifications: rest.specifications,
         color_quantity: color_quantity,
       };
+      console.log("body", body);
 
       if (isEditMode && productId) {
         const { data, error } = await supabaseClient.rpc("update_product", {
@@ -719,8 +709,12 @@ const ProductForm = () => {
         <div className="mb-6">
           <Label htmlFor="quantity">Specification</Label>
           <SpecificationsForm
-            setSpecifications={setSpecifications}
-            initialSpecifications={specifications.specifications || []}
+            setSpecifications={(data) => {
+              console.log("data", data);
+
+              formik.setFieldValue("specifications", data);
+            }}
+            initialSpecifications={formik.values?.specifications ?? []}
           />
         </div>
 
@@ -734,10 +728,16 @@ const ProductForm = () => {
                 !!!formik?.values?.images?.length ||
                 formik.values.color.length === formik.values.images.length
               }
-              onChange={handleColorChange}
+              onChange={(value, index) => {
+                handleColorChange(value);
+                setSelectedColorIndex(index);
+              }}
               values={formik.values.color}
               selectedColor={selectedColor}
-              setSelectedColor={setSelectedColor}
+              setSelectedColor={(index: number, value: string) => {
+                setSelectedColor(value);
+                setSelectedColorIndex(index);
+              }}
             />
             {/* Color Quantities Section */}
             {selectedColor && formik.values.color.includes(selectedColor) && (
@@ -798,10 +798,15 @@ const ProductForm = () => {
                   : colorImageMap[selectedColor] || []
                 : []
             }
+            selectedColorIndex={selectedColorIndex}
             primaryIndex={primaryIndex}
             title="Product Images"
             multiple
             uploading={uploading}
+            setFile={(file: any) => {
+              handleImageChangeColor(file);
+              handleImageChange(file);
+            }}
             onPrimaryChange={(name) => {
               setPrimaryThumbnail(name);
 
