@@ -311,7 +311,7 @@ const DropzoneComponent = ({
                   alt={`Upload ${index + 1}`}
                   className="w-full h-40 object-contain rounded"
                 />
-                {/* Primary selector */}
+
                 {multiple && (
                   <div className="absolute top-2 left-2">
                     <label className="inline-flex items-center gap-1 text-[11px] bg-white/85 dark:bg-gray-800/80 px-2 py-1 rounded shadow">

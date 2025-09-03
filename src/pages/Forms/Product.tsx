@@ -21,6 +21,7 @@ import Button from "../../components/common/Button";
 const ProductForm = () => {
   const [specifications, setSpecifications] = useState<any>({});
   const [colorImageMap, setColorImageMap] = useState<any>({});
+  const [updatedColorImageMap, setUpdateColorImageMap] = useState<any>({});
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [colorQuantities, setColorQuantities] = useState<{
     [color: string]: { quantity: string; label: string };
@@ -38,12 +39,10 @@ const ProductForm = () => {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const idFromUrl = params.get("id");
-  console.log("idFromUrl", idFromUrl);
 
   useEffect(() => {
     fetchColors();
 
-    // If ID is present in URL, fetch product data
     if (idFromUrl) {
       setProductId(idFromUrl);
       setIsEditMode(true);
@@ -79,24 +78,17 @@ const ProductForm = () => {
       if (error) throw error;
       if (data) {
         const product = data;
-        // Prefill form with product data
         formik.setValues({
           title: product.title || "",
           sub_title: product.sub_title || "",
           description: product.description || "",
-          images: [], // Will be handled separately
+          images: [],
           price: product.price,
           power: product.power,
-          color: [], // Will be handled separately
-          color_quantity: [], // Will be handled separately
+          color: [],
+          color_quantity: [],
         });
 
-        // Set primary thumbnail
-        if (product.primary_thumbnail) {
-          setPrimaryThumbnail(product.primary_thumbnail);
-        }
-
-        // Handle specifications
         if (product.specifications) {
           const specs = product.specifications;
           const specArray = Object.keys(specs).map((key) => ({
@@ -110,16 +102,30 @@ const ProductForm = () => {
           });
         }
 
-        // Handle colors and images
         if (product.images && product.color_quantity) {
           const images = product.images;
           const colorQuantity = product.color_quantity;
 
-          // Set colors
+          // Convert image names into public URLs
+          const imageUrlMap: Record<string, string[]> = {};
+
+          for (const [color, imageList] of Object.entries(JSON.parse(images))) {
+            const urls = (imageList as string[]).map((fileName) => {
+              const { data } = supabaseClient.storage
+                .from("product-image")
+                .getPublicUrl(fileName);
+
+              return data?.publicUrl || "";
+            });
+            imageUrlMap[color] = urls;
+          }
+
           const colors = colorQuantity.map((cq: any) => cq.color);
+          let colorToSelect = colors[0];
+          formik.setFieldValue("images", JSON.parse(images)[colorToSelect]);
+          setColorImageMap(JSON.parse(images));
           formik.setFieldValue("color", colors);
 
-          // Set color quantities
           const colorQuantitiesObj: {
             [color: string]: { quantity: string; label: string };
           } = {};
@@ -129,20 +135,24 @@ const ProductForm = () => {
               label: cq.label,
             };
           });
+
           setColorQuantities(colorQuantitiesObj);
-          formik.setFieldValue("color_quantity", colorQuantity);
+          setUpdateColorImageMap(imageUrlMap);
 
-          // Set color image map
-          const colorImageMapObj: { [color: string]: any } = {};
-          Object.keys(images).forEach((color) => {
-            colorImageMapObj[color] = images[color];
-          });
-          setColorImageMap(colorImageMapObj);
+          // Handle thumbnail
 
-          // Select first color
-          if (colors.length > 0) {
-            setSelectedColor(colors[0]);
+          if (product.primary_thumbnail) {
+            setPrimaryThumbnail(product.primary_thumbnail);
+
+            for (const [color, imageList] of Object.entries(imageUrlMap)) {
+              if ((imageList as string[]).includes(product.primary_thumbnail)) {
+                colorToSelect = color;
+                break;
+              }
+            }
           }
+
+          setSelectedColor(colorToSelect);
         }
       }
     } catch (error) {
@@ -163,7 +173,6 @@ const ProductForm = () => {
       color: [],
       color_quantity: [],
     },
-    validationSchema: productValidationSchema,
     onSubmit: async (values) => {
       setIsLoading(true);
       try {
@@ -175,30 +184,32 @@ const ProductForm = () => {
       }
     },
   });
+  console.log("ff", formik.values.images);
 
   const onSubmit = async (values: IProduct) => {
     try {
       const { color, ...rest } = values;
+      console.log("1");
 
-      // Validate: every selected color must have at least one image
-      const missingImageColors = (values.color || []).filter(
-        (c: string) =>
-          !Array.isArray(colorImageMap[c]) || colorImageMap[c]?.length === 0
-      );
+      // // Validate: every selected color must have at least one image
+      // const missingImageColors = (values.color || []).filter(
+      //   (c: string) =>
+      //     !Array.isArray(colorImageMap[c]) || colorImageMap[c]?.length === 0
+      // );
 
-      if (missingImageColors.length > 0) {
-        const missingColorLabels = missingImageColors.map(
-          (hex: any) => dbColors.find((clr) => clr.value === hex)?.name || hex
-        );
+      // if (missingImageColors.length > 0) {
+      //   const missingColorLabels = missingImageColors.map(
+      //     (hex: any) => dbColors.find((clr) => clr.value === hex)?.name || hex
+      //   );
 
-        formik.setFieldError(
-          "images",
-          `Please upload at least one image for: ${missingColorLabels.join(
-            ", "
-          )}`
-        );
-        return;
-      }
+      //   formik.setFieldError(
+      //     "images",
+      //     `Please upload at least one image for: ${missingColorLabels.join(
+      //       ", "
+      //     )}`
+      //   );
+      //   return;
+      // }
 
       const color_quantity = values.color_quantity;
 
@@ -209,6 +220,7 @@ const ProductForm = () => {
         specifications: specifications.keyValuePairs,
         color_quantity: color_quantity,
       };
+      console.log("body", body);
 
       if (isEditMode && productId) {
         // Update existing product
@@ -271,6 +283,34 @@ const ProductForm = () => {
             ...prev,
             [selectedColor]: [...existingFiles, ...newUniqueFiles],
           } as any;
+
+          // If this is the first image for this color and no primary thumbnail is set,
+          // or if the primary thumbnail was from this color but was removed,
+          // set this as the primary thumbnail
+          if (newUniqueFiles.length > 0) {
+            const isFirstImageForColor = existingFiles.length === 0;
+            const isPrimaryThumbnailMissing = !primaryThumbnail;
+            const wasPrimaryThumbnailFromThisColor =
+              primaryThumbnail &&
+              existingFiles.length > 0 &&
+              !existingFiles.some((file) => {
+                const fileName = typeof file === "string" ? file : file.name;
+                return fileName === primaryThumbnail;
+              });
+
+            if (
+              isFirstImageForColor ||
+              isPrimaryThumbnailMissing ||
+              wasPrimaryThumbnailFromThisColor
+            ) {
+              const newPrimaryFile = newUniqueFiles[0];
+              const newPrimaryFileName =
+                typeof newPrimaryFile === "string"
+                  ? newPrimaryFile
+                  : newPrimaryFile.name;
+              setPrimaryThumbnail(newPrimaryFileName);
+            }
+          }
 
           // Dynamic inline error: compute missing color images
           const missingImageColors = (formik.values.color || []).filter(
@@ -417,7 +457,50 @@ const ProductForm = () => {
       if (index < 0 || index >= updatedFiles.length) {
         return prev;
       }
+
+      // Check if we're removing the primary thumbnail
+      const removedFile = updatedFiles[index];
+      const removedFileName =
+        typeof removedFile === "string" ? removedFile : removedFile.name;
+      const isRemovingPrimaryThumbnail = primaryThumbnail === removedFileName;
+
+      // Remove the file
       updatedFiles.splice(index, 1);
+
+      // If we removed the primary thumbnail and there are other images available
+      if (isRemovingPrimaryThumbnail) {
+        // First try to find a new primary from the same color
+        if (updatedFiles.length > 0) {
+          const newPrimaryFile = updatedFiles[0];
+          const newPrimaryFileName =
+            typeof newPrimaryFile === "string"
+              ? newPrimaryFile
+              : newPrimaryFile.name;
+          setPrimaryThumbnail(newPrimaryFileName);
+        } else {
+          // If no images left for this color, try to find an image from another color
+          const otherColorWithImages = Object.entries(prev)
+            .filter(
+              ([c, files]) =>
+                c !== color && Array.isArray(files) && files.length > 0
+            )
+            .map(([c, files]) => ({ color: c, files: files as any[] }))[0];
+
+          if (otherColorWithImages) {
+            const newPrimaryFile = otherColorWithImages.files[0];
+            const newPrimaryFileName =
+              typeof newPrimaryFile === "string"
+                ? newPrimaryFile
+                : newPrimaryFile.name;
+            setPrimaryThumbnail(newPrimaryFileName);
+            // Also select this color
+            setSelectedColor(otherColorWithImages.color);
+          } else {
+            // No images left at all
+            setPrimaryThumbnail(null);
+          }
+        }
+      }
 
       if (updatedFiles.length === 0) {
         const { [color]: _, ...rest } = prev;
@@ -634,7 +717,11 @@ const ProductForm = () => {
           <DropzoneComponent
             disabled={!selectedColor}
             bucket="products-image"
-            file={colorImageMap[selectedColor ?? ""]}
+            file={
+              !!idFromUrl
+                ? updatedColorImageMap[selectedColor ?? ""]
+                : colorImageMap[selectedColor ?? ""]
+            }
             setFile={handleImageChangeColor}
             title="Product Images"
             multiple

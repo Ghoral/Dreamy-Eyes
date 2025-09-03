@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Next-Level Landing Page</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Poppins", sans-serif;
+      }
+
+      body {
+        height: 100vh;
+        background: linear-gradient(-45deg, #1e3c72, #2a5298, #6a11cb, #2575fc);
+        background-size: 400% 400%;
+        animation: gradientBG 12s ease infinite;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      @keyframes gradientBG {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      /* Floating glowing orbs */
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.6;
+        animation: floatOrb 20s linear infinite;
+      }
+
+      .orb:nth-child(1) {
+        width: 200px;
+        height: 200px;
+        background: #00d4ff;
+        top: 10%;
+        left: 20%;
+        animation-duration: 25s;
+      }
+      .orb:nth-child(2) {
+        width: 300px;
+        height: 300px;
+        background: #6a11cb;
+        bottom: 10%;
+        right: 15%;
+        animation-duration: 30s;
+      }
+      .orb:nth-child(3) {
+        width: 150px;
+        height: 150px;
+        background: #ff007f;
+        top: 50%;
+        left: 60%;
+        animation-duration: 35s;
+      }
+
+      @keyframes floatOrb {
+        0% {
+          transform: translateY(0) rotate(0);
+        }
+        50% {
+          transform: translateY(-50px) rotate(180deg);
+        }
+        100% {
+          transform: translateY(0) rotate(360deg);
+        }
+      }
+
+      /* Hero Section */
+      .hero {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        color: #fff;
+        max-width: 700px;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+        animation: fadeInUp 1.5s ease forwards;
+        opacity: 0;
+      }
+
+      @keyframes fadeInUp {
+        0% {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        100% {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        background: linear-gradient(90deg, #00d4ff, #ff00cc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glowText 3s ease-in-out infinite alternate;
+      }
+
+      @keyframes glowText {
+        from {
+          text-shadow: 0 0 10px #00d4ff;
+        }
+        to {
+          text-shadow: 0 0 25px #ff00cc;
+        }
+      }
+
+      .hero p {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        color: #eee;
+        line-height: 1.6;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 15px 35px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        border: 2px solid transparent;
+        border-radius: 30px;
+        background: linear-gradient(90deg, #00d4ff, #6a11cb);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: 0.4s;
+      }
+
+      .btn:hover {
+        background: linear-gradient(90deg, #6a11cb, #00d4ff);
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.7),
+          0 0 40px rgba(106, 17, 203, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Glowing Orbs Background -->
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+
+    <!-- Hero Section -->
+    <div class="hero">
+      <h1>Experience the Future</h1>
+      <p>
+        Welcome to the next level of modern web design. Smooth animations,
+        futuristic UI, and immersive visuals crafted with only HTML & CSS.
+      </p>
+      <button class="btn">Get Started</button>
+    </div>
+  </body>
+</html>
