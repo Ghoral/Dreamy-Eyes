@@ -724,7 +724,7 @@ const ProductForm = () => {
           </div>
           <DropzoneComponent
             disabled={!selectedColor}
-            bucket="products-image"
+            bucket="product-image"
             file={
               !!idFromUrl
                 ? updatedColorImageMap[selectedColor ?? ""]

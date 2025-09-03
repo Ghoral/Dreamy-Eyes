@@ -61,6 +61,7 @@ export default function ProductsTable() {
     if (!pendingId) return;
 
     try {
+      // Call your PostgreSQL RPC
       const { data, error } = await supabaseClient.rpc("delete_product", {
         _product_id: pendingId,
       });
@@ -73,6 +74,19 @@ export default function ProductsTable() {
         throw new Error(data.error || "Failed to delete product");
       }
 
+      // Delete images from Supabase storage
+      const imagesToDelete: string[] = data.images_to_delete || [];
+      if (imagesToDelete.length > 0) {
+        const { error: storageError } = await supabaseClient.storage
+          .from("product-images")
+          .remove(imagesToDelete);
+
+        if (storageError) {
+          console.warn("Failed to delete some images:", storageError.message);
+        }
+      }
+
+      // Update UI
       showCustomToastSuccess(data.message || "Product deleted successfully");
       setRows((rows) => rows.filter((r) => r.id !== pendingId));
     } catch (e: any) {
@@ -119,12 +133,8 @@ export default function ProductsTable() {
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {rows.length === 0 && !loading && (
                 <TableRow>
-                  <TableCell
-                    className="px-5 py-6 text-center text-gray-500"
-                  >
-                    <div className="col-span-4">
-                      No products found.
-                    </div>
+                  <TableCell className="px-5 py-6 text-center text-gray-500">
+                    <div className="col-span-4">No products found.</div>
                   </TableCell>
                 </TableRow>
               )}

@@ -125,17 +125,33 @@ const DropzoneComponent = ({
     if (disabled) return; // Prevent removal when disabled
 
     const fileToRemove = file[indexToRemove];
+    if (!fileToRemove) return;
+
+    // Determine the filename
+    let fileName = fileToRemove.name;
+    if (!fileName && typeof fileToRemove === "string") {
+      // If it's a string, extract the last part after '/'
+      const parts = fileToRemove.split("/");
+      fileName = parts[parts.length - 1];
+    }
+
+    if (!fileName) {
+      console.warn("Cannot determine file name to remove");
+      return;
+    }
+    console.log("fileName", fileName);
 
     try {
       setRemoving(true);
       const { error } = await supabaseClient.storage
         .from(bucket)
-        .remove([fileToRemove.name]);
+        .remove([fileName]);
 
       if (error) {
         throw error;
       }
     } catch (err) {
+      console.error("Error removing file:", err);
     } finally {
       setRemoving(false);
     }
@@ -143,7 +159,7 @@ const DropzoneComponent = ({
     const newFiles = [...file];
     newFiles.splice(indexToRemove, 1);
     setFile?.(newFiles);
-    setFieldValue(indexToRemove);
+    setFieldValue?.(indexToRemove);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
