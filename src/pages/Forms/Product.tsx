@@ -34,7 +34,6 @@ const ProductForm = () => {
   const [primaryThumbnail, setPrimaryThumbnail] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
-console.log('updatedColorImageMap',updatedColorImageMap);
 
   // Get product ID from URL if present
   const location = useLocation();
@@ -118,7 +117,9 @@ console.log('updatedColorImageMap',updatedColorImageMap);
               return data?.publicUrl || "";
             });
             // Filter out any URLs that are just 'http' strings or empty strings
-            const filteredUrls = urls.filter(url => url !== "http" && url !== "");
+            const filteredUrls = urls.filter(
+              (url) => url !== "http" && url !== ""
+            );
             imageUrlMap[color] = filteredUrls;
           }
 
@@ -349,35 +350,39 @@ console.log('updatedColorImageMap',updatedColorImageMap);
           } else {
             formik.setFieldError("images", undefined as any);
           }
-          
+
           // Update Formik state with the array of files for the current color
           formik.setFieldValue("images", updatedMap[selectedColor] || []);
 
           return updatedMap;
         });
-        
+
         // In edit mode, also update the updatedColorImageMap for URL strings
         if (idFromUrl) {
           setUpdateColorImageMap((prev: any) => {
             // Get the public URLs for the new files
-            const newUrls = files.map(file => {
+            const newUrls = files.map((file) => {
               const { data } = supabaseClient.storage
                 .from("product-image")
                 .getPublicUrl(file.name);
               return data?.publicUrl || "";
             });
-            
+
             // Filter out any URLs that are just 'http' strings
-            const filteredNewUrls = newUrls.filter(url => url !== "http" && url !== "");
-            
+            const filteredNewUrls = newUrls.filter(
+              (url) => url !== "http" && url !== ""
+            );
+
             // Combine with existing URLs for this color
             const existingUrls = prev[selectedColor] || [];
             // Filter out any existing URLs that are just 'http' strings
-            const filteredExistingUrls = existingUrls.filter((url: string) => url !== "http" && url !== "");
-            
+            const filteredExistingUrls = existingUrls.filter(
+              (url: string) => url !== "http" && url !== ""
+            );
+
             return {
               ...prev,
-              [selectedColor]: [...filteredExistingUrls, ...filteredNewUrls]
+              [selectedColor]: [...filteredExistingUrls, ...filteredNewUrls],
             };
           });
         }
@@ -553,28 +558,30 @@ console.log('updatedColorImageMap',updatedColorImageMap);
         ...prev,
         [color]: updatedFiles,
       };
-      
+
       // Update Formik state with the array of files for the current color
       formik.setFieldValue("images", updatedFiles);
       return mappedValue;
     });
-    
+
     // Also handle removal from updatedColorImageMap (for edit mode with URLs)
     if (idFromUrl) {
       setUpdateColorImageMap((prev: any) => {
         if (!prev[color] || !Array.isArray(prev[color])) return prev;
-        
+
         const updatedUrls = [...prev[color]];
         if (index < 0 || index >= updatedUrls.length) return prev;
-        
+
         updatedUrls.splice(index, 1);
-        
+
         // Filter out any URLs that are just 'http' strings or empty strings
-        const filteredUrls = updatedUrls.filter((url: string) => url !== "http" && url !== "");
-        
+        const filteredUrls = updatedUrls.filter(
+          (url: string) => url !== "http" && url !== ""
+        );
+
         return {
           ...prev,
-          [color]: filteredUrls
+          [color]: filteredUrls,
         };
       });
     }
@@ -784,11 +791,11 @@ console.log('updatedColorImageMap',updatedColorImageMap);
             disabled={!selectedColor}
             bucket="product-image"
             file={
-              selectedColor ? (
-                !!idFromUrl && updatedColorImageMap[selectedColor] ? 
-                  updatedColorImageMap[selectedColor] : 
-                  colorImageMap[selectedColor] || []
-              ) : []
+              selectedColor
+                ? !!idFromUrl && updatedColorImageMap[selectedColor]
+                  ? updatedColorImageMap[selectedColor]
+                  : colorImageMap[selectedColor] || []
+                : []
             }
             setFile={handleImageChangeColor}
             title="Product Images"

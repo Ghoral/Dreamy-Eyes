@@ -12,7 +12,7 @@ const DropzoneComponent = ({
   onReorder,
   setFieldValue = () => {},
   uploading = false,
-  disabled = false, // New prop to control disabled state
+  disabled = false,
   primaryIndex,
   onPrimaryChange,
 }: {
@@ -43,47 +43,45 @@ const DropzoneComponent = ({
 
     let newPreviews: { id: string; url: string; file: File | string }[] = [];
 
-    if (multiple && Array.isArray(file)) {
-      // Filter out any 'http' strings or empty strings
-      const filteredFiles = file.filter((f) => f !== "http" && f !== "");
+    if (Array.isArray(file)) {
+      // Filter out invalid values
+      const filteredFiles = file.filter((f: any) => {
+        if (!f || f === "http") return false;
 
-      newPreviews = filteredFiles.map((f) => {
-        if (f instanceof File) {
-          const previewUrl = URL.createObjectURL(f);
-          return {
-            id: `${f?.name}-${Date.now() * Math.random()}`,
-            url: previewUrl,
-            file: f,
-          };
-        } else {
-          return {
-            id: `${f}-${Date.now() * Math.random()}`,
-            url: f as string,
-            file: f,
-          };
-        }
-      });
-    } else if (!multiple && Array.isArray(file)) {
-      // Filter out any 'http' strings or empty strings
-      const filteredFiles = file.filter((f: any) => f !== "http" && f !== "");
+        // remove any string URL containing "undefined"
+        if (typeof f === "string" && f.includes("undefined")) return false;
 
-      newPreviews = filteredFiles.map((f: any) => {
-        if (f instanceof File) {
-          const previewUrl = URL.createObjectURL(f);
-          return {
-            id: `${f?.name}-${Date.now() * Math.random()}`,
-            url: previewUrl,
-            file: f,
-          };
-        } else {
-          return {
-            id: `${f}-${Date.now() * Math.random()}`,
-            url: f as string,
-            file: f,
-          };
-        }
+        return true;
       });
+
+      const seen = new Set<string>();
+
+      newPreviews = filteredFiles
+        .map((f: any) => {
+          if (f instanceof File) {
+            const key = `${f.name}-${f.size}`; // use name+size as uniqueness key
+            if (seen.has(key)) return null;
+            seen.add(key);
+            const previewUrl = URL.createObjectURL(f);
+            return {
+              id: `${f.name}-${Date.now() * Math.random()}`,
+              url: previewUrl,
+              file: f,
+            };
+          } else if (typeof f === "string") {
+            if (seen.has(f)) return null;
+            seen.add(f);
+            return {
+              id: `${f}-${Date.now() * Math.random()}`,
+              url: f,
+              file: f,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean) as { id: string; url: string; file: File | string }[];
     }
+    console.log("newPreviews", newPreviews);
 
     setPreviews(newPreviews);
 
@@ -142,10 +140,8 @@ const DropzoneComponent = ({
     }
 
     if (!fileName) {
-      console.warn("Cannot determine file name to remove");
       return;
     }
-    console.log("fileName", fileName);
 
     try {
       setRemoving(true);

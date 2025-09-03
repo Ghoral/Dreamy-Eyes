@@ -10,7 +10,6 @@ import {
 } from "../../components/ui/table";
 import { PencilIcon, TrashBinIcon } from "../../icons";
 import { Modal } from "../../components/ui/modal";
-import Button from "../../components/common/Button";
 import {
   showCustomToastError,
   showCustomToastSuccess,
