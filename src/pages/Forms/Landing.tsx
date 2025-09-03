@@ -20,7 +20,6 @@ const LandingForm = () => {
           .list(undefined, { limit: 100 });
         if (error) throw error;
         const items: BannerItem[] = [];
-        console.log("data", data);
 
         for (const f of data || []) {
           if (!f.name) continue;
@@ -31,7 +30,6 @@ const LandingForm = () => {
         }
         setBanners(items);
       } catch (e) {
-        console.error("Error loading banners", e);
         setBanners([]);
       } finally {
         setIsLoading(false);
@@ -65,7 +63,6 @@ const LandingForm = () => {
       }
       setBanners(items);
     } catch (e) {
-      console.error("Upload error", e);
     } finally {
       setIsUploading(false);
     }
@@ -78,9 +75,7 @@ const LandingForm = () => {
         .remove([originalPath]);
       if (error) throw error;
       setBanners((prev) => prev.filter((b) => b.originalPath !== originalPath));
-    } catch (e) {
-      console.error("Delete error", e);
-    }
+    } catch (e) {}
   };
 
   return (

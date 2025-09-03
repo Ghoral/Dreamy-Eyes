@@ -27,7 +27,6 @@ const MultiColorSelector = ({
 
   const handleAddColor = (colorValue?: string) => {
     const colorToAdd = colorValue || currentColor;
-    // Don't add duplicate colors
     if (!values.includes(colorToAdd)) {
       const newColors = [...values, colorToAdd];
       onChange(newColors);

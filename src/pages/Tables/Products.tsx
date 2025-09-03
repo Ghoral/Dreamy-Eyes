@@ -35,7 +35,6 @@ export default function ProductsTable() {
       const { data, error } = await supabaseClient.rpc("get_products");
 
       if (error) throw error;
-      console.log("data", data);
 
       setRows((data as any) || []);
     } catch (e) {
@@ -56,16 +55,24 @@ export default function ProductsTable() {
 
   const confirmDelete = async () => {
     if (!pendingId) return;
+
     try {
-      const { error } = await supabaseClient
-        .from("products")
-        .delete()
-        .eq("id", pendingId);
-      if (error) throw error;
-      showCustomToastSuccess("Product deleted successfully");
-      await fetchProducts();
-    } catch (e) {
-      showCustomToastError(e, "Failed to delete product");
+      const { data, error } = await supabaseClient.rpc("delete_product", {
+        _product_id: pendingId,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || "Failed to delete product");
+      }
+
+      showCustomToastSuccess(data.message || "Product deleted successfully");
+      setRows((rows) => rows.filter((r) => r.id !== pendingId));
+    } catch (e: any) {
+      showCustomToastError(e.message || e, "Failed to delete product");
     } finally {
       setConfirmOpen(false);
       setPendingId(null);
@@ -95,7 +102,7 @@ export default function ProductsTable() {
                   isHeader
                   className="px-5 py-3 text-gray-500 text-start text-theme-xs"
                 >
-                  Updated
+                  Created
                 </TableCell>
                 <TableCell
                   isHeader
@@ -125,7 +132,7 @@ export default function ProductsTable() {
                     ${p.price?.toFixed(2) ?? "0.00"}
                   </TableCell>
                   <TableCell className="px-5 py-4 text-start">
-                    {new Date(p.updated_at).toLocaleString()}
+                    {new Date(p.created_at).toLocaleString()}
                   </TableCell>
                   <TableCell className="px-5 py-4 text-end">
                     <div className="inline-flex items-center gap-2">

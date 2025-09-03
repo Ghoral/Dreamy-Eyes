@@ -133,10 +133,9 @@ const DropzoneComponent = ({
         .remove([fileToRemove.name]);
 
       if (error) {
-        console.error("Error removing file from storage:", error);
+        throw error;
       }
     } catch (err) {
-      console.error("Failed to remove file from storage:", err);
     } finally {
       setRemoving(false);
     }

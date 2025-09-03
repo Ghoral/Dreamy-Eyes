@@ -6,7 +6,6 @@ import Input from "../../components/form/input/InputField";
 import { Editor } from "@tinymce/tinymce-react";
 import SpecificationsForm from "../Components/SpecificationForm";
 import { IProduct } from "../../interface/product";
-import { productValidationSchema } from "../../validation/product";
 import { useEffect, useState } from "react";
 import { supabaseClient } from "../../service/supabase";
 import {
@@ -17,6 +16,7 @@ import { useLocation } from "react-router";
 import MultiColorSelector from "../../components/common/ColorPicker";
 import { getColorFileNameMap } from "../../utils";
 import Button from "../../components/common/Button";
+import { productValidationSchema } from "../../validation/product";
 
 const ProductForm = () => {
   const [specifications, setSpecifications] = useState<any>({});
@@ -61,7 +61,6 @@ const ProductForm = () => {
       if (error) throw error;
       setDbColors(data || []);
     } catch (error) {
-      console.error("Error fetching colors:", error);
     } finally {
       setLoading(false);
     }
@@ -125,6 +124,7 @@ const ProductForm = () => {
           formik.setFieldValue("images", JSON.parse(images)[colorToSelect]);
           setColorImageMap(JSON.parse(images));
           formik.setFieldValue("color", colors);
+          formik.setFieldValue("color_quantity", colorQuantity);
 
           const colorQuantitiesObj: {
             [color: string]: { quantity: string; label: string };
@@ -173,6 +173,7 @@ const ProductForm = () => {
       color: [],
       color_quantity: [],
     },
+    validationSchema: productValidationSchema,
     onSubmit: async (values) => {
       setIsLoading(true);
       try {
@@ -184,32 +185,30 @@ const ProductForm = () => {
       }
     },
   });
-  console.log("ff", formik.values.images);
 
   const onSubmit = async (values: IProduct) => {
     try {
       const { color, ...rest } = values;
-      console.log("1");
 
-      // // Validate: every selected color must have at least one image
-      // const missingImageColors = (values.color || []).filter(
-      //   (c: string) =>
-      //     !Array.isArray(colorImageMap[c]) || colorImageMap[c]?.length === 0
-      // );
+      // Validate: every selected color must have at least one image
+      const missingImageColors = (values.color || []).filter(
+        (c: string) =>
+          !Array.isArray(colorImageMap[c]) || colorImageMap[c]?.length === 0
+      );
 
-      // if (missingImageColors.length > 0) {
-      //   const missingColorLabels = missingImageColors.map(
-      //     (hex: any) => dbColors.find((clr) => clr.value === hex)?.name || hex
-      //   );
+      if (missingImageColors.length > 0) {
+        const missingColorLabels = missingImageColors.map(
+          (hex: any) => dbColors.find((clr) => clr.value === hex)?.name || hex
+        );
 
-      //   formik.setFieldError(
-      //     "images",
-      //     `Please upload at least one image for: ${missingColorLabels.join(
-      //       ", "
-      //     )}`
-      //   );
-      //   return;
-      // }
+        formik.setFieldError(
+          "images",
+          `Please upload at least one image for: ${missingColorLabels.join(
+            ", "
+          )}`
+        );
+        return;
+      }
 
       const color_quantity = values.color_quantity;
 
@@ -220,25 +219,39 @@ const ProductForm = () => {
         specifications: specifications.keyValuePairs,
         color_quantity: color_quantity,
       };
-      console.log("body", body);
 
       if (isEditMode && productId) {
-        // Update existing product
-        const { error } = await supabaseClient
-          .from("products")
-          .update(body)
-          .eq("id", productId);
+        const { data, error } = await supabaseClient.rpc("update_product", {
+          _id: productId,
+          _title: body.title,
+          _sub_title: body.sub_title,
+          _description: body.description,
+          _images: body.images,
+          _price: body.price,
+          _power: body.power,
+          _color_quantity: body.color_quantity,
+          _specifications: body.specifications,
+        });
 
-        if (error) throw error;
-        showCustomToastSuccess("Product updated successfully");
+        if (error) {
+          console.error("RPC error:", error);
+          throw error;
+        }
+
+        if (!data.success) {
+          throw new Error(data.error || "Failed to update product");
+        }
+
+        showCustomToastSuccess(data.message || "Product updated successfully");
       } else {
         // Insert new product
         const { error } = await supabaseClient.from("products").insert(body);
         if (error) throw error;
         showCustomToastSuccess("Product created successfully");
       }
-    } catch (error) {
-      showCustomToastError(error, "Failed to save product");
+    } catch (error: any) {
+      console.error("Submit error:", error);
+      showCustomToastError(error.message || error, "Failed to save product");
     }
   };
 
@@ -458,18 +471,14 @@ const ProductForm = () => {
         return prev;
       }
 
-      // Check if we're removing the primary thumbnail
       const removedFile = updatedFiles[index];
       const removedFileName =
         typeof removedFile === "string" ? removedFile : removedFile.name;
       const isRemovingPrimaryThumbnail = primaryThumbnail === removedFileName;
 
-      // Remove the file
       updatedFiles.splice(index, 1);
 
-      // If we removed the primary thumbnail and there are other images available
       if (isRemovingPrimaryThumbnail) {
-        // First try to find a new primary from the same color
         if (updatedFiles.length > 0) {
           const newPrimaryFile = updatedFiles[0];
           const newPrimaryFileName =
@@ -478,7 +487,6 @@ const ProductForm = () => {
               : newPrimaryFile.name;
           setPrimaryThumbnail(newPrimaryFileName);
         } else {
-          // If no images left for this color, try to find an image from another color
           const otherColorWithImages = Object.entries(prev)
             .filter(
               ([c, files]) =>
@@ -493,10 +501,9 @@ const ProductForm = () => {
                 ? newPrimaryFile
                 : newPrimaryFile.name;
             setPrimaryThumbnail(newPrimaryFileName);
-            // Also select this color
+
             setSelectedColor(otherColorWithImages.color);
           } else {
-            // No images left at all
             setPrimaryThumbnail(null);
           }
         }
@@ -506,11 +513,12 @@ const ProductForm = () => {
         const { [color]: _, ...rest } = prev;
         return rest;
       }
-
-      return {
+      const mappedValue = {
         ...prev,
         [color]: updatedFiles,
       };
+      formik.setFieldValue("colors", mappedValue);
+      return mappedValue;
     });
   };
 
