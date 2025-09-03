@@ -1,62 +1,34 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { supabaseClient } from '../../service/supabase';
+import React from 'react';
+import { useUserRole, UserRole } from '../../hooks/useUserRole';
 
 interface PermissionGateProps {
-  children: ReactNode;
-  requiredRole?: string;
-  fallback?: ReactNode;
+  children: React.ReactNode;
+  requiredRole?: UserRole;
+  fallback?: React.ReactNode;
 }
 
 /**
  * A component that conditionally renders its children based on the user's role.
- * 
- * @param children - The content to render if the user has the required role
- * @param requiredRole - The role required to view the content (defaults to "super_admin")
- * @param fallback - Optional content to render if the user doesn't have the required role
+ * If the user's role matches the required role, the children are rendered.
+ * Otherwise, the fallback is rendered, or null if no fallback is provided.
  */
-export default function PermissionGate({ 
-  children, 
+export default function PermissionGate({
+  children,
   requiredRole = 'super_admin',
-  fallback = null 
+  fallback = null,
 }: PermissionGateProps) {
-  const { user } = useAuth();
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { role, loading } = useUserRole();
 
-  useEffect(() => {
-    const loadRole = async () => {
-      try {
-        if (!user?.id) {
-          setUserRole(null);
-          return;
-        }
-        
-        const { data } = await supabaseClient
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-          
-        setUserRole((data as any)?.role ?? null);
-      } catch (e) {
-        setUserRole(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadRole();
-  }, [user?.id]);
+  // If still loading, don't render anything
+  if (loading) {
+    return null;
+  }
 
-  // While loading, render nothing
-  if (loading) return null;
-  
-  // If user has the required role, render children
-  if (userRole === requiredRole) {
+  // If the user's role matches the required role, render the children
+  if (role === requiredRole) {
     return <>{children}</>;
   }
-  
-  // Otherwise render fallback or null
+
+  // Otherwise, render the fallback or null
   return <>{fallback}</>;
 }
