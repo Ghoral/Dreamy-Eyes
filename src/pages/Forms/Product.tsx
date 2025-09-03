@@ -35,7 +35,6 @@ const ProductForm = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
   const [primaryIndex, setPrimaryIndex] = useState<number>(0);
-  console.log("primaryThumbnail", primaryThumbnail);
 
   // Get product ID from URL if present
   const location = useLocation();
@@ -242,7 +241,6 @@ const ProductForm = () => {
         });
 
         if (error) {
-          console.error("RPC error:", error);
           throw error;
         }
 
@@ -258,14 +256,11 @@ const ProductForm = () => {
         showCustomToastSuccess("Product created successfully");
       }
     } catch (error: any) {
-      console.error("Submit error:", error);
       showCustomToastError(error.message || error, "Failed to save product");
     }
   };
 
   const handleImageChange = async (files: File[]) => {
-    console.log("files", files);
-
     formik.setFieldValue("images", files);
 
     try {
@@ -592,7 +587,6 @@ const ProductForm = () => {
       });
     }
   };
-  console.log("colorImageMap", colorImageMap);
 
   return (
     <form onSubmit={formik.handleSubmit}>

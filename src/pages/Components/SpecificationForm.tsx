@@ -10,7 +10,7 @@ const SpecificationsForm = ({
   initialSpecifications = [],
 }: {
   setSpecifications: any;
-  initialSpecifications?: Array<{label: string, value: string}>;
+  initialSpecifications?: Array<{ label: string; value: string }>;
 }) => {
   const validationSchema = Yup.object({
     specifications: Yup.array().of(
@@ -46,6 +46,7 @@ const SpecificationsForm = ({
       keyValuePairs,
     });
   }, [formik.values.specifications, setSpecifications]);
+  console.log("setSpecifications", setSpecifications);
 
   return (
     <FormikProvider value={formik}>

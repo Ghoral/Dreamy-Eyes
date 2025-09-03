@@ -131,7 +131,6 @@ const DropzoneComponent = ({
     if (!fileName) {
       return;
     }
-    console.log("fileName", fileName);
 
     try {
       setRemoving(true);
@@ -143,7 +142,6 @@ const DropzoneComponent = ({
         throw error;
       }
     } catch (err) {
-      console.error("Error removing file:", err);
     } finally {
       setRemoving(false);
     }
