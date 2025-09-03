@@ -24,7 +24,6 @@ export default function Users() {
   const [hasMore, setHasMore] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  console.log("pendingDeleteId", pendingDeleteId);
 
   const fetchUsers = async () => {
     setLoading(true);

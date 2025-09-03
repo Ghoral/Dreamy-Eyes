@@ -3,6 +3,7 @@ import ComponentCard from "../components/common/ComponentCard";
 import Button from "../components/common/Button";
 import { supabaseClient } from "../service/supabase";
 import { TrashBinIcon } from "../icons";
+import { ActivityType, logActivity } from "../utils/activitylogger";
 
 type Profile = {
   id: string;
@@ -40,7 +41,12 @@ export default function Accounts() {
 
   const handleDelete = async (id: string) => {
     setLoading(true);
+
+    const userToDelete = [...users, ...admins].find((p) => p.id === id);
     await supabaseClient.from("profiles").delete().eq("id", id);
+
+    await logActivity(ActivityType.USER_DELETE, "user", "User Management");
+
     await fetchProfiles();
   };
 
@@ -55,6 +61,10 @@ export default function Accounts() {
         role: "admin",
       } as any);
       if (error) throw error;
+
+      // Log admin invitation activity
+      await logActivity(ActivityType.ADMIN_INVITE, "user", "User Management");
+
       setInvite({ first_name: "", last_name: "", email: "" });
       await fetchProfiles();
     } catch (e) {
@@ -65,7 +75,7 @@ export default function Accounts() {
   };
 
   return (
-    <ComponentCard title="Users & Admins" description="Manage users and admins">
+    <ComponentCard title="Users & Admins">
       <div className="overflow-x-auto">
         <h3 className="font-semibold mb-2">Users</h3>
         <table className="min-w-full text-sm mb-8">

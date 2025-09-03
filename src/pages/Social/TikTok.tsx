@@ -8,6 +8,7 @@ import {
   showCustomToastError,
   showCustomToastSuccess,
 } from "../../utils/toast";
+import { ActivityType, logActivity } from "../../utils/activitylogger";
 
 export default function TikTok() {
   const [link, setLink] = useState("");
@@ -34,6 +35,10 @@ export default function TikTok() {
         .from("slug")
         .upsert({ name: "tiktok", value: link });
       if (error) throw error;
+
+      // Log TikTok link update activity
+      await logActivity(ActivityType.USER_DELETE, "social", "Tiktok Page");
+
       showCustomToastSuccess("TikTok link updated");
     } catch (e) {
       showCustomToastError(e, "Failed to save link");
@@ -61,4 +66,3 @@ export default function TikTok() {
     </ComponentCard>
   );
 }
-

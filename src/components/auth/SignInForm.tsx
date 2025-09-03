@@ -10,6 +10,7 @@ import { Link, useNavigate } from "react-router";
 import { showCustomToastError } from "../../utils/toast";
 import { supabaseClient } from "../../service/supabase";
 import { Loader2 } from "lucide-react";
+import { ActivityType, logActivity } from "../../utils/activitylogger";
 
 export default function SignInForm() {
   const navigate = useNavigate();
@@ -57,7 +58,9 @@ export default function SignInForm() {
         navigate("/signin");
         throw new Error("Only admins can sign in.");
       }
-      console.log("error no here common ");
+
+      // Log successful sign-in activity
+      await logActivity(ActivityType.SIGN_IN, "auth", "Signin page");
 
       setLoading(false);
       navigate("/dashboard");
@@ -89,8 +92,7 @@ export default function SignInForm() {
               placeholder="Enter your email"
               value={formik.values.email}
               onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.email && formik.errors.email}
+              error={!!(formik.touched.email && formik.errors.email)}
             />
           </div>
 
@@ -104,8 +106,7 @@ export default function SignInForm() {
                 placeholder="Enter your password"
                 value={formik.values.password}
                 onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                error={formik.touched.password && formik.errors.password}
+                error={!!(formik.touched.password && formik.errors.password)}
               />
               <button
                 type="button"
@@ -125,7 +126,7 @@ export default function SignInForm() {
             <Checkbox
               id="remember"
               checked={isChecked}
-              onChange={(e) => setIsChecked(e.target.checked)}
+              onChange={(checked) => setIsChecked(checked)}
               label="Remember me"
             />
             <Link
@@ -136,7 +137,11 @@ export default function SignInForm() {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            className="w-full"
+            disabled={loading}
+            onClick={formik.handleSubmit}
+          >
             {loading ? (
               <>
                 <Loader2 className="mr-2 size-4 animate-spin" />

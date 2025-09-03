@@ -7,6 +7,7 @@ import { Editor } from "@tinymce/tinymce-react";
 import SpecificationsForm from "../Components/SpecificationForm";
 import { IProduct } from "../../interface/product";
 import { useEffect, useState } from "react";
+import { ActivityType, logActivity } from "../../utils/activitylogger";
 import { supabaseClient } from "../../service/supabase";
 import {
   showCustomToastError,
@@ -238,11 +239,28 @@ const ProductForm = () => {
           throw new Error(data.error || "Failed to update product");
         }
 
+        // Log product update activity
+        await logActivity(
+          ActivityType.PRODUCT_UPDATE,
+          "product",
+          "Product Form"
+        );
+
         showCustomToastSuccess(data.message || "Product updated successfully");
       } else {
         // Insert new product
-        const { error } = await supabaseClient.from("products").insert(body);
+        const { data, error } = await supabaseClient
+          .from("products")
+          .insert(body);
         if (error) throw error;
+
+        // Log product creation activity
+        await logActivity(
+          ActivityType.PRODUCT_CREATE,
+          "product",
+          "Product Form"
+        );
+
         showCustomToastSuccess("Product created successfully");
       }
     } catch (error: any) {

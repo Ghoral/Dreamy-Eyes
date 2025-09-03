@@ -16,6 +16,7 @@ import {
 } from "../../utils/toast";
 import PermissionGate from "../../components/common/PermissionGate";
 import { useUserRole } from "../../hooks/useUserRole";
+import { ActivityType, logActivity } from "../../utils/activitylogger";
 
 type Product = {
   id: string;
@@ -60,6 +61,9 @@ export default function ProductsTable() {
     if (!pendingId) return;
 
     try {
+      // Get product details before deletion for logging
+      const productToDelete = rows.find((p) => p.id === pendingId);
+
       const { data, error } = await supabaseClient.rpc("delete_product", {
         _product_id: pendingId,
       });
@@ -71,6 +75,9 @@ export default function ProductsTable() {
       const imagesToDelete: string[] = data.images_to_delete || [];
 
       await supabaseClient.storage.from("product-image").remove(imagesToDelete);
+
+      // Log product deletion activity
+      await logActivity(ActivityType.PRODUCT_DELETE, "product", "Product Form");
 
       showCustomToastSuccess(data.message || "Product deleted successfully");
       setRows((rows) => rows.filter((r) => r.id !== pendingId));
