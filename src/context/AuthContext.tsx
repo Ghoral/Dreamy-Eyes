@@ -1,6 +1,13 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { supabaseClient } from "../service/supabase";
 import { Session, User } from "@supabase/supabase-js";
+import { appStore } from "../store";
 
 interface AuthContextType {
   session: Session | null;
@@ -24,6 +31,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const { userData, setUserData } = appStore();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,11 +40,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkSession = async () => {
       try {
         const { data, error } = await supabaseClient.auth.getSession();
-        
+
         if (error) {
           console.error("Error checking session", error);
         }
-        
+
         setSession(data?.session ?? null);
         setUser(data?.session?.user ?? null);
       } catch (error) {
@@ -53,8 +61,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_OUT') {
+
+        if (event === "SIGNED_OUT") {
           setSession(null);
           setUser(null);
         }
@@ -66,16 +74,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const loadRole = async () => {
+      try {
+        const { data } = await supabaseClient.rpc("get_current_user_data");
+
+        setUserData(data);
+      } catch (e) {}
+    };
+    if (session && !userData) {
+      loadRole();
+    }
+  }, [userData, session]);
+
   const signOut = async () => {
     try {
       setLoading(true);
       const { error } = await supabaseClient.auth.signOut();
-      
+
       if (error) {
         console.error("Error signing out", error);
         throw error;
       }
-      
+
       // Clear local state
       setSession(null);
       setUser(null);
@@ -94,11 +115,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signOut,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-

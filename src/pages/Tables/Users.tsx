@@ -6,8 +6,8 @@ import {
   showCustomToastError,
   showCustomToastSuccess,
 } from "../../utils/toast";
-import { useAuth } from "../../context/AuthContext";
 import { TrashBinIcon } from "../../icons";
+import { appStore } from "../../store";
 
 type Profile = {
   id: string;
@@ -18,8 +18,7 @@ type Profile = {
 };
 
 export default function Users() {
-  const { user } = useAuth();
-  const [role, setRole] = useState<string | null>(null);
+  const { userData } = appStore();
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -27,6 +26,8 @@ export default function Users() {
   const [hasMore, setHasMore] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const role = userData?.role || "user";
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -45,23 +46,6 @@ export default function Users() {
   useEffect(() => {
     fetchUsers();
   }, [page]);
-
-  useEffect(() => {
-    const loadRole = async () => {
-      try {
-        if (!user?.id) return;
-        const { data } = await supabaseClient
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        setRole((data as any)?.role ?? null);
-      } catch (e) {
-        setRole(null);
-      }
-    };
-    loadRole();
-  }, [user?.id]);
 
   const openConfirm = (id: string) => {
     setPendingDeleteId(id);

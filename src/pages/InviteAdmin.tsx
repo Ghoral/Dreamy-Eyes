@@ -1,36 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ComponentCard from "../components/common/ComponentCard";
 import Button from "../components/common/Button";
 import { showCustomToastError, showCustomToastSuccess } from "../utils/toast";
 import { supabaseClient } from "../service/supabase";
-import { useAuth } from "../context/AuthContext";
+import { appStore } from "../store";
 
 export default function InviteAdmin() {
-  const { user } = useAuth();
-  const [role, setRole] = useState<string | null>(null);
+  const { userData } = appStore();
+  const role = userData?.role || "user";
   const [invite, setInvite] = useState({
     first_name: "",
     last_name: "",
     email: "",
   });
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const loadRole = async () => {
-      try {
-        if (!user?.id) return;
-        const { data } = await supabaseClient
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        setRole((data as any)?.role ?? null);
-      } catch (e) {
-        setRole(null);
-      }
-    };
-    loadRole();
-  }, [user?.id]);
 
   const handleInviteAdmin = async () => {
     try {

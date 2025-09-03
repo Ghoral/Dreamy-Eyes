@@ -10,8 +10,7 @@ import {
   ListIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import { useAuth } from "../context/AuthContext";
-import { supabaseClient } from "../service/supabase";
+import { appStore } from "../store";
 // import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
@@ -56,27 +55,11 @@ const navItems: NavItem[] = [
 const othersItems: NavItem[] = [];
 
 const AppSidebar: React.FC = () => {
+  const { userData } = appStore();
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-  const { user } = useAuth();
-  const [currentRole, setCurrentRole] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadRole = async () => {
-      try {
-        if (!user?.id) return;
-        const { data } = await supabaseClient
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        setCurrentRole((data as any)?.role ?? null);
-      } catch (e) {
-        setCurrentRole(null);
-      }
-    };
-    loadRole();
-  }, [user?.id]);
+  const role = userData?.role || "user";
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -222,7 +205,7 @@ const AppSidebar: React.FC = () => {
                 {nav.subItems
                   .filter((subItem) =>
                     subItem.name === "Invite Admin"
-                      ? currentRole === "super_admin"
+                      ? role === "super_admin"
                       : true
                   )
                   .map((subItem) => (
