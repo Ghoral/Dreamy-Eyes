@@ -34,6 +34,8 @@ const ProductForm = () => {
   const [primaryThumbnail, setPrimaryThumbnail] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [productId, setProductId] = useState<string | null>(null);
+  const [primaryIndex, setPrimaryIndex] = useState<number>(0);
+  console.log("primaryThumbnail", primaryThumbnail);
 
   // Get product ID from URL if present
   const location = useLocation();
@@ -88,6 +90,8 @@ const ProductForm = () => {
           color_quantity: [],
         });
 
+        product.primary_thumbnail || null;
+
         if (product.specifications) {
           const specs = product.specifications;
           const specArray = Object.keys(specs).map((key) => ({
@@ -130,6 +134,7 @@ const ProductForm = () => {
           setColorImageMap(JSON.parse(images));
           formik.setFieldValue("color", colors);
           formik.setFieldValue("color_quantity", colorQuantity);
+          setPrimaryIndex(data?.primary_index ?? 0);
 
           const colorQuantitiesObj: {
             [color: string]: { quantity: string; label: string };
@@ -143,9 +148,6 @@ const ProductForm = () => {
 
           setColorQuantities(colorQuantitiesObj);
           setUpdateColorImageMap(imageUrlMap);
-
-          // Handle thumbnail
-
           if (product.primary_thumbnail) {
             setPrimaryThumbnail(product.primary_thumbnail);
 
@@ -236,6 +238,7 @@ const ProductForm = () => {
           _power: body.power,
           _color_quantity: body.color_quantity,
           _specifications: body.specifications,
+          _primary_thumbnail: body.primary_thumbnail,
         });
 
         if (error) {
@@ -589,6 +592,7 @@ const ProductForm = () => {
       });
     }
   };
+  console.log("colorImageMap", colorImageMap);
 
   return (
     <form onSubmit={formik.handleSubmit}>
@@ -800,14 +804,28 @@ const ProductForm = () => {
                   : colorImageMap[selectedColor] || []
                 : []
             }
-            setFile={(file: any) => {
-              handleImageChangeColor(file);
-              handleImageChange(file);
-            }}
+            primaryIndex={primaryIndex}
             title="Product Images"
             multiple
             uploading={uploading}
-            onPrimaryChange={(name) => setPrimaryThumbnail(name)}
+            onPrimaryChange={(name) => {
+              setPrimaryThumbnail(name);
+
+              let foundIndex = -1;
+
+              for (const [_, files] of Object.entries(colorImageMap) as [
+                string,
+                string[]
+              ][]) {
+                const idx = files.indexOf(name);
+                if (idx !== -1) {
+                  foundIndex = idx;
+                  break;
+                }
+              }
+
+              setPrimaryIndex(foundIndex);
+            }}
             setFieldValue={(index: number) =>
               removeImageFromColor(selectedColor ?? "", index)
             }

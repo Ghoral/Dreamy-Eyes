@@ -58,30 +58,20 @@ export default function ProductsTable() {
 
   const confirmDelete = async () => {
     if (!pendingId) return;
-    console.log("1");
 
     try {
-      // Call your PostgreSQL RPC
       const { data, error } = await supabaseClient.rpc("delete_product", {
         _product_id: pendingId,
       });
-      console.log("data", data, error);
 
       if (error) {
         throw error;
       }
 
-      console.log("data", data);
-
-      // Delete images from Supabase storage
       const imagesToDelete: string[] = data.images_to_delete || [];
-      console.log("imagesToDelete", imagesToDelete);
 
-      const res = await supabaseClient.storage
-        .from("product-image")
-        .remove(imagesToDelete);
+      await supabaseClient.storage.from("product-image").remove(imagesToDelete);
 
-      // Update UI
       showCustomToastSuccess(data.message || "Product deleted successfully");
       setRows((rows) => rows.filter((r) => r.id !== pendingId));
     } catch (e: any) {

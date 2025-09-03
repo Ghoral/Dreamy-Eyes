@@ -84,17 +84,6 @@ const DropzoneComponent = ({
 
     setPreviews(newPreviews);
 
-    // Initialize primary selection
-    if (newPreviews.length > 0) {
-      const initIdx = typeof primaryIndex === "number" ? primaryIndex : 0;
-      setLocalPrimary(initIdx);
-      const f: any = newPreviews[initIdx]?.file;
-      const name = f?.name ?? (typeof f === "string" ? f : "");
-      onPrimaryChange?.(name);
-    } else {
-      setLocalPrimary(null);
-    }
-
     return () => {
       newPreviews.forEach((preview) => {
         if (preview.file instanceof File && preview.url.startsWith("blob:")) {
@@ -344,9 +333,16 @@ const DropzoneComponent = ({
                         }
                         onChange={() => {
                           setLocalPrimary(index);
+
                           const f: any = previews[index]?.file;
-                          const name =
-                            f?.name ?? (typeof f === "string" ? f : "");
+                          let name = "";
+
+                          if (f?.name) {
+                            name = f.name;
+                          } else if (typeof f === "string") {
+                            name = f.split("/").pop() ?? "";
+                          }
+
                           onPrimaryChange?.(name);
                         }}
                         disabled={disabled}
