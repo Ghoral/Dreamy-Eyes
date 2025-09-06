@@ -90,7 +90,7 @@ const ItemListing = () => {
         </div>
 
         {/* Products Grid with Animation */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 lg:gap-12 mb-12 justify-items-center">
           {loading && (
             <div className="col-span-full flex flex-col items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
@@ -119,10 +119,10 @@ const ItemListing = () => {
               return (
                 <div
                   key={section.key}
-                  className="group bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden max-w-sm w-full animate-fade-in"
+                  className="group bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden w-full max-w-md animate-fade-in"
                   style={{ animationDelay: `${orderedSections.indexOf(section) * 0.15}s` }}
                 >
-                  <div className="relative h-48 bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
+                  <div className="relative h-64 bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
                     {firstImage ? (
                       <Image
                         src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${firstImage}`}
