@@ -5,6 +5,7 @@ import { toCamelCase } from "../../utils";
 export const ThemeToggleButton: React.FC = () => {
   const { toggleTheme } = useTheme();
   const { role } = useUserRole();
+console.log('role',role);
 
   return (
     <div className="flex items-center gap-2">

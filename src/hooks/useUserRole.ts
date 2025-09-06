@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { appStore } from "../store";
 
 /**
@@ -8,8 +7,7 @@ import { appStore } from "../store";
  */
 export function useUserRole() {
   const { userData } = appStore();
-  const role = userData?.role || "user";
-  const [loading, setLoading] = useState(true);
+  const role = userData?.role;
 
   /**
    * Check if the current user has the specified role
@@ -32,7 +30,6 @@ export function useUserRole() {
 
   return {
     role,
-    loading,
     hasRole,
     isSuperAdmin,
   };
