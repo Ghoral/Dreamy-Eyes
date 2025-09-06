@@ -89,16 +89,22 @@ const ItemListing = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-8 mb-12">
+        {/* Products Grid with Animation */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-12">
           {loading && (
-            <div className="col-span-full text-center text-secondary-500">
-              Loading...
+            <div className="col-span-full flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+              <p className="text-secondary-600 font-medium">Loading amazing products...</p>
             </div>
           )}
 
           {!loading && orderedSections.length === 0 && (
-            <div className="col-span-full text-center text-secondary-500">
-              No collections to display
+            <div className="text-center py-16 bg-white rounded-xl shadow-md w-full">
+              <svg className="w-16 h-16 text-secondary-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 20h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
+              </svg>
+              <p className="text-secondary-600 text-lg">No collections to display</p>
+              <p className="text-secondary-500 mt-2">Please check back later for new products</p>
             </div>
           )}
 
@@ -113,7 +119,8 @@ const ItemListing = () => {
               return (
                 <div
                   key={section.key}
-                  className="group bg-white rounded-3xl shadow-soft hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden max-w-sm w-full"
+                  className="group bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden max-w-sm w-full animate-fade-in"
+                  style={{ animationDelay: `${orderedSections.indexOf(section) * 0.15}s` }}
                 >
                   <div className="relative h-48 bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
                     {firstImage ? (
@@ -161,10 +168,10 @@ const ItemListing = () => {
 
                     <Link
                       href={`/shop?type=${section.key}`}
-                      className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
+                      className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                     >
                       <svg
-                        className="w-4 h-4 mr-2"
+                        className="w-5 h-5 mr-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
