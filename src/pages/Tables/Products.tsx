@@ -62,7 +62,6 @@ export default function ProductsTable() {
 
     try {
       // Get product details before deletion for logging
-      const productToDelete = rows.find((p) => p.id === pendingId);
 
       const { data, error } = await supabaseClient.rpc("delete_product", {
         _product_id: pendingId,

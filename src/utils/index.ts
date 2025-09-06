@@ -50,3 +50,11 @@ export function toCamelCase(str: string) {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // capitalize each word
     .join(" ");
 }
+
+export const getFullName = (first_name?: string, last_name?: string) => {
+  try {
+    return `${first_name || ""} ${last_name || ""}`.trim() || "-";
+  } catch (error) {
+    return "";
+  }
+};

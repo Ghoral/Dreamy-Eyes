@@ -18,12 +18,9 @@ export default function InviteAdmin() {
   const handleInviteAdmin = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabaseClient.functions.invoke(
-        "create-admin",
-        {
-          body: JSON.stringify({ data: invite }),
-        }
-      );
+      const { error } = await supabaseClient.functions.invoke("create-admin", {
+        body: JSON.stringify({ data: invite }),
+      });
 
       if (error) throw error;
       showCustomToastSuccess("Invite email sent (if not existing)");

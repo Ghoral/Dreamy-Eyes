@@ -15,7 +15,7 @@ import {
 } from "../../utils/toast";
 import { useLocation } from "react-router";
 import MultiColorSelector from "../../components/common/ColorPicker";
-import { formatSpecifications, getColorFileNameMap } from "../../utils";
+import { getColorFileNameMap } from "../../utils";
 import Button from "../../components/common/Button";
 import { productValidationSchema } from "../../validation/product";
 
