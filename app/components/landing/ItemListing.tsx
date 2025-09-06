@@ -90,7 +90,7 @@ const ItemListing = () => {
         </div>
 
         {/* Products Grid with Animation */}
-        <div className="flex flex-wrap justify-center gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 mb-12">
           {loading && (
             <div className="col-span-full flex flex-col items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>

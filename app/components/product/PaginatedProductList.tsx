@@ -304,32 +304,33 @@ const ProductCard = ({ product }: { product: Product }) => {
           )}
         </div>
 
-        {/* Price and Action */}
-        <div className="flex items-center justify-between">
+        {/* Price */}
+        <div className="mb-2">
           <span className="text-xl font-bold text-primary-600">
             ${product.price.toFixed(2)}
           </span>
-          
-          <button
-            onClick={(e) => handleAddToCart(e)}
-            className="flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
-          >
-            <svg
-              className="w-5 h-5 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-              />
-            </svg>
-            Add
-          </button>
         </div>
+        
+        {/* Action Button - Moved to bottom */}
+        <button
+          onClick={(e) => handleAddToCart(e)}
+          className="w-full flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+        >
+          <svg
+            className="w-5 h-5 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+            />
+          </svg>
+          Add
+        </button>
       </div>
 
       {/* Hover Border Effect */}
@@ -513,7 +514,7 @@ const PaginatedProductList = ({ type }: { type: string }) => {
             ) : (
               <>
                 {/* Products Grid with Animation */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-12">
                   {products.map((product, index) => (
                     <div 
                       key={product.id} 
