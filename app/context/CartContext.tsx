@@ -179,10 +179,6 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           : item
       );
 
-      const totalItems = updatedItems.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-      );
       const totalPrice = updatedItems.reduce(
         (sum, item) => sum + item.price * item.quantity,
         0
@@ -191,7 +187,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return {
         ...state,
         items: updatedItems,
-        totalItems,
+        totalItems: updatedItems.length,
         itemCount: updatedItems.length,
         totalPrice,
       };
