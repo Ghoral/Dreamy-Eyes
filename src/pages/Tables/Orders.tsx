@@ -49,6 +49,7 @@ export default function Orders() {
   } | null>(null);
   const { isSuperAdmin, role } = useUserRole();
   const [statusOptions, setStatusOptions] = useState<any>([]);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -96,14 +97,26 @@ export default function Orders() {
     currentStatus: string | null,
     index: number
   ) => {
-    // If super admin is trying to change a paid status, show warning modal
-    if (isSuperAdmin() && currentStatus === "paid") {
+    const newLabel = getStatusLabel(newStatus);
+    const currentLabel = currentStatus ?? "";
+    setSelectedIndex(index);
+
+    const allowedTransitions: Record<string, string[]> = {
+      "Awaiting Payment": ["Paid", "Shipped", "Delivered", "Cancelled"],
+      Paid: ["Shipped", "Delivered"],
+      Shipped: ["Delivered"],
+      Delivered: [],
+      Cancelled: [],
+    };
+
+    const allowed = allowedTransitions[currentLabel] || [];
+
+    if (!allowed.includes(newLabel)) {
       setPendingStatusChange({ orderId, newStatus });
       setShowWarningModal(true);
       return;
     }
 
-    // Otherwise proceed with the update
     updateOrderStatus(orderId, newStatus, index);
   };
 
@@ -129,6 +142,7 @@ export default function Orders() {
 
       const tempData = [...orders];
       tempData[index].status = statusLabel;
+      tempData[index].status_slug = Number(newStatus);
       setOrders(tempData);
       // Log the activity
       await logActivity(
@@ -137,7 +151,6 @@ export default function Orders() {
         `Updated order status to ${statusLabel}`
       );
     } catch (err) {
-      console.error("Error updating order status:", err);
       setError(err instanceof Error ? err.message : "Failed to update status");
     } finally {
       setUpdatingStatus(null);
@@ -214,7 +227,8 @@ export default function Orders() {
                 if (pendingStatusChange) {
                   updateOrderStatus(
                     pendingStatusChange.orderId,
-                    pendingStatusChange.newStatus
+                    pendingStatusChange.newStatus,
+                    selectedIndex ?? 0
                   );
                   setPendingStatusChange(null);
                 }
@@ -343,7 +357,7 @@ export default function Orders() {
                           <Badge
                             size="sm"
                             color={
-                              status === "Paid"
+                              status === "Paid" || status === "Delivered"
                                 ? "success"
                                 : status === "Awaiting Payment"
                                 ? "warning"
@@ -358,7 +372,7 @@ export default function Orders() {
                         <TableCell className="px-4 py-3 text-start">
                           <div className="relative min-w-[180px]">
                             <select
-                              value={order.status || ""}
+                              value={order.status_slug || ""}
                               onChange={(e) =>
                                 handleStatusChange(
                                   order.id,
