@@ -27,21 +27,12 @@ export const logActivity = async (
   module: string
 ) => {
   try {
-    console.log("oook");
-
     // Call the RPC function to log the activity
     const { error, data } = await supabaseClient.rpc("log_activity", {
       p_action: action,
       p_table_name: table,
       p_module: module,
     });
-    console.log("bdy", {
-      p_action: action,
-      p_table_name: table,
-      p_module: module,
-    });
-
-    console.log("dd", data);
 
     if (error) {
       console.error("Error logging activity:", error);

@@ -31,6 +31,7 @@ interface Order {
     mobile_number: string;
   } | null;
   address: string;
+  status_slug: number;
 }
 
 export default function Orders() {
@@ -48,15 +49,19 @@ export default function Orders() {
   } | null>(null);
   const { isSuperAdmin, role } = useUserRole();
   const [statusOptions, setStatusOptions] = useState<any>([]);
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
     fetchOrders();
     fetchStatus();
   }, [page]);
 
-  const getStatusLabel = (status: string | null) => {
-    const option = statusOptions.find((opt: any) => opt.value === status);
-    return option ? option.label : status || "N/A";
+  const getStatusLabel = (status: number | null) => {
+    const option = statusOptions.find((opt: any) => {
+      return opt.value === status;
+    });
+
+    return option?.label ?? "";
   };
 
   const fetchStatus = async () => {
@@ -75,6 +80,7 @@ export default function Orders() {
         limit_value: pageSize,
         offset_value: (page - 1) * pageSize,
       });
+
       const rows = (res?.data as Order[]) || [];
       setOrders(rows);
       setHasMore(rows.length === pageSize);
@@ -104,16 +110,13 @@ export default function Orders() {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      console.log("newStatus", newStatus);
-
       setUpdatingStatus(orderId);
 
       // Update in database
-      const { data, error } = await supabaseClient.rpc("update_order_status", {
+      const { error } = await supabaseClient.rpc("update_order_status", {
         _order_id: orderId,
         _new_status: newStatus,
       });
-      console.log("data", error, data);
 
       if (error) {
         throw error;
@@ -304,108 +307,110 @@ export default function Orders() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="px-5 py-4 sm:px-6 text-start">
-                        <span className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {order.order_number}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        {new Date(order.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        {order.profile?.first_name} {order.profile?.last_name}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        {order?.title || "N/A"}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        {order?.color || "N/A"}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        ${order.total_amount?.toFixed(2) || "0.00"}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        {order?.address || "N/A"}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        {order?.profile?.mobile_number || "N/A"}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                        <Badge
-                          size="sm"
-                          color={
-                            order.status === "paid"
-                              ? "success"
-                              : order.status === "pending"
-                              ? "warning"
-                              : order.status === "cancelled"
-                              ? "error"
-                              : order.status === "awaiting"
-                              ? "info"
-                              : "primary"
-                          }
-                        >
-                          {getStatusLabel(order.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-start">
-                        <div className="relative min-w-[180px]">
-                          <select
-                            value={order.status || ""}
-                            onChange={(e) =>
-                              handleStatusChange(
-                                order.id,
-                                e.target.value,
-                                order.status
-                              )
+                  {orders.map((order) => {
+                    const status = order.status?.toLowerCase() ?? "";
+
+                    return (
+                      <TableRow key={order.id}>
+                        <TableCell className="px-5 py-4 sm:px-6 text-start">
+                          <span className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                            {order.order_number}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {order.profile?.first_name} {order.profile?.last_name}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {order?.title || "N/A"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {order?.color || "N/A"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          ${order.total_amount?.toFixed(2) || "0.00"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {order?.address || "N/A"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {order?.profile?.mobile_number || "N/A"}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          <Badge
+                            size="sm"
+                            color={
+                              Number(status) === 1
+                                ? "success"
+                                : Number(status) === 3
+                                ? "warning"
+                                : Number(status) === 4
+                                ? "error"
+                                : "primary"
                             }
-                            disabled={
-                              updatingStatus === order.id ||
-                              (order.status === "paid" && role === "admin")
-                            }
-                            className={cn(
-                              "appearance-none w-full px-4 py-2 text-sm font-medium",
-                              "border border-gray-300 rounded-lg",
-                              "bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white",
-                              "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400",
-                              "disabled:opacity-50 disabled:cursor-not-allowed",
-                              "shadow-sm transition-all duration-200 ease-in-out",
-                              "hover:border-blue-400 hover:shadow"
-                            )}
                           >
-                            <option value="" disabled>
-                              Select status
-                            </option>
-                            {statusOptions.map((option: any) => (
-                              <option
-                                key={option.value}
-                                value={option.value}
-                                className="py-1"
-                              >
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                            <svg
-                              className="w-4 h-4 fill-current"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 20 20"
+                            {getStatusLabel(Number(order?.status))}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-start">
+                          <div className="relative min-w-[180px]">
+                            <select
+                              value={order.status || ""}
+                              onChange={(e) =>
+                                handleStatusChange(
+                                  order.id,
+                                  e.target.value,
+                                  order.status
+                                )
+                              }
+                              disabled={
+                                updatingStatus === order.id ||
+                                (order.status === "paid" && role === "admin")
+                              }
+                              className={cn(
+                                "appearance-none w-full px-4 py-2 text-sm font-medium",
+                                "border border-gray-300 rounded-lg",
+                                "bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white",
+                                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400",
+                                "disabled:opacity-50 disabled:cursor-not-allowed",
+                                "shadow-sm transition-all duration-200 ease-in-out",
+                                "hover:border-blue-400 hover:shadow"
+                              )}
                             >
-                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                            </svg>
-                          </div>
-                          {updatingStatus === order.id && (
-                            <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
-                              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                              <option value="" disabled>
+                                Select status
+                              </option>
+                              {statusOptions.map((option: any) => (
+                                <option
+                                  key={option.value}
+                                  value={option.value}
+                                  className="py-1"
+                                >
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                              <svg
+                                className="w-4 h-4 fill-current"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                              </svg>
                             </div>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {updatingStatus === order.id && (
+                              <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

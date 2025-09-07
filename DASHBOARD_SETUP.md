@@ -116,12 +116,7 @@ All components use Tailwind CSS classes and can be easily customized to match yo
 You can add console logs in the `useDashboardData` hook to debug data fetching:
 
 ```typescript
-console.log("Fetched data:", {
-  userCount,
-  orderCount,
-  monthlySales,
-  ordersByCountry,
-});
+
 ```
 
 ## Next Steps
@@ -141,5 +136,3 @@ If you encounter any issues:
 2. Verify your Supabase table structure matches the expected schema
 3. Ensure your RLS policies allow the necessary access
 4. Check that your environment variables are correctly set
-
-

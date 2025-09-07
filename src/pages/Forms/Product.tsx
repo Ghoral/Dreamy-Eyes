@@ -206,7 +206,6 @@ const ProductForm = () => {
       }
 
       const color_quantity = rest.color_quantity;
-      console.log("values", rest);
 
       const body = {
         ...rest,
@@ -215,7 +214,6 @@ const ProductForm = () => {
         specifications: rest.specifications,
         color_quantity: color_quantity,
       };
-      console.log("body", body);
 
       if (isEditMode && productId) {
         const { data, error } = await supabaseClient.rpc("update_product", {
@@ -282,9 +280,7 @@ const ProductForm = () => {
           throw error;
         }
       }
-    } catch (error) {
-      console.log("error", error);
-    }
+    } catch (error) {}
   };
 
   const [uploading, setUploading] = useState(false);
@@ -728,8 +724,6 @@ const ProductForm = () => {
           <Label htmlFor="quantity">Specification</Label>
           <SpecificationsForm
             setSpecifications={(data) => {
-              console.log("data", data);
-
               formik.setFieldValue("specifications", data);
             }}
             initialSpecifications={formik.values?.specifications ?? []}
