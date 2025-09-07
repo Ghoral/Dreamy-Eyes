@@ -11,6 +11,8 @@ import {
   TableRow,
 } from "../../components/ui/table";
 import Badge from "../../components/ui/badge/Badge";
+import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
+import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 
 interface Order {
   id: string;
@@ -29,6 +31,13 @@ interface Order {
   address: string;
 }
 
+const statusOptions = [
+  { label: "Awaiting Payment", value: "awaiting" },
+  { label: "Paid", value: "paid" },
+  { label: "Pending", value: "pending" },
+  { label: "Cancelled", value: "cancelled" },
+];
+
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,10 +45,16 @@ export default function Orders() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [hasMore, setHasMore] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
   }, [page]);
+
+  const getStatusLabel = (status: string | null) => {
+    const option = statusOptions.find((opt) => opt.value === status);
+    return option ? option.label : status || "N/A";
+  };
 
   const fetchOrders = async () => {
     try {
@@ -56,6 +71,34 @@ export default function Orders() {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      setUpdatingStatus(orderId);
+
+      // Update in database
+      const { error } = await supabaseClient
+        .from("orders") // Replace 'orders' with your actual table name
+        .update({ status: newStatus })
+        .eq("id", orderId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Update local state
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+    } catch (err) {
+      console.error("Error updating order status:", err);
+      setError(err instanceof Error ? err.message : "Failed to update status");
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -146,6 +189,12 @@ export default function Orders() {
                     >
                       Status
                     </TableCell>
+                    <TableCell
+                      isHeader
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                    >
+                      Action
+                    </TableCell>
                   </TableRow>
                 </TableHeader>
 
@@ -196,11 +245,37 @@ export default function Orders() {
                               ? "warning"
                               : order.status === "cancelled"
                               ? "error"
+                              : order.status === "awaiting"
+                              ? "info"
                               : "primary"
                           }
                         >
-                          {order.status || "N/A"}
+                          {getStatusLabel(order.status)}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-start">
+                        <select
+                          value={order.status || ""}
+                          onChange={(e) =>
+                            updateOrderStatus(order.id, e.target.value)
+                          }
+                          disabled={updatingStatus === order.id}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <option value="" disabled>
+                            Select status
+                          </option>
+                          {statusOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {updatingStatus === order.id && (
+                          <div className="mt-1">
+                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
