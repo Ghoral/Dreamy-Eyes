@@ -49,19 +49,17 @@ export default function Orders() {
   } | null>(null);
   const { isSuperAdmin, role } = useUserRole();
   const [statusOptions, setStatusOptions] = useState<any>([]);
-  const [status, setStatus] = useState("");
 
   useEffect(() => {
     fetchOrders();
     fetchStatus();
   }, [page]);
 
-  const getStatusLabel = (status: number | null) => {
+  const getStatusLabel = (status: string | null) => {
     const option = statusOptions.find((opt: any) => {
-      return opt.value === status;
+      return opt.value === Number(status);
     });
-
-    return option?.label ?? "";
+    return option.label;
   };
 
   const fetchStatus = async () => {
@@ -95,7 +93,8 @@ export default function Orders() {
   const handleStatusChange = (
     orderId: string,
     newStatus: string,
-    currentStatus: string | null
+    currentStatus: string | null,
+    index: number
   ) => {
     // If super admin is trying to change a paid status, show warning modal
     if (isSuperAdmin() && currentStatus === "paid") {
@@ -105,12 +104,18 @@ export default function Orders() {
     }
 
     // Otherwise proceed with the update
-    updateOrderStatus(orderId, newStatus);
+    updateOrderStatus(orderId, newStatus, index);
   };
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (
+    orderId: string,
+    newStatus: string,
+    index: number
+  ) => {
     try {
       setUpdatingStatus(orderId);
+
+      const statusLabel = getStatusLabel(newStatus);
 
       // Update in database
       const { error } = await supabaseClient.rpc("update_order_status", {
@@ -122,18 +127,14 @@ export default function Orders() {
         throw error;
       }
 
+      const tempData = [...orders];
+      tempData[index].status = statusLabel;
+      setOrders(tempData);
       // Log the activity
       await logActivity(
         "update",
         "orders",
-        `Updated order status to ${newStatus}`
-      );
-
-      // Update local state
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
+        `Updated order status to ${statusLabel}`
       );
     } catch (err) {
       console.error("Error updating order status:", err);
@@ -307,8 +308,8 @@ export default function Orders() {
                       </TableCell>
                     </TableRow>
                   )}
-                  {orders.map((order) => {
-                    const status = order.status?.toLowerCase() ?? "";
+                  {orders.map((order, index: number) => {
+                    const status = order.status;
 
                     return (
                       <TableRow key={order.id}>
@@ -342,16 +343,16 @@ export default function Orders() {
                           <Badge
                             size="sm"
                             color={
-                              Number(status) === 1
+                              status === "Paid"
                                 ? "success"
-                                : Number(status) === 3
+                                : status === "Awaiting Payment"
                                 ? "warning"
-                                : Number(status) === 4
+                                : status === "Cancelled"
                                 ? "error"
                                 : "primary"
                             }
                           >
-                            {getStatusLabel(Number(order?.status))}
+                            {status}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start">
@@ -362,7 +363,8 @@ export default function Orders() {
                                 handleStatusChange(
                                   order.id,
                                   e.target.value,
-                                  order.status
+                                  order.status,
+                                  index
                                 )
                               }
                               disabled={
