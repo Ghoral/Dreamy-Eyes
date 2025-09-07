@@ -13,6 +13,10 @@ import {
 import Badge from "../../components/ui/badge/Badge";
 import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
 import { Dropdown } from "../../components/ui/dropdown/Dropdown";
+import { cn } from "../../lib/utils";
+import { useUserRole } from "../../hooks/useUserRole";
+import { Modal } from "../../components/ui/modal";
+import { logActivity } from "../../utils/activitylogger";
 
 interface Order {
   id: string;
@@ -46,6 +50,9 @@ export default function Orders() {
   const [pageSize] = useState(10);
   const [hasMore, setHasMore] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{orderId: string, newStatus: string} | null>(null);
+  const { isSuperAdmin, role } = useUserRole();
 
   useEffect(() => {
     fetchOrders();
@@ -74,6 +81,18 @@ export default function Orders() {
     }
   };
 
+  const handleStatusChange = (orderId: string, newStatus: string, currentStatus: string | null) => {
+    // If super admin is trying to change a paid status, show warning modal
+    if (isSuperAdmin() && currentStatus === "paid") {
+      setPendingStatusChange({ orderId, newStatus });
+      setShowWarningModal(true);
+      return;
+    }
+    
+    // Otherwise proceed with the update
+    updateOrderStatus(orderId, newStatus);
+  };
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
       setUpdatingStatus(orderId);
@@ -87,6 +106,13 @@ export default function Orders() {
       if (error) {
         throw error;
       }
+
+      // Log the activity
+      await logActivity(
+        "update",
+        "orders",
+        `Updated order status to ${newStatus}`
+      );
 
       // Update local state
       setOrders((prevOrders) =>
@@ -126,6 +152,61 @@ export default function Orders() {
         description="Orders overview for Dreamy Eyes Admin"
       />
       <PageBreadcrumb pageTitle="Orders" />
+      
+      {/* Warning Modal for Super Admin */}
+      <Modal 
+        isOpen={showWarningModal} 
+        onClose={() => setShowWarningModal(false)}
+        className="p-6"
+      >
+        <div className="text-center">
+          <div className="mb-5 flex justify-center">
+            <div className="rounded-full bg-warning-50 p-3">
+              <svg
+                className="h-8 w-8 text-warning-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+          </div>
+          <h3 className="mb-2 text-xl font-medium text-gray-800 dark:text-white">
+            Change Paid Order Status?
+          </h3>
+          <p className="mb-6 text-gray-500 dark:text-gray-400">
+            This order has already been marked as paid. Are you sure you want to change its status?
+          </p>
+          <div className="flex justify-center space-x-3">
+            <button
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+              onClick={() => setShowWarningModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="rounded-lg bg-warning-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-warning-600 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2 dark:bg-warning-600 dark:hover:bg-warning-700"
+              onClick={() => {
+                if (pendingStatusChange) {
+                  updateOrderStatus(pendingStatusChange.orderId, pendingStatusChange.newStatus);
+                  setPendingStatusChange(null);
+                }
+                setShowWarningModal(false);
+              }}
+            >
+              Yes, Change Status
+            </button>
+          </div>
+        </div>
+      </Modal>
+      
       <div className="space-y-6">
         <ComponentCard title="All Orders">
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -254,28 +335,50 @@ export default function Orders() {
                         </Badge>
                       </TableCell>
                       <TableCell className="px-4 py-3 text-start">
-                        <select
-                          value={order.status || ""}
-                          onChange={(e) =>
-                            updateOrderStatus(order.id, e.target.value)
-                          }
-                          disabled={updatingStatus === order.id}
-                          className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <option value="" disabled>
-                            Select status
-                          </option>
-                          {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
+                        <div className="relative min-w-[180px]">
+                          <select
+                            value={order.status || ""}
+                            onChange={(e) =>
+                              handleStatusChange(order.id, e.target.value, order.status)
+                            }
+                            disabled={
+                              updatingStatus === order.id || 
+                              (order.status === "paid" && role === "admin")
+                            }
+                            className={cn(
+                              "appearance-none w-full px-4 py-2 text-sm font-medium",
+                              "border border-gray-300 rounded-lg",
+                              "bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white",
+                              "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400",
+                              "disabled:opacity-50 disabled:cursor-not-allowed",
+                              "shadow-sm transition-all duration-200 ease-in-out",
+                              "hover:border-blue-400 hover:shadow"
+                            )}
+                          >
+                            <option value="" disabled>
+                              Select status
                             </option>
-                          ))}
-                        </select>
-                        {updatingStatus === order.id && (
-                          <div className="mt-1">
-                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                            {statusOptions.map((option) => (
+                              <option 
+                                key={option.value} 
+                                value={option.value}
+                                className="py-1"
+                              >
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                            <svg className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
                           </div>
-                        )}
+                          {updatingStatus === order.id && (
+                            <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
