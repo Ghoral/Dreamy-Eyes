@@ -11,8 +11,6 @@ import {
   TableRow,
 } from "../../components/ui/table";
 import Badge from "../../components/ui/badge/Badge";
-import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
-import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import { cn } from "../../lib/utils";
 import { useUserRole } from "../../hooks/useUserRole";
 import { Modal } from "../../components/ui/modal";
@@ -35,13 +33,6 @@ interface Order {
   address: string;
 }
 
-const statusOptions = [
-  { label: "Awaiting Payment", value: "awaiting" },
-  { label: "Paid", value: "paid" },
-  { label: "Pending", value: "pending" },
-  { label: "Cancelled", value: "cancelled" },
-];
-
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,16 +42,30 @@ export default function Orders() {
   const [hasMore, setHasMore] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const [pendingStatusChange, setPendingStatusChange] = useState<{orderId: string, newStatus: string} | null>(null);
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    orderId: string;
+    newStatus: string;
+  } | null>(null);
   const { isSuperAdmin, role } = useUserRole();
+  const [statusOptions, setStatusOptions] = useState<any>([]);
 
   useEffect(() => {
     fetchOrders();
+    fetchStatus();
   }, [page]);
 
   const getStatusLabel = (status: string | null) => {
-    const option = statusOptions.find((opt) => opt.value === status);
+    const option = statusOptions.find((opt: any) => opt.value === status);
     return option ? option.label : status || "N/A";
+  };
+
+  const fetchStatus = async () => {
+    try {
+      const { data } = await supabaseClient.rpc("get_slugs");
+      setStatusOptions(data);
+    } catch (err) {
+    } finally {
+    }
   };
 
   const fetchOrders = async () => {
@@ -81,27 +86,34 @@ export default function Orders() {
     }
   };
 
-  const handleStatusChange = (orderId: string, newStatus: string, currentStatus: string | null) => {
+  const handleStatusChange = (
+    orderId: string,
+    newStatus: string,
+    currentStatus: string | null
+  ) => {
     // If super admin is trying to change a paid status, show warning modal
     if (isSuperAdmin() && currentStatus === "paid") {
       setPendingStatusChange({ orderId, newStatus });
       setShowWarningModal(true);
       return;
     }
-    
+
     // Otherwise proceed with the update
     updateOrderStatus(orderId, newStatus);
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      console.log("newStatus", newStatus);
+
       setUpdatingStatus(orderId);
 
       // Update in database
-      const { error } = await supabaseClient
-        .from("orders") // Replace 'orders' with your actual table name
-        .update({ status: newStatus })
-        .eq("id", orderId);
+      const { data, error } = await supabaseClient.rpc("update_order_status", {
+        _order_id: orderId,
+        _new_status: newStatus,
+      });
+      console.log("data", error, data);
 
       if (error) {
         throw error;
@@ -152,10 +164,10 @@ export default function Orders() {
         description="Orders overview for Dreamy Eyes Admin"
       />
       <PageBreadcrumb pageTitle="Orders" />
-      
+
       {/* Warning Modal for Super Admin */}
-      <Modal 
-        isOpen={showWarningModal} 
+      <Modal
+        isOpen={showWarningModal}
         onClose={() => setShowWarningModal(false)}
         className="p-6"
       >
@@ -182,7 +194,8 @@ export default function Orders() {
             Change Paid Order Status?
           </h3>
           <p className="mb-6 text-gray-500 dark:text-gray-400">
-            This order has already been marked as paid. Are you sure you want to change its status?
+            This order has already been marked as paid. Are you sure you want to
+            change its status?
           </p>
           <div className="flex justify-center space-x-3">
             <button
@@ -195,7 +208,10 @@ export default function Orders() {
               className="rounded-lg bg-warning-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-warning-600 focus:outline-none focus:ring-2 focus:ring-warning-500 focus:ring-offset-2 dark:bg-warning-600 dark:hover:bg-warning-700"
               onClick={() => {
                 if (pendingStatusChange) {
-                  updateOrderStatus(pendingStatusChange.orderId, pendingStatusChange.newStatus);
+                  updateOrderStatus(
+                    pendingStatusChange.orderId,
+                    pendingStatusChange.newStatus
+                  );
                   setPendingStatusChange(null);
                 }
                 setShowWarningModal(false);
@@ -206,7 +222,7 @@ export default function Orders() {
           </div>
         </div>
       </Modal>
-      
+
       <div className="space-y-6">
         <ComponentCard title="All Orders">
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -339,10 +355,14 @@ export default function Orders() {
                           <select
                             value={order.status || ""}
                             onChange={(e) =>
-                              handleStatusChange(order.id, e.target.value, order.status)
+                              handleStatusChange(
+                                order.id,
+                                e.target.value,
+                                order.status
+                              )
                             }
                             disabled={
-                              updatingStatus === order.id || 
+                              updatingStatus === order.id ||
                               (order.status === "paid" && role === "admin")
                             }
                             className={cn(
@@ -358,9 +378,9 @@ export default function Orders() {
                             <option value="" disabled>
                               Select status
                             </option>
-                            {statusOptions.map((option) => (
-                              <option 
-                                key={option.value} 
+                            {statusOptions.map((option: any) => (
+                              <option
+                                key={option.value}
                                 value={option.value}
                                 className="py-1"
                               >
@@ -369,7 +389,11 @@ export default function Orders() {
                             ))}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                            <svg className="w-4 h-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <svg
+                              className="w-4 h-4 fill-current"
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 20 20"
+                            >
                               <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
                           </div>
