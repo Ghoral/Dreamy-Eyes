@@ -111,39 +111,39 @@ const tableData: Order[] = [
 
 export default function BasicTableOne() {
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-lg dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="max-w-full overflow-x-auto">
         <Table>
           {/* Table Header */}
-          <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+          <TableHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 dark:border-white/[0.05] dark:bg-gradient-to-r dark:from-gray-800/50 dark:to-gray-800/70">
             <TableRow>
               <TableCell
                 isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                className="px-5 py-4 text-gray-700 font-semibold text-start text-sm uppercase tracking-wider dark:text-gray-300"
               >
                 User
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                className="px-5 py-4 text-gray-700 font-semibold text-start text-sm uppercase tracking-wider dark:text-gray-300"
               >
                 Project Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                className="px-5 py-4 text-gray-700 font-semibold text-start text-sm uppercase tracking-wider dark:text-gray-300"
               >
                 Team
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                className="px-5 py-4 text-gray-700 font-semibold text-start text-sm uppercase tracking-wider dark:text-gray-300"
               >
                 Status
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                className="px-5 py-4 text-gray-700 font-semibold text-start text-sm uppercase tracking-wider dark:text-gray-300"
               >
                 Budget
               </TableCell>
@@ -151,9 +151,9 @@ export default function BasicTableOne() {
           </TableHeader>
 
           {/* Table Body */}
-          <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+          <TableBody className="divide-y divide-gray-100 bg-white dark:divide-white/[0.05] dark:bg-transparent">
             {tableData.map((order) => (
-              <TableRow key={order.id}>
+              <TableRow key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group">
                 <TableCell className="px-5 py-4 sm:px-6 text-start">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 overflow-hidden rounded-full">
@@ -174,10 +174,12 @@ export default function BasicTableOne() {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                  {order.projectName}
+                <TableCell className="px-4 py-3 text-start">
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {order.projectName}
+                  </span>
                 </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                <TableCell className="px-4 py-3 text-start">
                   <div className="flex -space-x-2">
                     {order.team.images.map((teamImage, index) => (
                       <div
@@ -195,7 +197,7 @@ export default function BasicTableOne() {
                     ))}
                   </div>
                 </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                <TableCell className="px-4 py-3 text-start">
                   <Badge
                     size="sm"
                     color={
@@ -209,8 +211,10 @@ export default function BasicTableOne() {
                     {order.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                  {order.budget}
+                <TableCell className="px-4 py-3 text-start">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                    {order.budget}
+                  </span>
                 </TableCell>
               </TableRow>
             ))}

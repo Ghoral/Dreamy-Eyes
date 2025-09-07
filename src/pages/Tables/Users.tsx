@@ -8,6 +8,13 @@ import {
 } from "../../utils/toast";
 import { TrashBinIcon } from "../../icons";
 import { appStore } from "../../store";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
 
 type Profile = {
   id: string;
@@ -73,52 +80,77 @@ export default function Users() {
 
   return (
     <ComponentCard title="Users" desc="Manage regular user accounts">
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="text-left border-b">
-              <th className="py-3 pr-4">Email</th>
-              <th className="py-3 pr-4">Name</th>
-              <th className="py-3 pr-4">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((p) => (
-              <tr key={p.id} className="border-b">
-                <td className="py-3 pr-4">{p.email || "-"}</td>
-                <td className="py-3 pr-4">
-                  {[p.first_name, p.last_name].filter(Boolean).join(" ") || "-"}
-                </td>
-                <td className="py-3 pr-4">
-                  <button
-                    type="button"
-                    onClick={() => role === "super_admin" && openConfirm(p.id)}
-                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
-                      role === "super_admin"
-                        ? "bg-red-100 text-red-600 hover:bg-red-200"
-                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    }`}
-                    aria-label={
-                      role === "super_admin"
-                        ? "Delete user"
-                        : "Delete disabled for admin"
-                    }
-                    disabled={loading || role !== "super_admin"}
-                  >
-                    <TrashBinIcon className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && !loading && (
-              <tr>
-                <td className="py-6 text-gray-500" colSpan={4}>
-                  No users found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-lg dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <div className="max-w-full overflow-x-auto">
+          <Table>
+            <TableHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 dark:border-white/[0.05] dark:bg-gradient-to-r dark:from-gray-800/50 dark:to-gray-800/70">
+              <TableRow>
+                <TableCell
+                  isHeader
+                  className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
+                >
+                  Email
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
+                >
+                  Name
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
+                >
+                  Action
+                </TableCell>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="bg-white dark:bg-transparent">
+              {users.map((p) => (
+                <TableRow key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group">
+                  <TableCell className="px-4 py-3 text-start">
+                    <span className="text-gray-700 dark:text-gray-300">{p.email || "-"}</span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-start">
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {[p.first_name, p.last_name].filter(Boolean).join(" ") || "-"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-start">
+                    <button
+                      type="button"
+                      onClick={() => role === "super_admin" && openConfirm(p.id)}
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
+                        role === "super_admin"
+                          ? "bg-red-100 text-red-600 hover:bg-red-200"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                      aria-label={
+                        role === "super_admin"
+                          ? "Delete user"
+                          : "Delete disabled for admin"
+                      }
+                      disabled={loading || role !== "super_admin"}
+                    >
+                      <TrashBinIcon className="w-4 h-4" />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {users.length === 0 && !loading && (
+                <TableRow>
+                  <TableCell className="px-5 py-8 text-center" colSpan={3}>
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <p className="text-gray-500 font-medium">
+                        No users found.
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       <div className="flex items-center justify-center gap-2 mt-4">
         {Array.from({ length: page + (hasMore ? 1 : 0) }, (_, i) => i + 1).map(
