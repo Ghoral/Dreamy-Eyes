@@ -49,7 +49,7 @@ const About = () => {
       <section className="py-16 bg-secondary-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-secondary-800 mb-4">Our Values</h2>
+            <h2 className="text-3xl font-bold text-secondary-800 mb-4 font-serif">Our Values</h2>
             <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
               The principles that guide everything we do
             </p>

@@ -171,7 +171,7 @@ export default function CompanyService() {
 
               {/* Content */}
               <div>
-                <h3 className="text-xl font-bold text-secondary-800 mb-3 group-hover:text-primary-600 transition-colors duration-300">
+                <h3 className="text-xl font-bold text-secondary-800 mb-3 group-hover:text-primary-600 transition-colors duration-300 font-serif">
                   {service.title}
                 </h3>
                 <p className="text-secondary-600 leading-relaxed">
@@ -188,7 +188,7 @@ export default function CompanyService() {
         {/* Bottom CTA */}
         <div className="text-center mt-16">
           <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-3xl p-8 text-white">
-            <h3 className="text-2xl sm:text-3xl font-bold mb-4">
+            <h3 className="text-2xl sm:text-3xl font-bold mb-4 font-serif">
               Ready to Experience the Difference?
             </h3>
             <p className="text-primary-100 text-lg mb-6 max-w-2xl mx-auto">

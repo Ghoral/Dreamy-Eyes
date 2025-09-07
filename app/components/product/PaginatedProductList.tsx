@@ -267,7 +267,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         )}
         
         {/* Title */}
-        <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300">
+        <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
           {product.title}
         </h3>
 
@@ -478,7 +478,7 @@ const PaginatedProductList = ({ type }: { type: string }) => {
             {/* Header with Title and Sorting */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 pb-4 border-b border-secondary-200">
               <div>
-                <h2 className="text-3xl font-bold text-secondary-800 mb-2 relative">
+                <h2 className="text-3xl font-bold text-secondary-800 mb-2 relative font-serif">
                   {getTitle()}
                   <span className="absolute bottom-0 left-0 w-20 h-1 bg-primary-500 rounded-full"></span>
                 </h2>

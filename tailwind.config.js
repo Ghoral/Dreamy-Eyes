@@ -47,7 +47,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        nunito: ["Nunito", "sans-serif"],
+        sans: ["Raleway", "sans-serif"],
+        serif: ["Cinzel", "serif"],
+        script: ["Dancing Script", "cursive"],
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in-out",

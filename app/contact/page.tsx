@@ -220,7 +220,7 @@ const Contact = () => {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-secondary-800 mb-1">Visit Us</h3>
+                      <h3 className="text-lg font-semibold text-secondary-800 mb-1 font-serif">Visit Us</h3>
                       <p className="text-secondary-600 mb-1">Headquarters:</p>
                       <address className="not-italic text-secondary-700">
                         123 Vision Street<br />
@@ -235,11 +235,11 @@ const Contact = () => {
               
               {/* FAQ */}
               <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
-                <h2 className="text-2xl font-bold text-secondary-800 mb-6">Frequently Asked Questions</h2>
+                <h2 className="text-2xl font-bold text-secondary-800 mb-6 font-serif">Frequently Asked Questions</h2>
                 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-secondary-800 mb-2">How long does shipping take?</h3>
+                    <h3 className="text-lg font-semibold text-secondary-800 mb-2 font-serif">How long does shipping take?</h3>
                     <p className="text-secondary-600">Standard shipping typically takes 3-5 business days within the continental US. Express shipping options are available at checkout.</p>
                   </div>
                   

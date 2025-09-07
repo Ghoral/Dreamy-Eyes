@@ -83,7 +83,7 @@ const ProductItems = ({ data }: { data: any }) => {
             </svg>
             Premium Collection
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6">
+          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6 font-serif">
             Our Products
           </h2>
           <p className="text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed">
@@ -199,7 +199,7 @@ const ProductItems = ({ data }: { data: any }) => {
                   )}
                   
                   {/* Title */}
-                  <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300">
+                  <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
                     {product.title}
                   </h3>
 

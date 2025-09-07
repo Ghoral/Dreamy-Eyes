@@ -13,7 +13,7 @@ const Footer = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-glow">
                 <span className="text-xl font-bold text-white">DE</span>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary-300 to-primary-400 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary-300 to-primary-400 bg-clip-text text-transparent font-serif">
                 Dreamy Eyes
               </span>
             </div>
@@ -78,7 +78,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-xl font-semibold mb-6 text-white">Quick Links</h4>
+            <h4 className="text-xl font-semibold mb-6 text-white font-serif">Quick Links</h4>
             <ul className="space-y-4">
               {[
                 { name: "Home", href: "/" },
@@ -102,7 +102,7 @@ const Footer = () => {
 
           {/* Help & Info */}
           <div>
-            <h4 className="text-xl font-semibold mb-6 text-white">Help & Info</h4>
+            <h4 className="text-xl font-semibold mb-6 text-white font-serif">Help & Info</h4>
             <ul className="space-y-4">
               {
                 [
@@ -128,7 +128,7 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-xl font-semibold mb-6 text-white">Contact Us</h4>
+            <h4 className="text-xl font-semibold mb-6 text-white font-serif">Contact Us</h4>
             <div className="space-y-4">
               <div className="flex items-start">
                 <div className="mr-3 mt-1 text-primary-400">
