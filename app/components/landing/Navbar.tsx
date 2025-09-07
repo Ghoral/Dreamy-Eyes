@@ -128,10 +128,10 @@ const Navbar = () => {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+                <span className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent font-serif">
                   Dreamy Eyes
                 </span>
-                <span className="text-xs text-secondary-500 font-medium -mt-1">
+                <span className="text-xs text-secondary-500 font-medium -mt-1 font-sans">
                   Contact Lenses
                 </span>
               </div>
@@ -143,7 +143,7 @@ const Navbar = () => {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="relative text-secondary-700 font-medium hover:text-primary-500 transition-colors duration-300 group"
+                  className="relative text-secondary-700 font-medium hover:text-primary-500 transition-colors duration-300 group font-sans"
                 >
                   {link.label}
                   <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-300 group-hover:w-full"></span>
@@ -210,7 +210,7 @@ const Navbar = () => {
                       <>
                         <Link
                           href="/profile"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
@@ -230,7 +230,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           href="/shipping-address"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
@@ -256,7 +256,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           href="/orders"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
@@ -276,7 +276,7 @@ const Navbar = () => {
                         </Link>
                         <div className="border-t border-secondary-100 my-2"></div>
                         <button
-                          className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                          className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 font-sans"
                           onClick={handleLogout}
                         >
                           <svg
@@ -299,7 +299,7 @@ const Navbar = () => {
                       <>
                         <Link
                           href="/login"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
@@ -319,7 +319,7 @@ const Navbar = () => {
                         </Link>
                         <Link
                           href="/register"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200"
+                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg

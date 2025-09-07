@@ -146,7 +146,7 @@ const ItemListing = () => {
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300">
+                    <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
                       {first?.title || section.label}
                     </h3>
                     <div
