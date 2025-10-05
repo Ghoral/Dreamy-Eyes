@@ -4,8 +4,12 @@ import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
+import {
+  createSupabaseClient,
+  supabaseBrowserClient,
+} from "../services/supabase/client/supabaseBrowserClient";
 import { generateUniqueCode } from "../util";
+import { MESSAGES } from "../constant/message";
 
 interface Address {
   id: number;
@@ -76,7 +80,6 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("e", e);
 
     if (!selectedAddressId || selectedAddressId <= 0) {
       setError("Please select a shipping address");
@@ -100,43 +103,19 @@ export default function CheckoutPage() {
       const order_number = generateUniqueCode();
 
       // Create order
-      const { data: orderData, error: orderError } = await (supabase as any)
-        .from("orders")
-        .insert([
-          {
-            order_number: order_number,
-            user_id: user.id,
-            total_amount: cartState.totalPrice * 1.08, // Including tax
-            status: "pending",
-            shipping_address_id: selectedAddressId,
-          },
-        ])
-        .select();
+      const { data: orderData, error: orderError } =
+        await supabaseBrowserClient.rpc("create_orders_and_update_stock", {
+          p_address_id: selectedAddressId,
+          p_order_number: order_number,
+          p_items: cartState.items,
+        });
 
       if (orderError) {
         throw new Error("Failed to create order");
       }
 
-      // Create order items
-      const orderItems = cartState.items.map((item) => ({
-        order_id: orderData[0].id,
-        product_id: item.id,
-        quantity: item.quantity,
-        price: item.price,
-        color: item.color,
-      }));
-
-      const { error: orderItemsError } = await (supabase as any)
-        .from("order_items")
-        .insert(orderItems);
-
-      if (orderItemsError) {
-        throw new Error("Failed to create order items");
-      }
-
       // Clear cart
       clearCart();
-
       // Redirect to success page
       router.push(`/checkout/success?order=${order_number}`);
     } catch (error) {
