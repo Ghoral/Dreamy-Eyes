@@ -44,13 +44,6 @@ export default function NotificationDropdown() {
           setNotifications((prev) => [newNotification, ...prev]);
 
           if (Notification.permission === "granted") {
-            console.log("pp", {
-              body: newNotification.body,
-              icon: "/favicon.png",
-              tag: newNotification.id,
-              silent: false,
-            });
-
             new Notification(newNotification.title, {
               body: newNotification.body,
               icon: "/favicon.png",
