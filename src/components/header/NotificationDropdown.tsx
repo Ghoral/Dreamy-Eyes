@@ -48,19 +48,19 @@ export default function NotificationDropdown() {
               body: newNotification.body,
               icon: "/favicon.png",
               tag: newNotification.id,
-              silent: true,
+              silent: false,
             });
 
             new Notification(newNotification.title, {
               body: newNotification.body,
               icon: "/favicon.png",
               tag: newNotification.id,
-              silent: true,
+              silent: false,
             });
           }
 
-          const audio = new Audio("/sounds/notification.wav");
-          audio.play().catch(() => {});
+          // const audio = new Audio("/sounds/notification.wav");
+          // audio.play().catch(() => {});
 
           if (!document.title.startsWith("🔴 ")) {
             document.title = "🔴 " + document.title;
