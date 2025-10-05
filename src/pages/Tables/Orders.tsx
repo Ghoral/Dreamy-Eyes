@@ -334,7 +334,10 @@ export default function Orders() {
                     const status = order.status;
 
                     return (
-                      <TableRow key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group">
+                      <TableRow
+                        key={order.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group"
+                      >
                         <TableCell className="px-5 py-4 sm:px-6 text-start">
                           <span className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
                             {order.order_number}
@@ -350,7 +353,8 @@ export default function Orders() {
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start">
                           <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {order.profile?.first_name} {order.profile?.last_name}
+                            {order.profile?.first_name}{" "}
+                            {order.profile?.last_name}
                           </span>
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start">
@@ -360,7 +364,7 @@ export default function Orders() {
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start">
                           <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {order.customer_name}
+                            {order?.customer_name}
                           </span>
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start">

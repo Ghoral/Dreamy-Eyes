@@ -13,7 +13,7 @@ createRoot(document.getElementById("root")!).render(
     <ThemeProvider>
       <AppWrapper>
         <App />
-        <Toaster />
+        <Toaster position="top-right" />
       </AppWrapper>
     </ThemeProvider>
   </StrictMode>
