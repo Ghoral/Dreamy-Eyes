@@ -37,6 +37,7 @@ interface Order {
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [totalOrders, setTotalOrders] = useState(0); // Add this
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -81,9 +82,9 @@ export default function Orders() {
         offset_value: (page - 1) * pageSize,
       });
 
-      const rows = (res?.data as Order[]) || [];
-      setOrders(rows);
-      setHasMore(rows.length === pageSize);
+      const response = res?.data || { data: [], total: 0 };
+      setOrders(response.data || []);
+      setTotalOrders(response.total || 0);
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -364,7 +365,7 @@ export default function Orders() {
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start">
                           <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {order?.customer_name}
+                            {order?.color}
                           </span>
                         </TableCell>
                         <TableCell className="px-4 py-3 text-start">
@@ -462,25 +463,56 @@ export default function Orders() {
             </div>
           </div>
         </ComponentCard>
-        <div className="flex items-center justify-center gap-2 mt-2">
-          {Array.from(
-            { length: page + (hasMore ? 1 : 0) },
-            (_, i) => i + 1
-          ).map((p) => (
+        {totalOrders > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-2">
             <button
-              key={p}
               className={`px-3 py-1 border rounded text-sm ${
-                p === page
-                  ? "bg-blue-600 text-white border-blue-600"
+                page === 1
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-50"
               }`}
-              disabled={loading}
-              onClick={() => setPage(p)}
+              disabled={page === 1 || loading}
+              onClick={() => setPage(page - 1)}
             >
-              {p}
+              Previous
             </button>
-          ))}
-        </div>
+
+            {Array.from(
+              { length: Math.ceil(totalOrders / pageSize) },
+              (_, i) => i + 1
+            ).map((p) => (
+              <button
+                key={p}
+                className={`px-3 py-1 border rounded text-sm ${
+                  p === page
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+                disabled={loading}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              className={`px-3 py-1 border rounded text-sm ${
+                page >= Math.ceil(totalOrders / pageSize)
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              disabled={page >= Math.ceil(totalOrders / pageSize) || loading}
+              onClick={() => setPage(page + 1)}
+            >
+              Next
+            </button>
+
+            <span className="ml-4 text-sm text-gray-600 dark:text-gray-400">
+              Showing {(page - 1) * pageSize + 1} to{" "}
+              {Math.min(page * pageSize, totalOrders)} of {totalOrders} orders
+            </span>
+          </div>
+        )}
       </div>
     </>
   );
