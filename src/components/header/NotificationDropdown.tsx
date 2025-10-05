@@ -1,25 +1,19 @@
 import { useState, useEffect } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { supabaseClient } from "../../service/supabase";
 import { DateTime } from "luxon";
 import { showCustomToastNotification } from "../../utils/toast";
-
-interface Notification {
-  id: string;
-  title: string;
-  body: string;
-  user_id: string;
-  notification_type: string;
-  order_id: string | null;
-  is_read: boolean;
-  created_at: string;
-}
+import { useNotifications } from "../../context/NotificationContext";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(false);
+  const {
+    notifications,
+    hasNewNotifications,
+    loading,
+    fetchNotifications,
+    markAllAsRead,
+  } = useNotifications();
 
   // Request notification permission on mount
   useEffect(() => {
@@ -28,66 +22,13 @@ export default function NotificationDropdown() {
     }
   }, []);
 
-  useEffect(() => {
-    const channel = supabaseClient
-      .channel("notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: "type=eq.admin",
-        },
-        (payload) => {
-          const newNotification = payload.new as Notification;
-          setNotifications((prev) => [newNotification, ...prev]);
-
-          if (Notification.permission === "granted") {
-            new Notification(newNotification.title, {
-              body: newNotification.body,
-              icon: "/favicon.png",
-              tag: newNotification.id,
-              silent: false,
-            });
-          }
-
-          // const audio = new Audio("/sounds/notification.wav");
-          // audio.play().catch(() => {});
-
-          if (!document.title.startsWith("🔴 ")) {
-            document.title = "🔴 " + document.title;
-          }
-
-          if (document.visibilityState === "visible") {
-            showCustomToastNotification(
-              newNotification.title,
-              newNotification.body
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabaseClient.removeChannel(channel);
-    };
-  }, []);
+  // Fetch notifications and mark as read when dropdown opens
   useEffect(() => {
     if (isOpen) {
       fetchNotifications();
+      markAllAsRead();
     }
   }, [isOpen]);
-
-  async function fetchNotifications() {
-    setLoading(true);
-    const { data, error } = await supabaseClient.rpc("get_notifications_admin");
-
-    if (!error && data) {
-      setNotifications(data);
-    }
-    setLoading(false);
-  }
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -97,17 +38,15 @@ export default function NotificationDropdown() {
     setIsOpen(false);
   }
 
-  const hasUnreadNotifications = notifications.some((n) => !n.is_read);
-
   return (
     <div className="relative">
       <button
         className="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full dropdown-toggle hover:text-gray-700 h-11 w-11 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
         onClick={toggleDropdown}
       >
-        {hasUnreadNotifications && (
-          <span className="absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400">
-            <span className="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 animate-ping"></span>
+        {hasNewNotifications && (
+          <span className="absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-red-500">
+            <span className="absolute inline-flex w-full h-full bg-red-500 rounded-full opacity-75 animate-ping"></span>
           </span>
         )}
         <svg

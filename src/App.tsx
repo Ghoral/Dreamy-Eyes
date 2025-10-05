@@ -19,6 +19,7 @@ import Home from "./pages/Dashboard/Home";
 import LandingForm from "./pages/Forms/Landing";
 import ProductForm from "./pages/Forms/Product";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import Users from "./pages/Tables/Users";
 import InviteAdmin from "./pages/InviteAdmin";
 import ResetPassword from "./pages/AuthPages/ResetPassword";
@@ -83,10 +84,12 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <ScrollToTop />
-        <AppRoutes />
-      </Router>
+      <NotificationProvider>
+        <Router>
+          <ScrollToTop />
+          <AppRoutes />
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
