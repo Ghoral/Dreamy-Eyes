@@ -60,7 +60,7 @@ const Pagination = ({
           Page {currentPage} of {totalPages}
         </p>
       </div>
-      
+
       <div className="flex items-center justify-center space-x-3">
         <button
           onClick={() => onPageChange(currentPage - 1)}
@@ -71,8 +71,18 @@ const Pagination = ({
               : "bg-white text-secondary-700 hover:bg-primary-50 hover:-translate-y-1 hover:shadow-lg border border-secondary-200 hover:scale-105"
           }`}
         >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-4 h-4 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Previous
         </button>
@@ -87,7 +97,9 @@ const Pagination = ({
                 1
               </button>
               {startPage > 2 && (
-                <span className="px-2 py-2 text-gray-500 flex items-end">...</span>
+                <span className="px-2 py-2 text-gray-500 flex items-end">
+                  ...
+                </span>
               )}
             </>
           )}
@@ -109,16 +121,18 @@ const Pagination = ({
           {endPage < totalPages && (
             <>
               {endPage < totalPages - 1 && (
-                <span className="px-2 py-2 text-gray-500 flex items-end">...</span>
+                <span className="px-2 py-2 text-gray-500 flex items-end">
+                  ...
+                </span>
               )}
               <button
                 onClick={() => onPageChange(totalPages)}
-            className="px-4 py-2 rounded-lg bg-white text-secondary-700 hover:bg-primary-50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 border border-secondary-200"
-          >
-            {totalPages}
-          </button>
-        </>
-      )}
+                className="px-4 py-2 rounded-lg bg-white text-secondary-700 hover:bg-primary-50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 border border-secondary-200"
+              >
+                {totalPages}
+              </button>
+            </>
+          )}
         </div>
 
         <button
@@ -131,14 +145,26 @@ const Pagination = ({
           }`}
         >
           Next
-          <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-4 h-4 ml-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
-      
+
       <div className="text-xs text-secondary-500 mt-2">
-        Showing products {(currentPage - 1) * productsPerPage + 1} - {Math.min(currentPage * productsPerPage, totalProducts)} of {totalProducts}
+        Showing products {(currentPage - 1) * productsPerPage + 1} -{" "}
+        {Math.min(currentPage * productsPerPage, totalProducts)} of{" "}
+        {totalProducts}
       </div>
     </div>
   );
@@ -181,10 +207,10 @@ const ProductCard = ({ product }: { product: Product }) => {
       isVisible: true,
     });
   };
-  
+
   // Check if product is "hot" (high order count)
   const isHot = product.order_count && product.order_count > 10;
-  
+
   const imageUrl = getThumbnailUrl(product);
 
   return (
@@ -200,7 +226,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           HOT
         </div>
       )}
-      
+
       {/* Product Image */}
       <div className="relative h-56 bg-gradient-to-br from-secondary-50 to-primary-50 overflow-hidden">
         {imageUrl ? (
@@ -230,7 +256,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         )}
 
         {/* Quick View Button */}
-        <div 
+        <div
           className={`absolute inset-0 bg-gradient-to-t from-primary-500/40 via-transparent to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
         >
           <div className="bg-white rounded-full p-3 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
@@ -265,7 +291,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             {product.sub_title}
           </div>
         )}
-        
+
         {/* Title */}
         <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
           {product.title}
@@ -295,7 +321,7 @@ const ProductCard = ({ product }: { product: Product }) => {
               ? `4.9 (${product.review_count})`
               : "4.9 (120)"}
           </span>
-          
+
           {/* Order Count Badge */}
           {product.order_count && product.order_count > 0 && (
             <span className="ml-auto text-xs bg-secondary-100 text-secondary-700 px-2 py-1 rounded-full">
@@ -310,7 +336,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             ${product.price.toFixed(2)}
           </span>
         </div>
-        
+
         {/* Action Button - Moved to bottom */}
         <button
           onClick={(e) => handleAddToCart(e)}
@@ -410,9 +436,13 @@ const PaginatedProductList = ({ type }: { type: string }) => {
           } else if (sortBy === "price-high") {
             productsData.sort((a, b) => b.price - a.price);
           } else if (sortBy === "popularity") {
-            productsData.sort((a, b) => (b.order_count || 0) - (a.order_count || 0));
+            productsData.sort(
+              (a, b) => (b.order_count || 0) - (a.order_count || 0)
+            );
           } else if (sortBy === "rating") {
-            productsData.sort((a, b) => (b.review_count || 0) - (a.review_count || 0));
+            productsData.sort(
+              (a, b) => (b.review_count || 0) - (a.review_count || 0)
+            );
           }
 
           setProducts(productsData);
@@ -457,21 +487,27 @@ const PaginatedProductList = ({ type }: { type: string }) => {
   }
 
   const getTitle = () => {
-    switch(type) {
-      case "latest_arrival": return "Latest Arrivals";
-      case "top_seller": return "Best Sellers";
-      case "best_reviewed": return "Top Reviewed";
-      default: return "Products";
+    switch (type) {
+      case "latest_arrival":
+        return "Latest Arrivals";
+      case "top_seller":
+        return "Best Sellers";
+      case "best_reviewed":
+        return "Top Reviewed";
+      default:
+        return "Products";
     }
   };
 
   return (
-    <section className="w-full py-12 bg-gradient-to-b from-white to-secondary-50 min-h-screen">
+    <section className="w-full py-12 bg-gradient-to-b from-white to-secondary-50 min-h-screen pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
-            <p className="text-secondary-600 font-medium">Loading amazing products...</p>
+            <p className="text-secondary-600 font-medium">
+              Loading amazing products...
+            </p>
           </div>
         ) : (
           <>
@@ -486,9 +522,14 @@ const PaginatedProductList = ({ type }: { type: string }) => {
                   Showing {products.length} of {totalProducts} products
                 </p>
               </div>
-              
+
               <div className="mt-4 md:mt-0 flex items-center">
-                <label htmlFor="sort" className="mr-2 text-secondary-700 font-medium">Sort by:</label>
+                <label
+                  htmlFor="sort"
+                  className="mr-2 text-secondary-700 font-medium"
+                >
+                  Sort by:
+                </label>
                 <select
                   id="sort"
                   value={sortBy}
@@ -505,20 +546,32 @@ const PaginatedProductList = ({ type }: { type: string }) => {
 
             {products.length === 0 ? (
               <div className="text-center py-16 bg-white rounded-xl shadow-md">
-                <svg className="w-16 h-16 text-secondary-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 20h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
+                <svg
+                  className="w-16 h-16 text-secondary-300 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 20h.01M12 4a8 8 0 100 16 8 8 0 000-16z"
+                  />
                 </svg>
                 <p className="text-secondary-600 text-lg">No products found</p>
-                <p className="text-secondary-500 mt-2">Try changing your search or filter criteria</p>
+                <p className="text-secondary-500 mt-2">
+                  Try changing your search or filter criteria
+                </p>
               </div>
             ) : (
               <>
                 {/* Products Grid with Animation */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-12">
                   {products.map((product, index) => (
-                    <div 
-                      key={product.id} 
-                      className="animate-fade-in" 
+                    <div
+                      key={product.id}
+                      className="animate-fade-in"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
                       <ProductCard product={product} />
