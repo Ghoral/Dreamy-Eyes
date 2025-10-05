@@ -51,6 +51,100 @@ CREATE POLICY "Allow public read access to profiles" ON public.profiles
 CREATE POLICY "Allow public read access to orders" ON public.orders
     FOR SELECT USING (true);
 
+-- Create get_products function with pagination support
+CREATE OR REPLACE FUNCTION get_products(
+    limit_value INTEGER DEFAULT 10,
+    offset_value INTEGER DEFAULT 0
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result JSON;
+    total_count INTEGER;
+BEGIN
+    -- Get total count
+    SELECT COUNT(*) INTO total_count FROM public.products;
+    
+    -- Get paginated products
+    SELECT json_build_object(
+        'data', (
+            SELECT json_agg(
+                json_build_object(
+                    'id', id,
+                    'title', title,
+                    'price', price,
+                    'created_at', created_at,
+                    'updated_at', updated_at
+                )
+            )
+            FROM (
+                SELECT id, title, price, created_at, updated_at
+                FROM public.products
+                ORDER BY created_at DESC
+                LIMIT limit_value
+                OFFSET offset_value
+            ) AS products
+        ),
+        'total', total_count
+    ) INTO result;
+    
+    RETURN result;
+END;
+$$;
+
+-- Create get_profiles_by_role function with pagination support
+CREATE OR REPLACE FUNCTION get_profiles_by_role(
+    p_role TEXT,
+    p_limit INTEGER DEFAULT 10,
+    p_page INTEGER DEFAULT 1
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result JSON;
+    total_count INTEGER;
+    offset_value INTEGER;
+BEGIN
+    -- Calculate offset
+    offset_value := (p_page - 1) * p_limit;
+    
+    -- Get total count for the role
+    SELECT COUNT(*) INTO total_count 
+    FROM public.profiles 
+    WHERE role = p_role;
+    
+    -- Get paginated profiles
+    SELECT json_build_object(
+        'data', (
+            SELECT json_agg(
+                json_build_object(
+                    'id', id,
+                    'email', email,
+                    'first_name', first_name,
+                    'last_name', last_name,
+                    'role', role
+                )
+            )
+            FROM (
+                SELECT id, email, first_name, last_name, role
+                FROM public.profiles
+                WHERE role = p_role
+                ORDER BY created_at DESC
+                LIMIT p_limit
+                OFFSET offset_value
+            ) AS profiles
+        ),
+        'total', total_count
+    ) INTO result;
+    
+    RETURN result;
+END;
+$$;
+
 -- Insert sample data for testing (optional)
 INSERT INTO public.users (email) VALUES 
     ('john@example.com'),

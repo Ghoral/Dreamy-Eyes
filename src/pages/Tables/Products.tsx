@@ -28,19 +28,27 @@ type Product = {
 
 export default function ProductsTable() {
   const [rows, setRows] = useState<Product[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
   const { isSuperAdmin } = useUserRole();
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabaseClient.rpc("get_products");
+      const { data, error } = await supabaseClient.rpc("get_products", {
+        limit_value: pageSize,
+        offset_value: (page - 1) * pageSize,
+      });
 
       if (error) throw error;
 
-      setRows((data as any) || []);
+      const response = data || { data: [], total: 0 };
+      setRows(response.data || []);
+      setTotalProducts(response.total || 0);
     } catch (e) {
       showCustomToastError(e, "Failed to load products");
     } finally {
@@ -50,7 +58,7 @@ export default function ProductsTable() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [page]);
 
   const openConfirm = (id: string) => {
     setPendingId(id);
@@ -137,7 +145,10 @@ export default function ProductsTable() {
                 </TableRow>
               )}
               {rows.map((p) => (
-                <TableRow key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group">
+                <TableRow
+                  key={p.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group"
+                >
                   <TableCell className="px-5 py-4 text-start">
                     <span className="font-medium text-gray-700 dark:text-gray-300">
                       {p.title}
@@ -197,6 +208,58 @@ export default function ProductsTable() {
           </Table>
         </div>
       </div>
+
+      {totalProducts > 0 && (
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <button
+            className={`px-3 py-1 border rounded text-sm ${
+              page === 1
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+            disabled={page === 1 || loading}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </button>
+
+          {Array.from(
+            { length: Math.ceil(totalProducts / pageSize) },
+            (_, i) => i + 1
+          ).map((p) => (
+            <button
+              key={p}
+              className={`px-3 py-1 border rounded text-sm ${
+                p === page
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+              disabled={loading}
+              onClick={() => setPage(p)}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            className={`px-3 py-1 border rounded text-sm ${
+              page >= Math.ceil(totalProducts / pageSize)
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+            disabled={page >= Math.ceil(totalProducts / pageSize) || loading}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+
+          <span className="ml-4 text-sm text-gray-600 dark:text-gray-400">
+            Showing {(page - 1) * pageSize + 1} to{" "}
+            {Math.min(page * pageSize, totalProducts)} of {totalProducts}{" "}
+            products
+          </span>
+        </div>
+      )}
 
       <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <div className="p-6 w-[360px]">

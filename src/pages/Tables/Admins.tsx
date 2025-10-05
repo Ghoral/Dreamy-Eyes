@@ -28,10 +28,10 @@ export default function Admins() {
   const { userData } = appStore();
   const role = userData?.role || "user";
   const [admins, setAdmins] = useState<Profile[]>([]);
+  const [totalAdmins, setTotalAdmins] = useState(0);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  const [hasMore, setHasMore] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -43,9 +43,10 @@ export default function Admins() {
       p_page: page,
     });
     if (error) console.error("RPC error get_profiles_by_role", error);
-    const rows = (data as Profile[]) || [];
-    setAdmins(rows);
-    setHasMore(rows.length === pageSize);
+
+    const response = data || { data: [], total: 0 };
+    setAdmins(response.data || []);
+    setTotalAdmins(response.total || 0);
     setLoading(false);
   };
 
@@ -106,19 +107,27 @@ export default function Admins() {
             </TableHeader>
             <TableBody className="bg-white dark:bg-transparent">
               {admins.map((p) => (
-                <TableRow key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group">
+                <TableRow
+                  key={p.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group"
+                >
                   <TableCell className="px-4 py-3 text-start">
-                    <span className="text-gray-700 dark:text-gray-300">{p.email || "-"}</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {p.email || "-"}
+                    </span>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-start">
                     <span className="text-gray-700 dark:text-gray-300">
-                      {[p.first_name, p.last_name].filter(Boolean).join(" ") || "-"}
+                      {[p.first_name, p.last_name].filter(Boolean).join(" ") ||
+                        "-"}
                     </span>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-start">
                     <button
                       type="button"
-                      onClick={() => role === "super_admin" && openConfirm(p.id)}
+                      onClick={() =>
+                        role === "super_admin" && openConfirm(p.id)
+                      }
                       className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
                         role === "super_admin"
                           ? "bg-red-100 text-red-600 hover:bg-red-200"
@@ -150,9 +159,24 @@ export default function Admins() {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-center gap-2 mt-4">
+      </div>
+
+      {totalAdmins > 0 && (
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <button
+            className={`px-3 py-1 border rounded text-sm ${
+              page === 1
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+            disabled={page === 1 || loading}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </button>
+
           {Array.from(
-            { length: page + (hasMore ? 1 : 0) },
+            { length: Math.ceil(totalAdmins / pageSize) },
             (_, i) => i + 1
           ).map((p) => (
             <button
@@ -168,8 +192,25 @@ export default function Admins() {
               {p}
             </button>
           ))}
+
+          <button
+            className={`px-3 py-1 border rounded text-sm ${
+              page >= Math.ceil(totalAdmins / pageSize)
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+            disabled={page >= Math.ceil(totalAdmins / pageSize) || loading}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+
+          <span className="ml-4 text-sm text-gray-600 dark:text-gray-400">
+            Showing {(page - 1) * pageSize + 1} to{" "}
+            {Math.min(page * pageSize, totalAdmins)} of {totalAdmins} admins
+          </span>
         </div>
-      </div>
+      )}
       <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <div className="p-6 w-[360px]">
           <h3 className="text-lg font-semibold mb-2">Delete admin</h3>
