@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Database } from "@/app/types/database.types";
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -8,7 +8,7 @@ export async function createSupabaseServerClient() {
 
   // Create a server's supabase client with newly configured cookie,
   // which could be used to maintain user's session
-  return createServerClient<Database>(
+  return createServerClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
