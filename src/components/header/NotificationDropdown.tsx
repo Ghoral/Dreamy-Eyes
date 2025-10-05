@@ -21,7 +21,13 @@ export default function NotificationDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Add useEffect for realtime subscription
+  // Request notification permission on mount
+  useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
+
   useEffect(() => {
     const channel = supabaseClient
       .channel("notifications")
@@ -31,18 +37,41 @@ export default function NotificationDropdown() {
           event: "INSERT",
           schema: "public",
           table: "notifications",
+          filter: "type=eq.admin",
         },
         (payload) => {
-          console.log("main");
-
           const newNotification = payload.new as Notification;
           setNotifications((prev) => [newNotification, ...prev]);
-          console.log("sdff", newNotification);
 
-          showCustomToastNotification(
-            newNotification.title,
-            newNotification.body
-          );
+          if (Notification.permission === "granted") {
+            console.log("pp", {
+              body: newNotification.body,
+              icon: "/favicon.png",
+              tag: newNotification.id,
+              silent: true,
+            });
+
+            new Notification(newNotification.title, {
+              body: newNotification.body,
+              icon: "/favicon.png",
+              tag: newNotification.id,
+              silent: true,
+            });
+          }
+
+          const audio = new Audio("/sounds/notification.wav");
+          audio.play().catch(() => {});
+
+          if (!document.title.startsWith("🔴 ")) {
+            document.title = "🔴 " + document.title;
+          }
+
+          if (document.visibilityState === "visible") {
+            showCustomToastNotification(
+              newNotification.title,
+              newNotification.body
+            );
+          }
         }
       )
       .subscribe();
@@ -51,7 +80,6 @@ export default function NotificationDropdown() {
       supabaseClient.removeChannel(channel);
     };
   }, []);
-
   useEffect(() => {
     if (isOpen) {
       fetchNotifications();
@@ -133,7 +161,7 @@ export default function NotificationDropdown() {
             </svg>
           </button>
         </div>
-        <ul className="flex flex-col h-auto overflow-y-auto custom-scrollbar">
+        <ul className="flex flex-col gap-2 h-auto overflow-y-auto custom-scrollbar">
           {loading ? (
             <li className="p-4 text-center text-gray-500">Loading...</li>
           ) : notifications.length === 0 ? (
@@ -144,12 +172,12 @@ export default function NotificationDropdown() {
             notifications.map((notification) => (
               <li key={notification.id}>
                 <DropdownItem
-                  onItemClick={closeDropdown}
-                  to={
-                    notification.order_id
-                      ? `/orders/${notification.order_id}`
-                      : undefined
-                  }
+                  onItemClick={() => {
+                    closeDropdown();
+                    if (notification.notification_type === "new_order") {
+                      window.location.href = `/orders`;
+                    }
+                  }}
                   className={`flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 ${
                     !notification.is_read
                       ? "bg-blue-50 dark:bg-blue-900/10"
