@@ -53,10 +53,13 @@ export default function SignInForm() {
         .select("role")
         .eq("email", values.email)
         .single();
-      if (roleErr || profile?.role !== "admin") {
+      if (
+        roleErr ||
+        (profile?.role !== "admin" && profile?.role !== "super_admin")
+      ) {
         await supabaseClient.auth.signOut();
         navigate("/signin");
-        throw new Error("Only admins can sign in.");
+        throw new Error("Only admins and super admins can sign in.");
       }
 
       // Log successful sign-in activity

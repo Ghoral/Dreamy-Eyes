@@ -260,6 +260,7 @@ const DropzoneComponent = ({
       {showSinglePreview && (
         <div className="relative w-full">
           <button
+            type="button"
             onClick={() => removeFile(0)}
             disabled={disabled}
             className={`absolute top-2 right-2 border border-gray-300 dark:border-gray-600 rounded-full w-7 h-7 flex items-center justify-center shadow transition ${

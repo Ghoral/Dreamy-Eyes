@@ -53,6 +53,7 @@ function AppRoutes() {
         <Route path="/admins" element={<Admins />} />
         <Route path="/users" element={<Users />} />
         <Route path="/invite-admin" element={<InviteAdmin />} />
+        <Route path="/invite-admin/edit/:id" element={<InviteAdmin />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/social/tiktok" element={<TikTok />} />
         <Route path="/products" element={<ProductsTable />} />

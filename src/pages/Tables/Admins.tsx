@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ComponentCard from "../../components/common/ComponentCard";
 import { Modal } from "../../components/ui/modal";
-import { TrashBinIcon } from "../../icons";
+import { TrashBinIcon, PencilIcon } from "../../icons";
 import { supabaseClient } from "../../service/supabase";
 import {
   showCustomToastSuccess,
@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../components/ui/table";
+import { Link } from "react-router";
 
 type Profile = {
   id: string;
@@ -64,13 +65,13 @@ export default function Admins() {
     setLoading(true);
     try {
       const { error } = await supabaseClient.functions.invoke("delete-user", {
-        body: JSON.stringify({ user_id: pendingDeleteId }),
+        body: JSON.stringify({ data: { user_id: pendingDeleteId } }),
       });
       if (error) throw error as any;
-      showCustomToastSuccess("User deleted successfully");
+      showCustomToastSuccess("Admin deleted successfully");
       await fetchAdmins();
     } catch (e) {
-      showCustomToastError(e, "Failed to delete user");
+      showCustomToastError(e, "Failed to delete admin");
     } finally {
       setLoading(false);
       setConfirmOpen(false);
@@ -123,25 +124,40 @@ export default function Admins() {
                     </span>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-start">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        role === "super_admin" && openConfirm(p.id)
-                      }
-                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
-                        role === "super_admin"
-                          ? "bg-red-100 text-red-600 hover:bg-red-200"
-                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      }`}
-                      aria-label={
-                        role === "super_admin"
-                          ? "Delete user"
-                          : "Delete disabled for admin"
-                      }
-                      disabled={loading || role !== "super_admin"}
-                    >
-                      <TrashBinIcon className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-2">
+                      {role === "super_admin" && (
+                        <Link
+                          to={`/invite-admin/edit/${p.id}`}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                          aria-label="Edit admin"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log("Navigating to edit admin:", p.id);
+                          }}
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          role === "super_admin" && openConfirm(p.id)
+                        }
+                        className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${
+                          role === "super_admin"
+                            ? "bg-red-100 text-red-600 hover:bg-red-200"
+                            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        }`}
+                        aria-label={
+                          role === "super_admin"
+                            ? "Delete user"
+                            : "Delete disabled for admin"
+                        }
+                        disabled={loading || role !== "super_admin"}
+                      >
+                        <TrashBinIcon className="w-4 h-4" />
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
