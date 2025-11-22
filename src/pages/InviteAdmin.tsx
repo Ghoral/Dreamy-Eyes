@@ -489,31 +489,36 @@ export default function InviteAdmin() {
             Identification Document{" "}
             {isEditMode && "(optional - upload new to replace)"}
           </Label>
-          {(() => {
-            console.log(
-              "Render check - signedUrl:",
-              signedUrl,
-              "existingIdentificationKey:",
-              existingIdentificationKey,
-              "identificationFile:",
-              identificationFile
-            );
-            return (
-              signedUrl && existingIdentificationKey && !identificationFile
-            );
-          })() && (
-            <div className="mb-2">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+          {signedUrl && existingIdentificationKey && !identificationFile && (
+            <div className="mb-2 p-2 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+              <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 font-medium">
                 Current identification:
               </p>
               <a
-                href={signedUrl || undefined}
+                href={signedUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline text-sm"
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline text-sm font-medium"
               >
                 View current identification
               </a>
+            </div>
+          )}
+          {/* Debug display - always show in edit mode */}
+          {isEditMode && (
+            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded">
+              <strong>Debug:</strong> signedUrl=
+              {signedUrl ? `✓ (${signedUrl.substring(0, 50)}...)` : "✗"},
+              existingKey=
+              {existingIdentificationKey
+                ? `✓ (${existingIdentificationKey})`
+                : "✗"}
+              , file={identificationFile ? "✗ (has file)" : "✓ (no file)"}
+              <br />
+              Condition result:{" "}
+              {signedUrl && existingIdentificationKey && !identificationFile
+                ? "TRUE - Should show"
+                : "FALSE - Won't show"}
             </div>
           )}
           <DropzoneComponent
