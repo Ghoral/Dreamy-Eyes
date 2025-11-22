@@ -6,10 +6,7 @@ import Input from "../components/form/input/InputField";
 import Button from "../components/common/Button";
 import { useState, useEffect } from "react";
 import { supabaseClient } from "../service/supabase";
-import {
-  showCustomToastError,
-  showCustomToastSuccess,
-} from "../utils/toast";
+import { showCustomToastError, showCustomToastSuccess } from "../utils/toast";
 import { appStore } from "../store";
 import { EyeIcon, EyeCloseIcon } from "../icons";
 import { useParams, useNavigate } from "react-router";
@@ -18,7 +15,9 @@ import * as Yup from "yup";
 const createAdminValidationSchema = Yup.object({
   first_name: Yup.string().required("First name is required"),
   last_name: Yup.string().required("Last name is required"),
-  email: Yup.string().email("Invalid email address").required("Email is required"),
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is required"),
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
     .required("Password is required"),
@@ -31,7 +30,9 @@ const createAdminValidationSchema = Yup.object({
 const editAdminValidationSchema = Yup.object({
   first_name: Yup.string().required("First name is required"),
   last_name: Yup.string().required("Last name is required"),
-  email: Yup.string().email("Invalid email address").required("Email is required"),
+  email: Yup.string()
+    .email("Invalid email address")
+    .required("Email is required"),
   password: Yup.string().min(6, "Password must be at least 6 characters"),
   user_type: Yup.string()
     .oneOf(["admin"], "Invalid user type")
@@ -46,28 +47,37 @@ export default function InviteAdmin() {
   const role = userData?.role || "user";
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [identificationFile, setIdentificationFile] = useState<File | null>(null);
-  const [existingIdentificationKey, setExistingIdentificationKey] = useState<string | null>(null);
+  const [identificationFile, setIdentificationFile] = useState<File | null>(
+    null
+  );
+  const [existingIdentificationKey, setExistingIdentificationKey] = useState<
+    string | null
+  >(null);
+  const [originalIdentificationKey, setOriginalIdentificationKey] = useState<
+    string | null
+  >(null);
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
 
   const formik = useFormik({
     initialValues: {
-    first_name: "",
-    last_name: "",
-    email: "",
+      first_name: "",
+      last_name: "",
+      email: "",
       password: "",
       user_type: "admin",
       identification: null,
     },
-    validationSchema: isEditMode ? editAdminValidationSchema : createAdminValidationSchema,
+    validationSchema: isEditMode
+      ? editAdminValidationSchema
+      : createAdminValidationSchema,
     onSubmit: async (values) => {
       try {
         setLoading(true);
-        
+
         if (isEditMode && id) {
           // Update admin
           let finalIdentificationKey = existingIdentificationKey;
-          
+
           if (identificationFile) {
             // New file uploaded - upload it first
             const fileName = `admin-${Date.now()}-${identificationFile.name}`;
@@ -84,9 +94,12 @@ export default function InviteAdmin() {
                 const { error: deleteError } = await supabaseClient.storage
                   .from("identification")
                   .remove([originalIdentificationKey]);
-                
+
                 if (deleteError && !deleteError.message.includes("not found")) {
-                  console.error("Failed to delete old identification file:", deleteError);
+                  console.error(
+                    "Failed to delete old identification file:",
+                    deleteError
+                  );
                 }
               } catch (err) {
                 console.error("Error deleting old identification file:", err);
@@ -94,15 +107,22 @@ export default function InviteAdmin() {
             }
             // Use new key
             finalIdentificationKey = fileName;
-          } else if (!identificationFile && !existingIdentificationKey && originalIdentificationKey) {
+          } else if (
+            !identificationFile &&
+            !existingIdentificationKey &&
+            originalIdentificationKey
+          ) {
             // User removed the existing file - delete from storage and set to null
             try {
               const { error: deleteError } = await supabaseClient.storage
                 .from("identification")
                 .remove([originalIdentificationKey]);
-              
+
               if (deleteError && !deleteError.message.includes("not found")) {
-                console.error("Failed to delete identification file:", deleteError);
+                console.error(
+                  "Failed to delete identification file:",
+                  deleteError
+                );
               }
             } catch (err) {
               console.error("Error deleting identification file:", err);
@@ -110,18 +130,19 @@ export default function InviteAdmin() {
             finalIdentificationKey = null;
           }
           // If existingIdentificationKey is still set, keep it (no changes)
-          
+
           // Update profile using RPC function
-          const { data: updatedProfile, error: profileError } = await supabaseClient.rpc("update_profile_by_id", {
-            profile_id: id,
-            profile_data: {
-              first_name: values.first_name,
-              last_name: values.last_name,
-              email: values.email,
-              role: values.user_type,
-              identification: finalIdentificationKey
-            }
-          });
+          const { data: updatedProfile, error: profileError } =
+            await supabaseClient.rpc("update_profile_by_id", {
+              profile_id: id,
+              profile_data: {
+                first_name: values.first_name,
+                last_name: values.last_name,
+                email: values.email,
+                role: values.user_type,
+                identification: finalIdentificationKey,
+              },
+            });
 
           if (profileError) throw profileError;
           showCustomToastSuccess("Admin user updated successfully");
@@ -129,11 +150,14 @@ export default function InviteAdmin() {
         } else {
           // Create admin - identification is required
           if (!identificationFile) {
-            showCustomToastError("Identification document is required", "Validation Error");
+            showCustomToastError(
+              "Identification document is required",
+              "Validation Error"
+            );
             setLoading(false);
             return;
           }
-          
+
           // Upload identification document
           const fileName = `admin-${Date.now()}-${identificationFile.name}`;
           const { data: uploadData, error: uploadError } =
@@ -144,14 +168,17 @@ export default function InviteAdmin() {
           if (uploadError) throw uploadError;
 
           // Create admin with identification key
-          const { data, error } = await supabaseClient.functions.invoke("create-admin", {
-            body: JSON.stringify({ 
-              data: {
-                ...values,
-                identification: fileName
-              }
-            }),
-          });
+          const { data, error } = await supabaseClient.functions.invoke(
+            "create-admin",
+            {
+              body: JSON.stringify({
+                data: {
+                  ...values,
+                  identification: fileName,
+                },
+              }),
+            }
+          );
 
           if (error) throw error;
           showCustomToastSuccess("Admin user created successfully");
@@ -159,7 +186,10 @@ export default function InviteAdmin() {
           setIdentificationFile(null);
         }
       } catch (e: any) {
-        showCustomToastError(e?.message || e, isEditMode ? "Failed to update admin" : "Failed to create admin");
+        showCustomToastError(
+          e?.message || e,
+          isEditMode ? "Failed to update admin" : "Failed to create admin"
+        );
       } finally {
         setLoading(false);
       }
@@ -170,34 +200,42 @@ export default function InviteAdmin() {
   useEffect(() => {
     if (isEditMode && id) {
       const fetchAdminData = async () => {
-    try {
-      setLoading(true);
-          
+        try {
+          setLoading(true);
+
           console.log("Fetching admin data for ID:", id);
-          
+
           // Use RPC function to fetch admin data
-          const { data: rpcResponse, error } = await supabaseClient.rpc("get_profile_by_id", {
-            profile_id: id
-          });
+          const { data: rpcResponse, error } = await supabaseClient.rpc(
+            "get_profile_by_id",
+            {
+              profile_id: id,
+            }
+          );
 
           console.log("RPC response:", { rpcResponse, error });
 
           if (error) {
             console.error("RPC error:", error);
-            throw new Error(error.message || "Failed to fetch admin data");
+            showCustomToastError(
+              error.message || "Failed to fetch admin data",
+              "Error loading admin"
+            );
+            setTimeout(() => {
+              navigate("/admins");
+            }, 2000);
+            return;
           }
 
-          // Handle response structure: { adminData: {...}, error: null }
-          const adminData = rpcResponse?.adminData;
-          
-          if (rpcResponse?.error) {
-            console.error("Error in RPC response:", rpcResponse.error);
-            throw new Error(rpcResponse.error || "Failed to fetch admin data");
-          }
-          
-          if (!adminData) {
+          // RPC function returns the profile data directly
+          const adminData = rpcResponse;
+
+          if (!adminData || !adminData.id) {
             console.warn("No admin data returned:", rpcResponse);
-            showCustomToastError("Admin profile not found", "Failed to load admin data");
+            showCustomToastError(
+              "Admin profile not found",
+              "Failed to load admin data"
+            );
             setTimeout(() => {
               navigate("/admins");
             }, 2000);
@@ -205,44 +243,80 @@ export default function InviteAdmin() {
           }
 
           console.log("Setting form values with:", adminData);
-          
+
+          const identificationKey = adminData.identification || null;
+
           formik.setValues({
             first_name: adminData.first_name || "",
             last_name: adminData.last_name || "",
             email: adminData.email || "",
             password: "", // Don't prefill password
             user_type: adminData.role || "admin", // Map role to user_type for form
-            identification: null,
+            identification: identificationKey ? "existing" : (null as any), // Set a value to pass validation
           });
-          
-          const identificationKey = adminData.identification || null;
+
           setExistingIdentificationKey(identificationKey);
           setOriginalIdentificationKey(identificationKey); // Store original for deletion tracking
-          
+
+          console.log("Identification key set:", identificationKey);
+          console.log("Existing identification key state:", identificationKey);
+
           // Generate signed URL for preview if identification exists
           if (identificationKey) {
             console.log("Generating signed URL for key:", identificationKey);
-            const { data: signedUrlData, error: urlError } = await supabaseClient.storage
-              .from("identification")
-              .createSignedUrl(identificationKey, 3600); // 1 hour expiry
-            
-            if (urlError) {
-              console.error("Error generating signed URL:", urlError);
-            } else if (signedUrlData) {
-              console.log("Signed URL generated successfully");
-              setSignedUrl(signedUrlData.signedUrl);
+            try {
+              const { data: signedUrlData, error: urlError } =
+                await supabaseClient.storage
+                  .from("identification")
+                  .createSignedUrl(identificationKey, 3600); // 1 hour expiry
+
+              console.log("Signed URL response:", { signedUrlData, urlError });
+
+              if (urlError) {
+                console.error("Error generating signed URL:", urlError);
+              } else if (signedUrlData) {
+                // Handle both response structures: { signedUrl: "..." } or direct string
+                const url =
+                  typeof signedUrlData === "string"
+                    ? signedUrlData
+                    : signedUrlData?.signedUrl || null;
+                if (url) {
+                  console.log("Setting signed URL:", url);
+                  console.log(
+                    "Before setSignedUrl - signedUrl state will be:",
+                    url
+                  );
+                  setSignedUrl(url);
+                  console.log("After setSignedUrl called");
+                } else {
+                  console.warn(
+                    "Could not extract signed URL from:",
+                    signedUrlData
+                  );
+                }
+              } else {
+                console.warn("No signedUrlData returned");
+              }
+            } catch (err) {
+              console.error("Exception generating signed URL:", err);
             }
+          } else {
+            console.log("No identification key to generate signed URL");
           }
         } catch (error: any) {
           console.error("Error fetching admin data:", error);
-          const errorMessage = error?.message || error?.toString() || "Failed to load admin data";
+          const errorMessage =
+            error?.message || error?.toString() || "Failed to load admin data";
           console.error("Error details:", errorMessage);
           console.error("Full error object:", error);
-          showCustomToastError(`Error: ${errorMessage}. Check console for details.`, "Error loading admin");
+          showCustomToastError(
+            `Error: ${errorMessage}. Check console for details.`,
+            "Error loading admin"
+          );
           // DON'T navigate away - let user see the error and stay on page
           // User can manually go back if needed
-    } finally {
-      setLoading(false);
+        } finally {
+          setLoading(false);
         }
       };
 
@@ -282,12 +356,19 @@ export default function InviteAdmin() {
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <ComponentCard title={isEditMode ? "Edit Admin" : "Create Admin"} desc={isEditMode ? "Update admin user information" : "Create a new admin user with email and password"}>
+      <ComponentCard
+        title={isEditMode ? "Edit Admin" : "Create Admin"}
+        desc={
+          isEditMode
+            ? "Update admin user information"
+            : "Create a new admin user with email and password"
+        }
+      >
         {/* First Name */}
         <div className="mb-6">
           <Label htmlFor="first_name">First Name</Label>
           <Input
-          type="text"
+            type="text"
             id="first_name"
             name="first_name"
             placeholder="Enter first name"
@@ -306,7 +387,7 @@ export default function InviteAdmin() {
         <div className="mb-6">
           <Label htmlFor="last_name">Last Name</Label>
           <Input
-          type="text"
+            type="text"
             id="last_name"
             name="last_name"
             placeholder="Enter last name"
@@ -344,11 +425,13 @@ export default function InviteAdmin() {
         <div className="mb-6">
           <Label htmlFor="password">Password</Label>
           <div className="relative">
-        <input
+            <input
               type={showPassword ? "text" : "password"}
               id="password"
               name="password"
-              placeholder={isEditMode ? "Enter new password (optional)" : "Enter password"}
+              placeholder={
+                isEditMode ? "Enter new password (optional)" : "Enter password"
+              }
               value={formik.values.password}
               onChange={formik.handleChange}
               className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-10 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${
@@ -402,12 +485,29 @@ export default function InviteAdmin() {
 
         {/* Identification Document */}
         <div className="mb-6">
-          <Label htmlFor="identification">Identification Document {isEditMode && "(optional - upload new to replace)"}</Label>
-          {signedUrl && !identificationFile && (
+          <Label htmlFor="identification">
+            Identification Document{" "}
+            {isEditMode && "(optional - upload new to replace)"}
+          </Label>
+          {(() => {
+            console.log(
+              "Render check - signedUrl:",
+              signedUrl,
+              "existingIdentificationKey:",
+              existingIdentificationKey,
+              "identificationFile:",
+              identificationFile
+            );
+            return (
+              signedUrl && existingIdentificationKey && !identificationFile
+            );
+          })() && (
             <div className="mb-2">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Current identification:</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                Current identification:
+              </p>
               <a
-                href={signedUrl}
+                href={signedUrl || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline text-sm"
@@ -441,12 +541,14 @@ export default function InviteAdmin() {
               </button>
             </div>
           )}
-          {formik.touched.identification && formik.errors.identification && !isEditMode && (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.identification}
-            </div>
-          )}
-      </div>
+          {formik.touched.identification &&
+            formik.errors.identification &&
+            !isEditMode && (
+              <div className="text-red-500 text-sm mt-1">
+                {formik.errors.identification}
+              </div>
+            )}
+        </div>
 
         <div className="flex gap-4">
           <button
@@ -474,8 +576,8 @@ export default function InviteAdmin() {
           >
             {isEditMode ? "Cancel" : "Reset"}
           </button>
-      </div>
-    </ComponentCard>
+        </div>
+      </ComponentCard>
     </form>
   );
 }

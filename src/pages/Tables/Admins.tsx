@@ -132,7 +132,6 @@ export default function Admins() {
                           aria-label="Edit admin"
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log("Navigating to edit admin:", p.id);
                           }}
                         >
                           <PencilIcon className="w-4 h-4" />
