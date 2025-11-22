@@ -40,14 +40,14 @@ serve(async (req) => {
     // Check if caller is super_admin
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('user_type')
+      .select('role')
       .eq('id', user.id)
       .single();
 
     if (profileError || !profile) throw new Error('Unauthorized: Profile not found');
 
-    if (profile.user_type !== 'super_admin') {
-      throw new Error(`Unauthorized: Only super_admin can create admin users. Your role: ${profile.user_type}`);
+    if (profile.role !== 'super_admin') {
+      throw new Error(`Unauthorized: Only super_admin can create admin users. Your role: ${profile.role}`);
     }
 
     // Parse request body - handle both formats: { data: {...} } and direct fields

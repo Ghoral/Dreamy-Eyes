@@ -320,29 +320,12 @@ const ProductForm = () => {
             [selectedColor]: [...existingFiles, ...newUniqueFiles],
           } as any;
 
-          // If this is the first image for this color and no primary thumbnail is set,
-          // or if the primary thumbnail was from this color but was removed,
-          // set this as the primary thumbnail
-          if (newUniqueFiles.length > 0) {
-            const isFirstImageForColor = existingFiles.length === 0;
-            const isPrimaryThumbnailMissing = !primaryThumbnail;
-            const wasPrimaryThumbnailFromThisColor =
-              primaryThumbnail &&
-              existingFiles.length > 0 &&
-              !existingFiles.some((file) => {
-                const fileName = typeof file === "string" ? file : file.name;
-                return fileName === primaryThumbnail;
-              });
-
-            if (
-              isFirstImageForColor ||
-              isPrimaryThumbnailMissing ||
-              wasPrimaryThumbnailFromThisColor
-            ) {
-              const newPrimaryFile = newUniqueFiles[0];
-              const newPrimaryFileName = newPrimaryFile.name;
-              setPrimaryThumbnail(newPrimaryFileName);
-            }
+          // Only set primary thumbnail if no primary is set at all (first image ever)
+          // Don't automatically set primary when switching colors or uploading to different color
+          if (newUniqueFiles.length > 0 && !primaryThumbnail) {
+            const newPrimaryFile = newUniqueFiles[0];
+            const newPrimaryFileName = newPrimaryFile.name;
+            setPrimaryThumbnail(newPrimaryFileName);
           }
 
           // Dynamic inline error: compute missing color images
@@ -536,34 +519,13 @@ const ProductForm = () => {
       updatedFiles.splice(index, 1);
 
       if (isRemovingPrimaryThumbnail) {
-        if (updatedFiles.length > 0) {
-          const newPrimaryFile = updatedFiles[0];
-          const newPrimaryFileName =
-            typeof newPrimaryFile === "string"
-              ? newPrimaryFile
-              : newPrimaryFile.name;
-          setPrimaryThumbnail(newPrimaryFileName);
-        } else {
-          const otherColorWithImages = Object.entries(prev)
-            .filter(
-              ([c, files]) =>
-                c !== color && Array.isArray(files) && files.length > 0
-            )
-            .map(([c, files]) => ({ color: c, files: files as any[] }))[0];
-
-          if (otherColorWithImages) {
-            const newPrimaryFile = otherColorWithImages.files[0];
-            const newPrimaryFileName =
-              typeof newPrimaryFile === "string"
-                ? newPrimaryFile
-                : newPrimaryFile.name;
-            setPrimaryThumbnail(newPrimaryFileName);
-
-            setSelectedColor(otherColorWithImages.color);
-          } else {
-            setPrimaryThumbnail(null);
-          }
+        // Don't automatically set a new primary - let user select via radio button
+        // Only clear primary if no images remain at all
+        const allImages = Object.values(prev).flat();
+        if (allImages.length === 0) {
+          setPrimaryThumbnail(null);
         }
+        // Otherwise, keep primaryThumbnail as is (it will be invalid, user must select new one)
       }
 
       if (updatedFiles.length === 0) {
