@@ -80,6 +80,19 @@ const ProductForm = () => {
       if (error) throw error;
       if (data) {
         const product = data;
+        // Parse specifications - handle both array and object formats
+        let parsedSpecifications = [];
+        if (product?.specifications) {
+          if (Array.isArray(product.specifications)) {
+            parsedSpecifications = product.specifications;
+          } else if (typeof product.specifications === 'object') {
+            // Convert object to array (handle numeric keys like {0: {...}, 1: {...}})
+            parsedSpecifications = Object.values(product.specifications).filter(
+              (spec: any) => spec && typeof spec === 'object' && (spec.label || spec.value)
+            );
+          }
+        }
+
         formik.setValues({
           title: product.title || "",
           sub_title: product.sub_title || "",
@@ -89,8 +102,7 @@ const ProductForm = () => {
           power: product.power,
           color: [],
           color_quantity: [],
-          specifications:
-            product?.specifications?.length > 0 ? product?.specifications : [],
+          specifications: parsedSpecifications,
         });
 
         product.primary_thumbnail || null;
@@ -168,6 +180,7 @@ const ProductForm = () => {
       power: undefined,
       color: [],
       color_quantity: [],
+      specifications: [],
     },
     validationSchema: productValidationSchema,
     onSubmit: async (values) => {
@@ -263,7 +276,19 @@ const ProductForm = () => {
         showCustomToastSuccess("Product created successfully");
         
         // Reset form after successful creation
-        formik.resetForm();
+        formik.resetForm({
+          values: {
+            title: "",
+            sub_title: "",
+            description: "",
+            images: [],
+            price: undefined,
+            power: undefined,
+            color: [],
+            color_quantity: [],
+            specifications: [],
+          },
+        });
         setColorImageMap({});
         setUpdateColorImageMap({});
         setSelectedColor(null);

@@ -14,25 +14,32 @@ import Badge from "../../components/ui/badge/Badge";
 import { cn } from "../../lib/utils";
 import { useUserRole } from "../../hooks/useUserRole";
 import { Modal } from "../../components/ui/modal";
-import { TimeIcon } from "../../icons";
+import { TimeIcon, EyeIcon, ChevronDownIcon, CloseLineIcon, ChevronUpIcon } from "../../icons";
 import { logActivity } from "../../utils/activitylogger";
 
-interface Order {
-  id: string;
-  order_number: string;
+interface OrderItem {
   title: string;
+  color: string | null;
+  color_value: string | null;
+  quantity: number;
+  amount: number;
+}
+
+interface Order {
+  id?: string;
+  order_number: string;
   created_at: string;
   status: string | null;
   total_amount: number | null;
-  user_id: string | null;
-  color: string;
   profile: {
     first_name: string | null;
     last_name: string | null;
-    mobile_number: string;
+    mobile_number: string | null;
+    email?: string | null;
   } | null;
   address: string;
-  status_slug: number;
+  status_slug?: number;
+  items: OrderItem[];
 }
 
 export default function Orders() {
@@ -45,6 +52,8 @@ export default function Orders() {
   const [hasMore, setHasMore] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [showWarningModal, setShowWarningModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     orderId: string;
     newStatus: string;
@@ -52,6 +61,7 @@ export default function Orders() {
   const { isSuperAdmin, role } = useUserRole();
   const [statusOptions, setStatusOptions] = useState<any>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchOrders();
@@ -83,7 +93,9 @@ export default function Orders() {
       });
 
       const response = res?.data || { data: [], total: 0 };
-      setOrders(response.data || []);
+      // Handle both old and new data structure
+      const ordersData = response.data || [];
+      setOrders(ordersData);
       setTotalOrders(response.total || 0);
     } catch (err) {
       console.error("Error fetching orders:", err);
@@ -91,6 +103,18 @@ export default function Orders() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleOrderExpansion = (orderNumber: string) => {
+    setExpandedOrders((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderNumber)) {
+        newSet.delete(orderNumber);
+      } else {
+        newSet.add(orderNumber);
+      }
+      return newSet;
+    });
   };
 
   const handleStatusChange = (
@@ -182,7 +206,7 @@ export default function Orders() {
         title="Orders | Dreamy Eyes Admin"
         description="Orders overview for Dreamy Eyes Admin"
       />
-      <PageBreadcrumb pageTitle="Orders" />
+      <PageBreadcrumb pageTitle="All Orders" />
 
       {/* Warning Modal for Super Admin */}
       <Modal
@@ -243,25 +267,191 @@ export default function Orders() {
         </div>
       </Modal>
 
-      <div className="space-y-6">
-        <ComponentCard title="All Orders">
+      {/* Order Details Modal */}
+      <Modal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedOrder(null);
+        }}
+      >
+        {selectedOrder && (
+          <div className="p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-6 text-gray-800 dark:text-white">
+              Order Details
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Order Number & Status */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Order Number
+                  </label>
+                  <p className="text-gray-800 dark:text-white font-medium mt-1">
+                    {selectedOrder.order_number}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Status
+                  </label>
+                  <div className="mt-1">
+                    <Badge
+                      size="sm"
+                      color={
+                        selectedOrder.status === "Paid" || selectedOrder.status === "Delivered"
+                          ? "success"
+                          : selectedOrder.status === "Awaiting Payment"
+                          ? "warning"
+                          : selectedOrder.status === "Cancelled"
+                          ? "error"
+                          : "primary"
+                      }
+                    >
+                      {selectedOrder.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-3 block">
+                  Order Items ({selectedOrder.items?.length || 0})
+                </label>
+                <div className="space-y-3">
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    selectedOrder.items.map((item, itemIndex) => (
+                      <div
+                        key={itemIndex}
+                        className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            {item.title}
+                          </h4>
+                          <span className="font-bold text-gray-900 dark:text-white">
+                            ${item.amount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                          {item.color_value && (
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600"
+                                style={{
+                                  backgroundColor: item.color_value.startsWith("#")
+                                    ? item.color_value
+                                    : item.color_value === "red"
+                                    ? "#ff0000"
+                                    : item.color_value,
+                                }}
+                              />
+                              <span>{item.color || item.color_value}</span>
+                            </div>
+                          )}
+                          <span>
+                            <span className="font-medium">Quantity:</span> {item.quantity}
+                          </span>
+                          <span>
+                            <span className="font-medium">Unit Price:</span> ${(item.amount / item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 dark:text-gray-400">No items found</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                  Customer Information
+                </label>
+                <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-2">
+                  <p className="text-gray-800 dark:text-white">
+                    <span className="font-medium">Name:</span> {selectedOrder.profile?.first_name || ""} {selectedOrder.profile?.last_name || ""}
+                  </p>
+                  <p className="text-gray-800 dark:text-white">
+                    <span className="font-medium">Email:</span> {selectedOrder.profile?.email || "N/A"}
+                  </p>
+                  <p className="text-gray-800 dark:text-white">
+                    <span className="font-medium">Mobile:</span> {selectedOrder.profile?.mobile_number || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                  Delivery Address
+                </label>
+                <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-gray-800 dark:text-white whitespace-pre-wrap break-words">
+                    {selectedOrder.address || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Amount & Date */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Total Amount
+                  </label>
+                  <p className="text-gray-800 dark:text-white font-bold text-lg mt-1">
+                    ${selectedOrder.total_amount?.toFixed(2) || "0.00"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Order Date
+                  </label>
+                  <p className="text-gray-800 dark:text-white mt-1">
+                    {new Date(selectedOrder.created_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-sm hover:shadow-md font-medium text-sm"
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  setSelectedOrder(null);
+                }}
+              >
+                <CloseLineIcon className="w-4 h-4" />
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <div className="space-y-3">
+        <ComponentCard>
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-lg dark:border-white/[0.05] dark:bg-white/[0.03]">
             <div className="max-w-full overflow-x-auto">
               <Table>
                 {/* Table Header */}
                 <TableHeader className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100 dark:border-white/[0.05] dark:bg-gradient-to-r dark:from-gray-800/50 dark:to-gray-800/70">
-                  <TableRow>
+                  <TableRow className="hover:bg-transparent">
                     <TableCell
                       isHeader
                       className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
                     >
-                      Order Id
+                      Order #
                     </TableCell>
                     <TableCell
                       isHeader
                       className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
                     >
-                      Ordered Date
+                      Date
                     </TableCell>
                     <TableCell
                       isHeader
@@ -273,20 +463,13 @@ export default function Orders() {
                       isHeader
                       className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
                     >
-                      Product
+                      Items
                     </TableCell>
                     <TableCell
                       isHeader
                       className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
                     >
-                      Color
-                    </TableCell>
-
-                    <TableCell
-                      isHeader
-                      className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
-                    >
-                      Amount
+                      Total
                     </TableCell>
                     <TableCell
                       isHeader
@@ -310,7 +493,7 @@ export default function Orders() {
                       isHeader
                       className="px-5 py-4 text-gray-700 font-semibold text-start text-sm tracking-wider dark:text-gray-300"
                     >
-                      Action
+                      Actions
                     </TableCell>
                   </TableRow>
                 </TableHeader>
@@ -319,7 +502,7 @@ export default function Orders() {
                 <TableBody className="divide-y divide-gray-100 bg-white dark:divide-white/[0.05] dark:bg-transparent">
                   {orders.length === 0 && (
                     <TableRow>
-                      <TableCell className="px-5 py-8 text-center" colSpan={10}>
+                      <TableCell className="px-6 py-12 text-center" colSpan={9}>
                         <div className="flex flex-col items-center justify-center space-y-3">
                           <div className="rounded-full bg-gray-100 p-3 dark:bg-gray-800">
                             <TimeIcon className="h-6 w-6 text-gray-500" />
@@ -333,129 +516,225 @@ export default function Orders() {
                   )}
                   {orders.map((order, index: number) => {
                     const status = order.status;
+                    const isExpanded = expandedOrders.has(order.order_number);
+                    const items = order.items || [];
+                    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
                     return (
-                      <TableRow
-                        key={order.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-all duration-200 hover:shadow-sm group"
-                      >
-                        <TableCell className="px-5 py-4 sm:px-6 text-start">
-                          <span className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                            {order.order_number}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                            <TimeIcon className="h-4 w-4" />
-                            <span className="text-sm">
-                              {new Date(order.created_at).toLocaleDateString()}
+                      <>
+                        <TableRow
+                          key={order.order_number || order.id || index}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+                        >
+                          <TableCell className="px-5 py-4 text-start">
+                            <span className="font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                              {order.order_number}
                             </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {order.profile?.first_name}{" "}
-                            {order.profile?.last_name}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {order?.title || "N/A"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {order?.color}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            ${order.total_amount?.toFixed(2) || "0.00"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {order?.address || "N/A"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {order?.profile?.mobile_number || "N/A"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          <Badge
-                            size="sm"
-                            color={
-                              status === "Paid" || status === "Delivered"
-                                ? "success"
-                                : status === "Awaiting Payment"
-                                ? "warning"
-                                : status === "Cancelled"
-                                ? "error"
-                                : "primary"
-                            }
-                            className="transform transition-all duration-200 hover:scale-105 hover:shadow-sm"
-                          >
-                            {status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-4 py-3 text-start">
-                          <div className="relative min-w-[180px]">
-                            <select
-                              value={order.status_slug || ""}
-                              onChange={(e) =>
-                                handleStatusChange(
-                                  order.id,
-                                  e.target.value,
-                                  order.status,
-                                  index
-                                )
-                              }
-                              disabled={
-                                updatingStatus === order.id ||
-                                (order.status === "paid" && role === "admin")
-                              }
-                              className={cn(
-                                "appearance-none w-full px-4 py-2 text-sm font-medium",
-                                "border border-gray-300 rounded-lg",
-                                "bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white",
-                                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400",
-                                "disabled:opacity-50 disabled:cursor-not-allowed",
-                                "shadow-sm transition-all duration-200 ease-in-out",
-                                "hover:border-blue-400 hover:shadow"
-                              )}
-                            >
-                              <option value="" disabled>
-                                Select status
-                              </option>
-                              {statusOptions.map((option: any) => (
-                                <option
-                                  key={option.value}
-                                  value={option.value}
-                                  className="py-1"
-                                >
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
-                              <svg
-                                className="w-4 h-4 fill-current"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20"
-                              >
-                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                              </svg>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-start">
+                            <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                              <TimeIcon className="h-4 w-4" />
+                              <span className="text-sm">
+                                {new Date(order.created_at).toLocaleDateString()}
+                              </span>
                             </div>
-                            {updatingStatus === order.id && (
-                              <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
-                              </div>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-start">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">
+                              {order.profile?.first_name || ""} {order.profile?.last_name || ""}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-start">
+                            <button
+                              onClick={() => toggleOrderExpansion(order.order_number)}
+                              className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                            >
+                              {isExpanded ? (
+                                <ChevronUpIcon className="w-4 h-4" />
+                              ) : (
+                                <ChevronDownIcon className="w-4 h-4" />
+                              )}
+                              <span className="text-sm font-medium">
+                                {items.length} {items.length === 1 ? "item" : "items"}
+                              </span>
+                            </button>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-start">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">
+                              ${order.total_amount?.toFixed(2) || "0.00"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-start max-w-[200px]">
+                            {order?.address ? (
+                              <span
+                                className="text-gray-700 dark:text-gray-300 truncate block cursor-pointer hover:text-gray-900 dark:hover:text-white"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedOrder(order);
+                                  setShowDetailsModal(true);
+                                }}
+                                title={order.address}
+                              >
+                                {order.address.length > 30 
+                                  ? `${order.address.substring(0, 30)}...` 
+                                  : order.address}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 dark:text-gray-500">N/A</span>
                             )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-start">
+                            <span className="text-gray-700 dark:text-gray-300">
+                              {order?.profile?.mobile_number || "N/A"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                            <Badge
+                              size="sm"
+                              color={
+                                status === "Paid" || status === "Delivered"
+                                  ? "success"
+                                  : status === "Awaiting Payment"
+                                  ? "warning"
+                                  : status === "Cancelled"
+                                  ? "error"
+                                  : "primary"
+                              }
+                            >
+                              {status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="px-5 py-4 text-end">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedOrder(order);
+                                  setShowDetailsModal(true);
+                                }}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                                aria-label="View order details"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </button>
+                              <div className="relative min-w-[150px]">
+                                <select
+                                  value={order.status_slug || ""}
+                                  onChange={(e) =>
+                                    handleStatusChange(
+                                      order.id || order.order_number,
+                                      e.target.value,
+                                      order.status,
+                                      index
+                                    )
+                                  }
+                                  disabled={
+                                    updatingStatus === (order.id || order.order_number) ||
+                                    (order.status === "paid" && role === "admin")
+                                  }
+                                  className={cn(
+                                    "appearance-none w-full px-3 py-2 text-sm",
+                                    "border border-gray-300 rounded-lg",
+                                    "bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white",
+                                    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+                                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                                    "transition-colors"
+                                  )}
+                                >
+                                  <option value="" disabled>
+                                    Change Status
+                                  </option>
+                                  {statusOptions.map((option: any) => (
+                                    <option
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500 dark:text-gray-400">
+                                  <ChevronDownIcon className="w-4 h-4" />
+                                </div>
+                                {updatingStatus === (order.id || order.order_number) && (
+                                  <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-t-blue-500 border-b-transparent"></div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        {/* Expanded Items Row */}
+                        {isExpanded && items.length > 0 && (
+                          <TableRow className="bg-gray-50 dark:bg-gray-800/20">
+                            <TableCell colSpan={9} className="px-5 py-4">
+                              <div className="space-y-3">
+                                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                  Order Items ({items.length})
+                                </div>
+                                <div className="space-y-2">
+                                  {items.map((item, itemIndex) => (
+                                    <div
+                                      key={itemIndex}
+                                      className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                                    >
+                                      <div className="flex items-center gap-4 flex-1">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                            {itemIndex + 1}
+                                          </span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-1">
+                                            {item.title}
+                                          </h4>
+                                          <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                            {item.color_value && (
+                                              <div className="flex items-center gap-1.5">
+                                                <div
+                                                  className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600"
+                                                  style={{
+                                                    backgroundColor: item.color_value.startsWith("#")
+                                                      ? item.color_value
+                                                      : item.color_value === "red"
+                                                      ? "#ff0000"
+                                                      : item.color_value,
+                                                  }}
+                                                />
+                                                <span>{item.color || item.color_value}</span>
+                                              </div>
+                                            )}
+                                            <span>Qty: {item.quantity}</span>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-medium text-gray-900 dark:text-white">
+                                            ${item.amount.toFixed(2)}
+                                          </div>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                                            ${(item.amount / item.quantity).toFixed(2)} each
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+                                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                                    Total Items: {totalItems}
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                                      ${order.total_amount?.toFixed(2) || "0.00"}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
                     );
                   })}
                 </TableBody>
@@ -517,3 +796,4 @@ export default function Orders() {
     </>
   );
 }
+

@@ -214,8 +214,7 @@ const AppSidebar: React.FC = () => {
                     .filter((subItem) => {
                       return subItem.name === "Invite Admin" ||
                         subItem.name === "Activity Logs" ||
-                        subItem.name === "Report Generation" ||
-                        subItem.name === "Orders"
+                        subItem.name === "Report Generation"
                         ? role === "super_admin"
                         : true;
                     })
@@ -268,13 +267,13 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-3 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
         ${
           isExpanded || isMobileOpen
-            ? "w-[290px]"
+            ? "w-[220px]"
             : isHovered
-            ? "w-[290px]"
-            : "w-[90px]"
+            ? "w-[220px]"
+            : "w-[70px]"
         }
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
@@ -293,15 +292,15 @@ const AppSidebar: React.FC = () => {
                 className="dark:hidden"
                 src="/images/logo/logo.svg"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={120}
+                height={32}
               />
               <img
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={120}
+                height={32}
               />
             </>
           ) : (

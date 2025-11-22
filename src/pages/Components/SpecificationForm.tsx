@@ -35,13 +35,12 @@ const SpecificationsForm = ({
 
   useEffect(() => {
     const validSpecifications = formik.values.specifications.filter(
-      (spec: any) => spec.label.trim() && spec.value.trim()
+      (spec: any) => spec.label && spec.value && spec.label.trim() && spec.value.trim()
     );
 
-    if (validSpecifications.length > 0) {
-      setSpecifications(validSpecifications);
-    }
-  }, [formik.values.specifications]);
+    // Always set specifications, even if empty array (to clear previous values)
+    setSpecifications(validSpecifications);
+  }, [formik.values.specifications, setSpecifications]);
 
   return (
     <FormikProvider value={formik}>
