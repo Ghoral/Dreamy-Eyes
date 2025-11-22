@@ -421,44 +421,44 @@ export default function InviteAdmin() {
           )}
         </div>
 
-        {/* Password */}
-        <div className="mb-6">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              name="password"
-              placeholder={
-                isEditMode ? "Enter new password (optional)" : "Enter password"
-              }
-              value={formik.values.password}
-              onChange={formik.handleChange}
-              className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-10 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${
-                formik.touched.password && formik.errors.password
-                  ? "border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800"
-                  : "bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800"
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none cursor-pointer z-10"
-              tabIndex={-1}
-            >
-              {showPassword ? (
-                <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5 hover:fill-gray-700 dark:hover:fill-gray-300" />
-              ) : (
-                <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5 hover:fill-gray-700 dark:hover:fill-gray-300" />
-              )}
-            </button>
-          </div>
-          {formik.touched.password && formik.errors.password && (
-            <div className="text-red-500 text-sm mt-1">
-              {formik.errors.password}
+        {/* Password - Only show in create mode */}
+        {!isEditMode && (
+          <div className="mb-6">
+            <Label htmlFor="password">Password</Label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                placeholder="Enter password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 pr-10 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${
+                  formik.touched.password && formik.errors.password
+                    ? "border-error-500 focus:border-error-300 focus:ring-error-500/20 dark:text-error-400 dark:border-error-500 dark:focus:border-error-800"
+                    : "bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90 dark:focus:border-brand-800"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none cursor-pointer z-10"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5 hover:fill-gray-700 dark:hover:fill-gray-300" />
+                ) : (
+                  <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5 hover:fill-gray-700 dark:hover:fill-gray-300" />
+                )}
+              </button>
             </div>
-          )}
-        </div>
+            {formik.touched.password && formik.errors.password && (
+              <div className="text-red-500 text-sm mt-1">
+                {formik.errors.password}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* User Type */}
         <div className="mb-6">

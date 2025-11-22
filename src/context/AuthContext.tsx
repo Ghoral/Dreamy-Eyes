@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import { supabaseClient } from "../service/supabase";
@@ -35,6 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const loadingUserDataRef = useRef(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -65,7 +67,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === "SIGNED_OUT") {
           setSession(null);
           setUser(null);
+          // Clear user data on sign out
+          setUserData(null);
         }
+        // Don't load user data here - let the useEffect handle it
       }
     );
 
@@ -75,17 +80,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    const userId = session?.user?.id;
+    
+    // Skip if already loading
+    if (loadingUserDataRef.current) {
+      return;
+    }
+    
     const loadRole = async () => {
+      if (!userId) {
+        // Clear user data if no session
+        setUserData(null);
+        loadingUserDataRef.current = false;
+        return;
+      }
+      
+      loadingUserDataRef.current = true;
       try {
         const { data } = await supabaseClient.rpc("get_current_user_data");
-
+        // Always set user data when session exists
+        // This ensures fresh data on login
         setUserData(data);
-      } catch (e) {}
+      } catch (e) {
+        console.error("Error loading user data:", e);
+        setUserData(null);
+      } finally {
+        loadingUserDataRef.current = false;
+      }
     };
-    if (session && !userData) {
-      loadRole();
-    }
-  }, [userData, session]);
+    
+    // Load role whenever user ID changes
+    loadRole();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   const signOut = async () => {
     try {
@@ -97,9 +124,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw error;
       }
 
-      // Clear local state
+      // Clear all local state including user data
       setSession(null);
       setUser(null);
+      setUserData(null); // Clear user data from store
     } catch (error) {
       console.error("Error in signOut", error);
       throw error;
