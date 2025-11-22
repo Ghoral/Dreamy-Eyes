@@ -309,7 +309,7 @@ export default function ReportGeneration() {
           ) : (
             <>
               <DownloadIcon className="w-5 h-5" />
-              Download CSV
+              Download Report
             </>
           )}
         </button>

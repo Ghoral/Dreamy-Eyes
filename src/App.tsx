@@ -18,6 +18,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import LandingForm from "./pages/Forms/Landing";
 import ProductForm from "./pages/Forms/Product";
+import ColorsForm from "./pages/Forms/Colors";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import Users from "./pages/Tables/Users";
@@ -61,6 +62,7 @@ function AppRoutes() {
         {/* Forms */}
         <Route path="/form/landing" element={<LandingForm />} />
         <Route path="/form/product" element={<ProductForm />} />
+        <Route path="/form/colors" element={<ColorsForm />} />
         {/* Tables */}
         <Route path="/basic-tables" element={<BasicTables />} />
         <Route path="/orders" element={<Orders />} />

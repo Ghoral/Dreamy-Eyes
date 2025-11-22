@@ -36,9 +36,6 @@ const ProductForm = () => {
   const [productId, setProductId] = useState<string | null>(null);
   const [primaryIndex, setPrimaryIndex] = useState<number>(0);
   const [selectedColorIndex, setSelectedColorIndex] = useState<number>(0);
-  const [newColorValue, setNewColorValue] = useState<string>("#2563eb");
-  const [newColorName, setNewColorName] = useState<string>("");
-  const [addingColor, setAddingColor] = useState<boolean>(false);
 
   // Get product ID from URL if present
   const location = useLocation();
@@ -71,52 +68,6 @@ const ProductForm = () => {
     }
   };
 
-  const handleAddColor = async () => {
-    if (!newColorName.trim()) {
-      showCustomToastError("Color name is required", "Validation Error");
-      return;
-    }
-
-    // Check if color value already exists
-    const colorExists = dbColors.some(
-      (c) => c.value.toLowerCase() === newColorValue.toLowerCase()
-    );
-    if (colorExists) {
-      showCustomToastError("This color already exists", "Validation Error");
-      return;
-    }
-
-    // Check if color name already exists
-    const nameExists = dbColors.some(
-      (c) => c.name.toLowerCase() === newColorName.trim().toLowerCase()
-    );
-    if (nameExists) {
-      showCustomToastError("This color name already exists", "Validation Error");
-      return;
-    }
-
-    try {
-      setAddingColor(true);
-      const { error } = await supabaseClient.from("colors").insert({
-        name: newColorName.trim(),
-        value: newColorValue,
-      });
-
-      if (error) throw error;
-
-      showCustomToastSuccess("Color added successfully");
-      setNewColorName("");
-      setNewColorValue("#2563eb");
-      await fetchColors(); // Refresh color list
-    } catch (error: any) {
-      showCustomToastError(
-        error?.message || error,
-        "Failed to add color"
-      );
-    } finally {
-      setAddingColor(false);
-    }
-  };
 
   // Fetch product data by ID
   const fetchProductData = async (id: string) => {
@@ -788,56 +739,6 @@ const ProductForm = () => {
             }}
             initialSpecifications={formik.values?.specifications ?? []}
           />
-        </div>
-
-        {/* Add New Color Section */}
-        <div className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-          <Label className="mb-4 block">Add New Color</Label>
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <Label htmlFor="new-color-name" className="text-sm mb-2 block">
-                Color Name
-              </Label>
-              <Input
-                type="text"
-                id="new-color-name"
-                placeholder="e.g., Red, Blue, Green"
-                value={newColorName}
-                onChange={(e) => setNewColorName(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="new-color-value" className="text-sm mb-2 block">
-                Color Value
-              </Label>
-              <div className="flex gap-2 items-center">
-                <input
-                  type="color"
-                  id="new-color-value"
-                  value={newColorValue}
-                  onChange={(e) => setNewColorValue(e.target.value)}
-                  className="h-11 w-20 rounded-lg border border-gray-300 dark:border-gray-700 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={newColorValue}
-                  onChange={(e) => setNewColorValue(e.target.value)}
-                  placeholder="#2563eb"
-                  className="flex-1"
-                />
-              </div>
-            </div>
-            <Button
-              type="button"
-              onClick={handleAddColor}
-              loading={addingColor}
-              disabled={addingColor || !newColorName.trim()}
-              className="mb-0"
-            >
-              Add Color
-            </Button>
-          </div>
         </div>
 
         {/* Dropzone & Color Selector */}
