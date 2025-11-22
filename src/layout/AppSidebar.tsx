@@ -44,6 +44,7 @@ const navItems: NavItem[] = [
       { name: "Products", path: "/products", pro: false },
       { name: "Orders", path: "/orders", pro: false },
       { name: "Activity Logs", path: "/activity-logs", pro: false },
+      { name: "Report Generation", path: "/report-generation", pro: false },
     ],
   },
   {
@@ -211,7 +212,9 @@ const AppSidebar: React.FC = () => {
                   {nav.subItems
                     .filter((subItem) => {
                       return subItem.name === "Invite Admin" ||
-                        subItem.name === "Activity Logs"
+                        subItem.name === "Activity Logs" ||
+                        subItem.name === "Report Generation" ||
+                        subItem.name === "Orders"
                         ? role === "super_admin"
                         : true;
                     })

@@ -36,6 +36,13 @@ const DropzoneComponent = ({
   const [removing, setRemoving] = useState(false);
   const [localPrimary, setLocalPrimary] = useState<number | null>(null);
 
+  // Sync localPrimary with primaryIndex prop when it changes
+  useEffect(() => {
+    if (typeof primaryIndex === "number" && primaryIndex >= 0) {
+      setLocalPrimary(primaryIndex);
+    }
+  }, [primaryIndex]);
+
   useEffect(() => {
     previews.forEach((preview) => {
       if (preview.file instanceof File && preview.url.startsWith("blob:")) {
@@ -328,9 +335,7 @@ const DropzoneComponent = ({
                         type="radio"
                         name="primary-thumbnail"
                         checked={
-                          (typeof primaryIndex === "number"
-                            ? primaryIndex
-                            : localPrimary) === index
+                          (localPrimary !== null ? localPrimary : primaryIndex) === index
                         }
                         onChange={() => {
                           setLocalPrimary(index);
