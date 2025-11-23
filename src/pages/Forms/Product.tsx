@@ -13,13 +13,17 @@ import {
   showCustomToastError,
   showCustomToastSuccess,
 } from "../../utils/toast";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import MultiColorSelector from "../../components/common/ColorPicker";
 import { getColorFileNameMap } from "../../utils";
 import Button from "../../components/common/Button";
 import { productValidationSchema } from "../../validation/product";
 
-const ProductForm = () => {
+interface ProductFormProps {
+  tableName?: "products" | "sales";
+}
+
+const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
   const [colorImageMap, setColorImageMap] = useState<any>({});
   const [updatedColorImageMap, setUpdateColorImageMap] = useState<any>({});
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
@@ -39,6 +43,7 @@ const ProductForm = () => {
 
   // Get product ID from URL if present
   const location = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const idFromUrl = params.get("id");
 
@@ -49,6 +54,11 @@ const ProductForm = () => {
       setProductId(idFromUrl);
       setIsEditMode(true);
       fetchProductData(idFromUrl);
+    } else {
+      // Reset edit mode when no ID in URL
+      setIsEditMode(false);
+      setProductId(null);
+      setLoading(false);
     }
   }, [idFromUrl]);
 
@@ -69,17 +79,33 @@ const ProductForm = () => {
   };
 
 
-  // Fetch product data by ID
+  // Fetch product/sales data by ID
   const fetchProductData = async (id: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabaseClient.rpc("get_product_by_id", {
-        pid: id,
-      });
+      
+      let product;
+      if (tableName === "sales") {
+        // For sales, query directly from the table
+        const { data, error } = await supabaseClient
+          .from("sales")
+          .select("*")
+          .eq("id", id)
+          .single();
+        
+        if (error) throw error;
+        product = data;
+      } else {
+        // For products, use RPC function
+        const { data, error } = await supabaseClient.rpc("get_product_by_id", {
+          pid: id,
+        });
+        
+        if (error) throw error;
+        product = data;
+      }
 
-      if (error) throw error;
-      if (data) {
-        const product = data;
+      if (product) {
         // Parse specifications - handle both array and object formats
         let parsedSpecifications = [];
         if (product?.specifications) {
@@ -105,15 +131,15 @@ const ProductForm = () => {
           specifications: parsedSpecifications,
         });
 
-        product.primary_thumbnail || null;
+        setPrimaryThumbnail(product.primary_thumbnail || null);
         if (product.images && product.color_quantity) {
-          const images = product.images;
+          const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
           const colorQuantity = product.color_quantity;
 
           // Convert image names into public URLs
           const imageUrlMap: Record<string, string[]> = {};
 
-          for (const [color, imageList] of Object.entries(JSON.parse(images))) {
+          for (const [color, imageList] of Object.entries(images)) {
             const urls = (imageList as string[]).map((fileName) => {
               const { data } = supabaseClient.storage
                 .from("product-image")
@@ -131,11 +157,11 @@ const ProductForm = () => {
           const colors = colorQuantity.map((cq: any) => cq.color);
           let colorToSelect = colors[0];
 
-          formik.setFieldValue("images", JSON.parse(images)[colorToSelect]);
-          setColorImageMap(JSON.parse(images));
+          formik.setFieldValue("images", images[colorToSelect] || []);
+          setColorImageMap(images);
           formik.setFieldValue("color", colors);
           formik.setFieldValue("color_quantity", colorQuantity);
-          setPrimaryIndex(data?.primary_index ?? 0);
+          setPrimaryIndex(0);
 
           const colorQuantitiesObj: {
             [color: string]: { quantity: string; label: string };
@@ -164,7 +190,10 @@ const ProductForm = () => {
         }
       }
     } catch (error) {
-      showCustomToastError(error, "Failed to load product data");
+      showCustomToastError(
+        error, 
+        tableName === "sales" ? "Failed to load sale data" : "Failed to load product data"
+      );
     } finally {
       setLoading(false);
     }
@@ -223,82 +252,108 @@ const ProductForm = () => {
 
       const body = {
         ...rest,
-        images: getColorFileNameMap(colorImageMap),
+        images: tableName === "sales" 
+          ? JSON.stringify(getColorFileNameMap(colorImageMap))
+          : getColorFileNameMap(colorImageMap),
         primary_thumbnail: primaryThumbnail,
         specifications: rest.specifications,
         color_quantity: color_quantity,
       };
 
       if (isEditMode && productId) {
-        const { data, error } = await supabaseClient.rpc("update_product", {
-          _id: productId,
-          _title: body.title,
-          _sub_title: body.sub_title,
-          _description: body.description,
-          _images: body.images,
-          _price: body.price,
-          _power: body.power,
-          _color_quantity: body.color_quantity,
-          _specifications: body.specifications,
-          _primary_thumbnail: body.primary_thumbnail,
-        });
+        if (tableName === "sales") {
+          // Update sales directly
+          const { error } = await supabaseClient
+            .from("sales")
+            .update({
+              title: body.title,
+              sub_title: body.sub_title,
+              description: body.description,
+              images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images),
+              price: body.price,
+              power: body.power,
+              color_quantity: body.color_quantity,
+              specifications: body.specifications,
+              primary_thumbnail: body.primary_thumbnail,
+            })
+            .eq("id", productId);
 
-        if (error) {
-          throw error;
+          if (error) throw error;
+
+          await logActivity(
+            ActivityType.PRODUCT_UPDATE,
+            "sales",
+            "Sales Form"
+          );
+
+          showCustomToastSuccess("Sale updated successfully");
+        } else {
+          // Update product using RPC
+          const { data, error } = await supabaseClient.rpc("update_product", {
+            _id: productId,
+            _title: body.title,
+            _sub_title: body.sub_title,
+            _description: body.description,
+            _images: body.images,
+            _price: body.price,
+            _power: body.power,
+            _color_quantity: body.color_quantity,
+            _specifications: body.specifications,
+            _primary_thumbnail: body.primary_thumbnail,
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          if (!data.success) {
+            throw new Error(data.error || "Failed to update product");
+          }
+
+          await logActivity(
+            ActivityType.PRODUCT_UPDATE,
+            "product",
+            "Product Form"
+          );
+
+          showCustomToastSuccess(data.message || "Product updated successfully");
         }
-
-        if (!data.success) {
-          throw new Error(data.error || "Failed to update product");
-        }
-
-        // Log product update activity
-        await logActivity(
-          ActivityType.PRODUCT_UPDATE,
-          "product",
-          "Product Form"
-        );
-
-        showCustomToastSuccess(data.message || "Product updated successfully");
       } else {
-        // Insert new product
+        // Insert new product/sale
+        const insertBody = {
+          ...body,
+          images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images),
+        };
+
         const { data, error } = await supabaseClient
-          .from("products")
-          .insert(body);
+          .from(tableName)
+          .insert(insertBody);
+        
         if (error) throw error;
 
-        // Log product creation activity
+        // Log creation activity
         await logActivity(
-          ActivityType.PRODUCT_CREATE,
-          "product",
-          "Product Form"
+          tableName === "sales" ? ActivityType.PRODUCT_CREATE : ActivityType.PRODUCT_CREATE,
+          tableName,
+          tableName === "sales" ? "Sales Form" : "Product Form"
         );
 
-        showCustomToastSuccess("Product created successfully");
+        showCustomToastSuccess(
+          tableName === "sales" 
+            ? "Sale created successfully" 
+            : "Product created successfully"
+        );
         
-        // Reset form after successful creation
-        formik.resetForm({
-          values: {
-            title: "",
-            sub_title: "",
-            description: "",
-            images: [],
-            price: undefined,
-            power: undefined,
-            color: [],
-            color_quantity: [],
-            specifications: [],
-          },
-        });
-        setColorImageMap({});
-        setUpdateColorImageMap({});
-        setSelectedColor(null);
-        setColorQuantities({});
-        setPrimaryThumbnail(null);
-        setPrimaryIndex(0);
-        setSelectedColorIndex(0);
+        // Navigate to the respective table page after successful creation
+        setTimeout(() => {
+          navigate(tableName === "sales" ? "/sales" : "/products");
+        }, 500);
       }
     } catch (error: any) {
-      showCustomToastError(error.message || error, "Failed to save product");
+      showCustomToastError(
+        error.message || error, 
+        tableName === "sales" ? "Failed to save sale" : "Failed to save product"
+      );
     }
   };
 
@@ -592,7 +647,7 @@ const ProductForm = () => {
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <ComponentCard title="Product">
+      <ComponentCard title={tableName === "sales" ? "Sale" : "Product"}>
         {/* Title */}
         <div className="mb-6">
           <Label htmlFor="title">Title</Label>
@@ -853,7 +908,10 @@ const ProductForm = () => {
         </div>
 
         <Button onClick={formik.handleSubmit} loading={isLoading}>
-          {isEditMode ? "Update Product" : "Save Product"}
+          {isEditMode 
+            ? (tableName === "sales" ? "Update Sale" : "Update Product")
+            : (tableName === "sales" ? "Save Sale" : "Save Product")
+          }
         </Button>
       </ComponentCard>
     </form>

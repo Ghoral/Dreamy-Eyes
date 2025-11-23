@@ -63,14 +63,13 @@ export default function DeliveryOrders() {
 
   useEffect(() => {
     fetchStatus();
+    fetchOrders();
   }, []);
 
   useEffect(() => {
-    // Fetch orders after status options are loaded
-    if (statusOptions.length > 0) {
-      fetchOrders();
-    }
-  }, [page, statusOptions]);
+    // Fetch orders when page changes
+    fetchOrders();
+  }, [page]);
 
   // Generate signed URL when order is selected for modal
   useEffect(() => {
@@ -95,16 +94,45 @@ export default function DeliveryOrders() {
 
   const fetchStatus = async () => {
     try {
-      const { data } = await supabaseClient.rpc("get_slugs");
-      // Filter to only allow cancelled, shipped, and delivered statuses
-      const allowedStatuses = ["cancelled", "shipped", "delivered"];
-      const filteredStatuses = (data || []).filter((option: any) => {
-        const statusLabel = option.label?.toLowerCase() || "";
-        return allowedStatuses.includes(statusLabel);
+      const { data, error } = await supabaseClient.rpc("get_slugs");
+      
+      if (error) {
+        console.error("Error fetching status options:", error);
+        setStatusOptions([]);
+        return;
+      }
+      
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.warn("No status options returned from get_slugs");
+        setStatusOptions([]);
+        return;
+      }
+      
+      // Filter to only allow cancelled, shipped, shipped_not_paid, and delivered statuses
+      const allowedStatuses = ["cancelled", "shipped", "shipped_not_paid", "shipped not paid", "delivered"];
+      const filteredStatuses = data.filter((option: any) => {
+        if (!option || !option.label) return false;
+        const statusLabel = String(option.label).toLowerCase().trim();
+        
+        // Check if label matches any allowed status (more flexible matching)
+        return allowedStatuses.some(allowed => {
+          const normalizedAllowed = allowed.toLowerCase().trim();
+          const normalizedLabel = statusLabel.replace(/\s+/g, '_').replace(/-/g, '_');
+          const normalizedAllowedNoSpaces = normalizedAllowed.replace(/\s+/g, '_').replace(/-/g, '_');
+          
+          return statusLabel === normalizedAllowed || 
+                 normalizedLabel === normalizedAllowedNoSpaces ||
+                 statusLabel.includes(normalizedAllowed) ||
+                 normalizedLabel.includes(normalizedAllowedNoSpaces) ||
+                 statusLabel.replace(/_/g, ' ') === normalizedAllowed.replace(/_/g, ' ');
+        });
       });
-      setStatusOptions(filteredStatuses);
+      
+      // Always show filtered results, or all if filter returns empty
+      setStatusOptions(filteredStatuses.length > 0 ? filteredStatuses : data);
     } catch (err) {
-    } finally {
+      console.error("Error fetching status options:", err);
+      setStatusOptions([]);
     }
   };
 
@@ -150,12 +178,17 @@ export default function DeliveryOrders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      // Pass type='shipped' to filter orders by shipped status
+      setError(null);
+      // Pass array of types: 'shipped' and 'shipped_not_paid' to filter orders
       const res = await supabaseClient.rpc("get_orders", {
         limit_value: pageSize,
         offset_value: (page - 1) * pageSize,
-        type: "shipped",
+        type: ["shipped", "shipped_not_paid"],
       });
+
+      if (res.error) {
+        throw res.error;
+      }
 
       const response = res?.data || { data: [], total: 0 };
       const ordersData = response.data || [];
@@ -163,20 +196,25 @@ export default function DeliveryOrders() {
       setOrders(ordersData);
       setTotalOrders(response.total || 0);
 
-      // Generate signed URLs for all payment URLs
+      // Generate signed URLs for all payment URLs (don't block on this)
       const signedUrlMap: Record<string, string> = {};
-      for (const order of ordersData) {
-        if (order.payment_url) {
-          const signedUrl = await generatePaymentSignedUrl(order.payment_url);
-          if (signedUrl) {
-            signedUrlMap[order.id || order.order_number] = signedUrl;
-          }
-        }
-      }
-      setPaymentSignedUrls(signedUrlMap);
+      Promise.all(
+        ordersData
+          .filter((order: any) => order.payment_url)
+          .map(async (order: any) => {
+            const signedUrl = await generatePaymentSignedUrl(order.payment_url);
+            if (signedUrl) {
+              signedUrlMap[order.id || order.order_number] = signedUrl;
+            }
+          })
+      ).then(() => {
+        setPaymentSignedUrls(signedUrlMap);
+      });
     } catch (err) {
       console.error("Error fetching orders:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
+      setOrders([]);
+      setTotalOrders(0);
     } finally {
       setLoading(false);
     }

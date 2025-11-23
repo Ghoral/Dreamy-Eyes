@@ -19,6 +19,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import LandingForm from "./pages/Forms/Landing";
 import ProductForm from "./pages/Forms/Product";
+import SalesForm from "./pages/Forms/Sales";
 import ColorsForm from "./pages/Forms/Colors";
 import OffersForm from "./pages/Forms/Offers";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -28,6 +29,7 @@ import InviteAdmin from "./pages/InviteAdmin";
 import ResetPassword from "./pages/AuthPages/ResetPassword";
 import TikTok from "./pages/Social/TikTok";
 import ProductsTable from "./pages/Tables/Products";
+import SalesTable from "./pages/Tables/Sales";
 import Admins from "./pages/Tables/Admins";
 import ActivityLogs from "./pages/Tables/ActivityLogs";
 import ReportGeneration from "./pages/Tables/ReportGeneration";
@@ -61,9 +63,11 @@ function AppRoutes() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/social/tiktok" element={<TikTok />} />
         <Route path="/products" element={<ProductsTable />} />
+        <Route path="/sales" element={<SalesTable />} />
         {/* Forms */}
         <Route path="/form/landing" element={<LandingForm />} />
         <Route path="/form/product" element={<ProductForm />} />
+        <Route path="/form/sales" element={<SalesForm />} />
         <Route path="/form/colors" element={<ColorsForm />} />
         <Route path="/form/offers" element={<OffersForm />} />
         {/* Tables */}

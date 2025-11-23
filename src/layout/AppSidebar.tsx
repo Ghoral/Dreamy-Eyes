@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Landing", path: "/form/landing", pro: false },
       { name: "Product", path: "/form/product", pro: false },
+      { name: "Sales", path: "/form/sales", pro: false },
       { name: "Colors", path: "/form/colors", pro: false },
       { name: "Offers", path: "/form/offers", pro: false },
     ],
@@ -44,6 +45,7 @@ const navItems: NavItem[] = [
       { name: "Users", path: "/users", pro: false },
       { name: "Invite Admin", path: "/invite-admin", pro: false },
       { name: "Products", path: "/products", pro: false },
+      { name: "Sales", path: "/sales", pro: false },
       { name: "Orders", path: "/orders", pro: false },
       { name: "Delivery Orders", path: "/delivery-orders", pro: false },
       { name: "Activity Logs", path: "/activity-logs", pro: false },
@@ -61,7 +63,7 @@ const othersItems: NavItem[] = [];
 
 const AppSidebar: React.FC = () => {
   const { userData } = appStore();
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleMobileSidebar } = useSidebar();
   const location = useLocation();
 
   const role = userData?.role || "user";
@@ -138,11 +140,19 @@ const AppSidebar: React.FC = () => {
           <li>
             <Link
               to="/delivery-orders"
-              className={`menu-item group ${
+              replace={false}
+              onClick={() => {
+                // Close mobile menu when clicking a menu item
+                if (isMobileOpen) {
+                  toggleMobileSidebar();
+                }
+              }}
+              className={`menu-item group cursor-pointer ${
                 isActive("/delivery-orders")
                   ? "menu-item-active"
                   : "menu-item-inactive"
               }`}
+              style={{ display: 'block', width: '100%' }}
             >
               <span
                 className={`menu-item-icon-size ${
@@ -208,6 +218,12 @@ const AppSidebar: React.FC = () => {
                 nav.path && (
                   <Link
                     to={nav.path}
+                    onClick={() => {
+                      // Close mobile menu when clicking a menu item
+                      if (isMobileOpen) {
+                        toggleMobileSidebar();
+                      }
+                    }}
                     className={`menu-item group ${
                       isActive(nav.path)
                         ? "menu-item-active"
@@ -263,7 +279,14 @@ const AppSidebar: React.FC = () => {
                         <li key={subItem.name}>
                           <Link
                             to={subItem.path}
-                            className={`menu-dropdown-item ${
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Close mobile menu when clicking a submenu item
+                              if (isMobileOpen) {
+                                toggleMobileSidebar();
+                              }
+                            }}
+                            className={`menu-dropdown-item cursor-pointer ${
                               isActive(subItem.path)
                                 ? "menu-dropdown-item-active"
                                 : "menu-dropdown-item-inactive"
