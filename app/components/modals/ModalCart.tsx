@@ -1,6 +1,7 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useCart } from "../../context/CartContext";
 import { useRouter } from "next/navigation";
+import { update_product_quantity } from "../../api/quantity";
 
 const ModalCart = ({
   isOpen = false,
@@ -15,6 +16,12 @@ const ModalCart = ({
 }) => {
   const { state: cartItems, removeItem, updateQuantity } = useCart();
   const router = useRouter();
+  const [checkingQuantities, setCheckingQuantities] = useState<
+    Record<string, boolean>
+  >({});
+  const [quantityErrors, setQuantityErrors] = useState<Record<string, string>>(
+    {}
+  );
 
   const handleBackdropClick = useCallback(
     (e: any) => {
@@ -203,7 +210,11 @@ const ModalCart = ({
                           </div>
                         )}
                         <div className="text-secondary-600 text-sm mb-3 line-clamp-2">
-                          <div dangerouslySetInnerHTML={{ __html: item.description ??'' }} />
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: item.description ?? "",
+                            }}
+                          />
                         </div>
 
                         {/* Price and Quantity */}
@@ -213,63 +224,225 @@ const ModalCart = ({
                           </span>
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() =>
-                                updateQuantity(
-                                  item.id,
-                                  Math.max(1, item.quantity - 1),
-                                  item.color
-                                )
+                              onClick={async () => {
+                                const newQuantity = Math.max(
+                                  1,
+                                  item.quantity - 1
+                                );
+                                const itemKey = `${item.id}-${item.color}`;
+
+                                setCheckingQuantities((prev) => ({
+                                  ...prev,
+                                  [itemKey]: true,
+                                }));
+                                setQuantityErrors((prev) => {
+                                  const newErrors = { ...prev };
+                                  delete newErrors[itemKey];
+                                  return newErrors;
+                                });
+
+                                try {
+                                  if (
+                                    item.colorHex &&
+                                    typeof item.id === "string"
+                                  ) {
+                                    // Call RPC to validate and update quantity
+                                    const result =
+                                      await update_product_quantity(
+                                        item.id,
+                                        item.colorHex,
+                                        newQuantity
+                                      );
+
+                                    if (result.success) {
+                                      // Use validated quantity from RPC response
+                                      updateQuantity(
+                                        item.id,
+                                        result.validated_quantity ||
+                                          newQuantity,
+                                        item.color
+                                      );
+                                    } else {
+                                      setQuantityErrors((prev) => ({
+                                        ...prev,
+                                        [itemKey]:
+                                          result.message ||
+                                          "Quantity not available",
+                                      }));
+                                      if (result.available_quantity > 0) {
+                                        updateQuantity(
+                                          item.id,
+                                          result.available_quantity,
+                                          item.color
+                                        );
+                                      }
+                                    }
+                                  } else {
+                                    updateQuantity(
+                                      item.id,
+                                      newQuantity,
+                                      item.color
+                                    );
+                                  }
+                                } catch (error: any) {
+                                  console.error(
+                                    "Error updating quantity:",
+                                    error
+                                  );
+                                  setQuantityErrors((prev) => ({
+                                    ...prev,
+                                    [itemKey]:
+                                      error.message ||
+                                      "Failed to update quantity",
+                                  }));
+                                } finally {
+                                  setCheckingQuantities((prev) => ({
+                                    ...prev,
+                                    [itemKey]: false,
+                                  }));
+                                }
+                              }}
+                              disabled={
+                                checkingQuantities[
+                                  `${item.id}-${item.color}`
+                                ] || item.quantity <= 1
                               }
-                              className="w-8 h-8 bg-secondary-100 hover:bg-secondary-200 rounded-full flex items-center justify-center transition-colors duration-200"
+                              className="w-8 h-8 bg-secondary-100 hover:bg-secondary-200 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <svg
-                                className="w-4 h-4 text-secondary-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M20 12H4"
-                                />
-                              </svg>
+                              {checkingQuantities[
+                                `${item.id}-${item.color}`
+                              ] ? (
+                                <div className="w-4 h-4 border-2 border-secondary-600 border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <svg
+                                  className="w-4 h-4 text-secondary-600"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M20 12H4"
+                                  />
+                                </svg>
+                              )}
                             </button>
                             <span className="w-12 text-center font-semibold text-secondary-800">
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() =>
-                                updateQuantity(
-                                  item.id,
-                                  Math.min(
-                                    item.maxQuantity || 999,
-                                    item.quantity + 1
-                                  ),
-                                  item.color
-                                )
-                              }
+                              onClick={async () => {
+                                const newQuantity = Math.min(
+                                  item.maxQuantity || 999,
+                                  item.quantity + 1
+                                );
+                                const itemKey = `${item.id}-${item.color}`;
+
+                                setCheckingQuantities((prev) => ({
+                                  ...prev,
+                                  [itemKey]: true,
+                                }));
+                                setQuantityErrors((prev) => {
+                                  const newErrors = { ...prev };
+                                  delete newErrors[itemKey];
+                                  return newErrors;
+                                });
+
+                                try {
+                                  if (
+                                    item.colorHex &&
+                                    typeof item.id === "string"
+                                  ) {
+                                    // Call RPC to validate and update quantity
+                                    const result =
+                                      await update_product_quantity(
+                                        item.id,
+                                        item.colorHex,
+                                        newQuantity
+                                      );
+
+                                    if (result.success) {
+                                      // Use validated quantity from RPC response
+                                      updateQuantity(
+                                        item.id,
+                                        result.validated_quantity ||
+                                          newQuantity,
+                                        item.color
+                                      );
+                                    } else {
+                                      setQuantityErrors((prev) => ({
+                                        ...prev,
+                                        [itemKey]:
+                                          result.message ||
+                                          "Quantity not available",
+                                      }));
+                                      if (result.available_quantity > 0) {
+                                        updateQuantity(
+                                          item.id,
+                                          result.available_quantity,
+                                          item.color
+                                        );
+                                      }
+                                    }
+                                  } else {
+                                    updateQuantity(
+                                      item.id,
+                                      newQuantity,
+                                      item.color
+                                    );
+                                  }
+                                } catch (error: any) {
+                                  console.error(
+                                    "Error updating quantity:",
+                                    error
+                                  );
+                                  setQuantityErrors((prev) => ({
+                                    ...prev,
+                                    [itemKey]:
+                                      error.message ||
+                                      "Failed to update quantity",
+                                  }));
+                                } finally {
+                                  setCheckingQuantities((prev) => ({
+                                    ...prev,
+                                    [itemKey]: false,
+                                  }));
+                                }
+                              }}
                               disabled={
-                                item.quantity >= (item.maxQuantity || 999)
+                                item.quantity >= (item.maxQuantity || 999) ||
+                                checkingQuantities[`${item.id}-${item.color}`]
                               }
                               className="w-8 h-8 bg-secondary-100 hover:bg-secondary-200 disabled:bg-secondary-50 disabled:cursor-not-allowed rounded-full flex items-center justify-center transition-colors duration-200"
                             >
-                              <svg
-                                className="w-4 h-4 text-secondary-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M12 4v16m8-8H4"
-                                />
-                              </svg>
+                              {checkingQuantities[
+                                `${item.id}-${item.color}`
+                              ] ? (
+                                <div className="w-4 h-4 border-2 border-secondary-600 border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <svg
+                                  className="w-4 h-4 text-secondary-600"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 4v16m8-8H4"
+                                  />
+                                </svg>
+                              )}
                             </button>
                           </div>
+                          {quantityErrors[`${item.id}-${item.color}`] && (
+                            <div className="text-xs text-red-600 mt-1">
+                              {quantityErrors[`${item.id}-${item.color}`]}
+                            </div>
+                          )}
                         </div>
                       </div>
 

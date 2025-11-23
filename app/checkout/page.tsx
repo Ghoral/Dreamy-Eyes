@@ -9,7 +9,8 @@ import {
   supabaseBrowserClient,
 } from "../services/supabase/client/supabaseBrowserClient";
 import { generateUniqueCode } from "../util";
-import { MESSAGES } from "../constant/message";
+import ModalOffers from "../components/modals/ModalOffers";
+import { Offer } from "../context/CartContext";
 
 interface Address {
   id: number;
@@ -24,17 +25,87 @@ interface Address {
 }
 
 export default function CheckoutPage() {
-  const { state: cartState, clearCart } = useCart();
+  const { state: cartState, clearCart, setOffer } = useCart();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash_on_delivery" | "pre_payment">("cash_on_delivery");
+  const [transactionId, setTransactionId] = useState("");
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
+  const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
 
   useEffect(() => {
     loadUserAddresses();
+    loadDeliveryCharge();
   }, []);
+
+  const loadDeliveryCharge = async () => {
+    try {
+      const supabase = createSupabaseClient();
+      const { data, error } = await (supabase as any)
+        .from("detail")
+        .select("delivery_charge")
+        .order("id", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!error && data?.delivery_charge) {
+        setDeliveryCharge(Number(data.delivery_charge));
+      }
+    } catch (error) {
+      console.error("Error loading delivery charge:", error);
+    }
+  };
+
+  const uploadScreenshotToStorage = async (file: File): Promise<string | null> => {
+    try {
+      const supabase = createSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return null;
+
+      const fileName = `payment-${Date.now()}-${file.name}`;
+      const { data, error } = await supabase.storage
+        .from("payment")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (error) {
+        console.error("Upload error:", error);
+        return null;
+      }
+
+      return data.path;
+    } catch (error) {
+      console.error("Error uploading screenshot:", error);
+      return null;
+    }
+  };
+
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPaymentScreenshot(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleOfferSelect = (offer: Offer, selectedProducts: any[]) => {
+    setOffer(offer, selectedProducts);
+  };
 
   const loadUserAddresses = async () => {
     try {
@@ -86,7 +157,20 @@ export default function CheckoutPage() {
       return;
     }
 
+    // Validate pre-payment requirements
+    if (paymentMethod === "pre_payment") {
+      if (!transactionId.trim()) {
+        setError("Transaction ID is required for pre-payment");
+        return;
+      }
+      if (!paymentScreenshot) {
+        setError("Payment screenshot is required for pre-payment");
+        return;
+      }
+    }
+
     setIsProcessing(true);
+    setError("");
 
     try {
       const supabase = createSupabaseClient();
@@ -100,27 +184,47 @@ export default function CheckoutPage() {
       if (userError || !user) {
         throw new Error("User not authenticated");
       }
+
       const order_number = generateUniqueCode();
 
+      // Upload screenshot if provided
+      let paymentUrl: string | null = null;
+      if (paymentMethod === "pre_payment" && paymentScreenshot) {
+        paymentUrl = await uploadScreenshotToStorage(paymentScreenshot);
+        if (!paymentUrl) {
+          throw new Error("Failed to upload payment screenshot");
+        }
+      }
+
       // Create order
+      // Note: p_offer_id and p_offer_products are not in the function signature
+      // If needed, they should be added to the database function first
       const { data: orderData, error: orderError } =
         await supabaseBrowserClient.rpc("create_orders_and_update_stock", {
           p_address_id: selectedAddressId,
           p_order_number: order_number,
           p_items: cartState.items,
+          p_payment_method: paymentMethod,
+          p_transaction_id: paymentMethod === "pre_payment" ? transactionId : null,
+          p_payment_url: paymentUrl,
         });
 
       if (orderError) {
-        throw new Error("Failed to create order");
+        const errorMessage =
+          orderError.message ||
+          orderError.details ||
+          orderError.hint ||
+          "Failed to create order";
+        throw new Error(errorMessage);
       }
 
       // Clear cart
       clearCart();
       // Redirect to success page
       router.push(`/checkout/success?order=${order_number}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Checkout error:", error);
-      setError("Failed to process order. Please try again.");
+      setError(error.message || "Failed to process order. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -366,6 +470,146 @@ export default function CheckoutPage() {
                 </Link>
               </div>
             </div>
+
+            {/* Payment Method Selection */}
+            <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-primary-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-secondary-800">
+                  Payment Method
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                {/* Cash on Delivery */}
+                <div className="relative">
+                  <input
+                    type="radio"
+                    id="cash_on_delivery"
+                    name="paymentMethod"
+                    value="cash_on_delivery"
+                    checked={paymentMethod === "cash_on_delivery"}
+                    onChange={(e) => setPaymentMethod(e.target.value as "cash_on_delivery")}
+                    className="sr-only"
+                  />
+                  <label
+                    htmlFor="cash_on_delivery"
+                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                      paymentMethod === "cash_on_delivery"
+                        ? "border-primary-500 bg-primary-50 shadow-glow"
+                        : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-primary-500"></div>
+                          <span className="font-semibold text-secondary-800">
+                            Cash on Delivery
+                          </span>
+                        </div>
+                        <p className="text-secondary-600 text-sm">
+                          Pay with cash when your order is delivered. Delivery charge of ${deliveryCharge.toFixed(2)} will be included.
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Pre Payment */}
+                <div className="relative">
+                  <input
+                    type="radio"
+                    id="pre_payment"
+                    name="paymentMethod"
+                    value="pre_payment"
+                    checked={paymentMethod === "pre_payment"}
+                    onChange={(e) => setPaymentMethod(e.target.value as "pre_payment")}
+                    className="sr-only"
+                  />
+                  <label
+                    htmlFor="pre_payment"
+                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                      paymentMethod === "pre_payment"
+                        ? "border-primary-500 bg-primary-50 shadow-glow"
+                        : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-primary-500"></div>
+                          <span className="font-semibold text-secondary-800">
+                            Pre Payment
+                          </span>
+                        </div>
+                        <p className="text-secondary-600 text-sm mb-4">
+                          Pay in advance. Delivery charge of ${deliveryCharge.toFixed(2)} will be included.
+                        </p>
+
+                        {paymentMethod === "pre_payment" && (
+                          <div className="space-y-4 mt-4 pt-4 border-t border-secondary-200">
+                            {/* Transaction ID */}
+                            <div>
+                              <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                                Transaction ID <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={transactionId}
+                                onChange={(e) => setTransactionId(e.target.value)}
+                                placeholder="Enter your transaction ID"
+                                className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors"
+                                required
+                              />
+                            </div>
+
+                            {/* Screenshot Upload */}
+                            <div>
+                              <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                                Payment Screenshot <span className="text-red-500">*</span>
+                              </label>
+                              <div className="space-y-3">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleScreenshotChange}
+                                  className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors"
+                                  required
+                                />
+                                {screenshotPreview && (
+                                  <div className="mt-3">
+                                    <img
+                                      src={screenshotPreview}
+                                      alt="Payment screenshot preview"
+                                      className="max-w-full h-48 object-contain border-2 border-secondary-200 rounded-xl"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right Column - Order Summary */}
@@ -494,6 +738,31 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Offers Section */}
+              {cartState.items.length > 0 && (
+                <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6 mb-6 border border-primary-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-secondary-800 mb-1">
+                        Special Offers Available
+                      </h3>
+                      <p className="text-sm text-secondary-600">
+                        {cartState.selectedOffer
+                          ? `Selected: ${cartState.selectedOffer.title}`
+                          : "Select an offer to save on your order"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsOffersModalOpen(true)}
+                      className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
+                    >
+                      {cartState.selectedOffer ? "Change Offer" : "View Offers"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Order Totals */}
               <div className="border-t border-secondary-100 pt-6 space-y-3">
                 <div className="flex justify-between items-center">
@@ -503,8 +772,10 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-secondary-600">Shipping:</span>
-                  <span className="text-green-600 font-semibold">Free</span>
+                  <span className="text-secondary-600">Delivery Charge:</span>
+                  <span className="font-semibold text-secondary-800">
+                    ${deliveryCharge.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-secondary-600">Tax (8%):</span>
@@ -518,7 +789,7 @@ export default function CheckoutPage() {
                       Total:
                     </span>
                     <span className="text-2xl font-bold text-primary-600">
-                      ${(cartState.totalPrice * 1.08).toFixed(2)}
+                      ${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -541,7 +812,7 @@ export default function CheckoutPage() {
                       <span>Processing Order...</span>
                     </div>
                   ) : (
-                    `Complete Order - $${(cartState.totalPrice * 1.08).toFixed(
+                    `Complete Order - $${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(
                       2
                     )}`
                   )}
@@ -589,6 +860,13 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      {/* Offers Modal */}
+      <ModalOffers
+        isOpen={isOffersModalOpen}
+        onClose={() => setIsOffersModalOpen(false)}
+        onSelectOffer={handleOfferSelect}
+      />
     </div>
   );
 }

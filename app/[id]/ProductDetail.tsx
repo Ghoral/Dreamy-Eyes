@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import Toast from "../components/ui/Toast";
 import { getThumbnailUrl } from "../util";
+import { update_product_quantity } from "../api/quantity";
 
 const ProductDetail = ({ product }: { product: any }) => {
   // Get images for a specific color from product.images
@@ -130,6 +131,8 @@ const ProductDetail = ({ product }: { product: any }) => {
 
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
+  const [isCheckingQuantity, setIsCheckingQuantity] = useState(false);
+  const [quantityError, setQuantityError] = useState<string | null>(null);
 
   const { addItem, state: cartState, updateQuantity, removeItem } = useCart();
 
@@ -218,10 +221,42 @@ const ProductDetail = ({ product }: { product: any }) => {
     setQuantity(1);
   };
 
-  const handleQuantityChange = (newQuantity: number) => {
-    const maxQuantity = getMaxQuantityForThisSession();
-    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
-      setQuantity(newQuantity);
+  const handleQuantityChange = async (newQuantity: number) => {
+    if (!selectedColor || !product.id) return;
+
+    if (newQuantity < 1) {
+      setQuantity(1);
+      return;
+    }
+
+    setIsCheckingQuantity(true);
+    setQuantityError(null);
+
+    try {
+      // Call RPC to validate and update quantity
+      const result = await update_product_quantity(
+        product.id,
+        selectedColor.color,
+        newQuantity
+      );
+
+      if (result.success) {
+        // Use the validated quantity from RPC response
+        setQuantity(result.validated_quantity || newQuantity);
+      } else {
+        setQuantityError(result.message || "Quantity not available");
+        // Set to maximum available if less than requested
+        if (result.available_quantity > 0) {
+          setQuantity(result.available_quantity);
+        } else {
+          setQuantity(1);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error updating quantity:", error);
+      setQuantityError(error.message || "Failed to update quantity");
+    } finally {
+      setIsCheckingQuantity(false);
     }
   };
 
@@ -586,13 +621,35 @@ const ProductDetail = ({ product }: { product: any }) => {
                 </div>
               )}
 
+              {/* Quantity Error Display */}
+              {quantityError && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-center space-x-2 text-red-700">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">{quantityError}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Quantity Selector */}
               <div className="flex items-center space-x-4">
-                <div className="flex items-center border border-secondary-200 rounded-xl overflow-hidden bg-white">
+                <div className="relative flex items-center border border-secondary-200 rounded-xl overflow-hidden bg-white">
                   <button
                     className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleQuantityChange(quantity - 1)}
-                    disabled={quantity <= 1}
+                    disabled={quantity <= 1 || isCheckingQuantity}
                   >
                     <svg
                       className="w-5 h-5"
@@ -617,13 +674,20 @@ const ProductDetail = ({ product }: { product: any }) => {
                     onChange={(e) =>
                       handleQuantityChange(Number(e.target.value))
                     }
+                    disabled={isCheckingQuantity}
                   />
+                  {isCheckingQuantity && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+                      <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
                   <button
                     className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleQuantityChange(quantity + 1)}
                     disabled={
                       quantity >= getMaxQuantityForThisSession() ||
-                      getMaxQuantityForThisSession() === 0
+                      getMaxQuantityForThisSession() === 0 ||
+                      isCheckingQuantity
                     }
                   >
                     <svg

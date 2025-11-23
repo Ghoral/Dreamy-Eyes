@@ -19,7 +19,20 @@ export interface CartItem {
   colorHex?: string;
   image?: string;
   maxQuantity?: number; 
-  primary_thumbnail?:string// Add maximum quantity limit
+  primary_thumbnail?: string;
+  productImages?: string; // Store full product images JSON
+}
+
+export interface Offer {
+  id: number;
+  title: string;
+  description?: string;
+  discount_type?: string;
+  discount_value?: number;
+  minimum_quantity?: number;
+  minimum_value?: number;
+  is_enabled: boolean;
+  [key: string]: any;
 }
 
 interface CartState {
@@ -27,6 +40,8 @@ interface CartState {
   totalItems: number; // Total quantity across all items
   itemCount: number; // Number of unique items
   totalPrice: number;
+  selectedOffer?: Offer | null;
+  offerSelectedProducts?: CartItem[];
 }
 
 type CartAction =
@@ -37,13 +52,16 @@ type CartAction =
       payload: { id: string | number; color?: string; quantity: number };
     }
   | { type: "CLEAR_CART" }
-  | { type: "LOAD_CART"; payload: CartState };
+  | { type: "LOAD_CART"; payload: CartState }
+  | { type: "SET_OFFER"; payload: { offer: Offer | null; selectedProducts: CartItem[] } };
 
 const initialState: CartState = {
   items: [],
   totalItems: 0,
   itemCount: 0,
   totalPrice: 0,
+  selectedOffer: null,
+  offerSelectedProducts: [],
 };
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
@@ -200,10 +218,19 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         totalItems: 0,
         itemCount: 0,
         totalPrice: 0,
+        selectedOffer: null,
+        offerSelectedProducts: [],
       };
 
     case "LOAD_CART":
       return action.payload;
+
+    case "SET_OFFER":
+      return {
+        ...state,
+        selectedOffer: action.payload.offer,
+        offerSelectedProducts: action.payload.selectedProducts,
+      };
 
     default:
       return state;
@@ -221,6 +248,7 @@ interface CartContextType {
   ) => void;
   clearCart: () => void;
   validateCart: () => void;
+  setOffer: (offer: Offer | null, selectedProducts: CartItem[]) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -399,6 +427,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     console.log("Cart validated. New state:", validatedState);
   };
 
+  const setOffer = (offer: Offer | null, selectedProducts: CartItem[]) => {
+    console.log("Setting offer:", offer, "with products:", selectedProducts);
+    dispatch({
+      type: "SET_OFFER",
+      payload: { offer, selectedProducts },
+    });
+  };
+
   // Debug: Log current cart state
   useEffect(() => {
     if (isClient) {
@@ -415,6 +451,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         updateQuantity,
         clearCart,
         validateCart,
+        setOffer,
       }}
     >
       {children}
