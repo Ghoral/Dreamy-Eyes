@@ -33,3 +33,28 @@ export async function get_sales(
   };
 }
 
+export async function get_sale_by_id(pid: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc("get_sale_by_id", {
+    pid,
+  });
+
+  if (error) {
+    return {
+      data: null,
+      message: error.message || "Failed to fetch sale",
+      status: false,
+      statusCode: 400,
+      error: error.details,
+    };
+  }
+
+  return {
+    data: data || null,
+    message: "Sale fetched successfully",
+    status: true,
+    statusCode: 200,
+    error: null,
+  };
+}
+

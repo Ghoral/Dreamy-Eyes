@@ -29,6 +29,8 @@ export interface Offer {
   description?: string;
   discount_type?: string;
   discount_value?: number;
+  discount?: number; // New field: discount amount/percentage
+  price?: number; // New field: fixed price for offer items
   minimum_quantity?: number;
   minimum_value?: number;
   is_enabled: boolean;
@@ -64,6 +66,122 @@ const initialState: CartState = {
   offerSelectedProducts: [],
 };
 
+// Helper function to calculate offer price based on discount type
+const calculateOfferPrice = (originalPrice: number, offer: Offer | null): number => {
+  if (!offer) return originalPrice;
+  
+  // If offer has a fixed price, use that directly
+  if (offer.price !== undefined && offer.price !== null) {
+    return offer.price;
+  }
+  
+  // If offer has discount field, use that
+  if (offer.discount !== undefined && offer.discount !== null) {
+    const discountType = offer.discount_type;
+    const discountValue = offer.discount;
+    
+    if (!discountType) {
+      // If no discount type specified, assume percentage
+      const percentageDiscount = (originalPrice * discountValue) / 100;
+      return Math.max(0, originalPrice - percentageDiscount);
+    }
+    
+    switch (discountType.toLowerCase()) {
+      case 'percentage':
+      case 'percent':
+        // Percentage discount: reduce by X%
+        const percentageDiscount = (originalPrice * discountValue) / 100;
+        return Math.max(0, originalPrice - percentageDiscount);
+      
+      case 'fixed':
+      case 'amount':
+        // Fixed amount discount: reduce by fixed amount
+        return Math.max(0, originalPrice - discountValue);
+      
+      case 'free':
+      case 'zero':
+        // Free item: price is 0
+        return 0;
+      
+      default:
+        // Unknown discount type, assume percentage
+        const defaultPercentageDiscount = (originalPrice * discountValue) / 100;
+        return Math.max(0, originalPrice - defaultPercentageDiscount);
+    }
+  }
+  
+  // Fallback to old discount_value field for backward compatibility
+  const discountType = offer.discount_type;
+  const discountValue = offer.discount_value;
+  
+  if (!discountType || discountValue === undefined || discountValue === null) {
+    return originalPrice; // No discount, return original price
+  }
+  
+  switch (discountType.toLowerCase()) {
+    case 'percentage':
+    case 'percent':
+      // Percentage discount: reduce by X%
+      const percentageDiscount = (originalPrice * discountValue) / 100;
+      return Math.max(0, originalPrice - percentageDiscount);
+    
+    case 'fixed':
+    case 'amount':
+      // Fixed amount discount: reduce by fixed amount
+      return Math.max(0, originalPrice - discountValue);
+    
+    case 'free':
+    case 'zero':
+      // Free item: price is 0
+      return 0;
+    
+    default:
+      // Unknown discount type, return original price
+      return originalPrice;
+  }
+};
+
+// Helper function to calculate total price with offer discounts applied
+const calculateTotalPriceWithOffer = (
+  items: CartItem[],
+  offer: Offer | null,
+  offerProducts: CartItem[]
+): number => {
+  if (!offer || !offerProducts || offerProducts.length === 0) {
+    // No offer, calculate regular total
+    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  }
+  
+  // Create a map of offer product keys and quantities for quick lookup
+  const offerProductMap = new Map<string, number>();
+  offerProducts.forEach((offerProduct) => {
+    const key = `${offerProduct.id}-${offerProduct.color || ''}`;
+    const existing = offerProductMap.get(key) || 0;
+    offerProductMap.set(key, existing + offerProduct.quantity);
+  });
+  
+  // Calculate total price with offer discounts
+  return items.reduce((sum, item) => {
+    const key = `${item.id}-${item.color || ''}`;
+    const offerQuantity = offerProductMap.get(key) || 0;
+    const regularQuantity = item.quantity - offerQuantity;
+    
+    // Regular price items (not in offer)
+    let itemTotal = 0;
+    if (regularQuantity > 0) {
+      itemTotal += item.price * regularQuantity;
+    }
+    
+    // Offer price items (in offer)
+    if (offerQuantity > 0) {
+      const offerPrice = calculateOfferPrice(item.price, offer);
+      itemTotal += offerPrice * offerQuantity;
+    }
+    
+    return sum + itemTotal;
+  }, 0);
+};
+
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
@@ -85,10 +203,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           (sum, item) => sum + item.quantity,
           0
         );
-        const totalPrice = updatedItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
+        // Calculate total price with offer discounts
+        const totalPrice = calculateTotalPriceWithOffer(updatedItems, state.selectedOffer, state.offerSelectedProducts);
 
         return {
           ...state,
@@ -104,10 +220,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           (sum, item) => sum + item.quantity,
           0
         );
-        const totalPrice = newItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
+        // Calculate total price with offer discounts
+        const totalPrice = calculateTotalPriceWithOffer(newItems, state.selectedOffer, state.offerSelectedProducts);
 
         return {
           ...state,
@@ -130,10 +244,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         (sum, item) => sum + item.quantity,
         0
       );
-      const totalPrice = filteredItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
+      // Calculate total price with offer discounts
+      const totalPrice = calculateTotalPriceWithOffer(filteredItems, state.selectedOffer, state.offerSelectedProducts);
 
       return {
         ...state,
@@ -177,10 +289,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           (sum, item) => sum + item.quantity,
           0
         );
-        const totalPrice = filteredItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        );
+        // Calculate total price with offer discounts
+        const totalPrice = calculateTotalPriceWithOffer(filteredItems, state.selectedOffer, state.offerSelectedProducts);
 
         return {
           ...state,
@@ -197,10 +307,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           : item
       );
 
-      const totalPrice = updatedItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
+      // Calculate total price with offer discounts
+      const totalPrice = calculateTotalPriceWithOffer(updatedItems, state.selectedOffer, state.offerSelectedProducts);
 
       return {
         ...state,
@@ -225,12 +333,48 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "LOAD_CART":
       return action.payload;
 
-    case "SET_OFFER":
+    case "SET_OFFER": {
+      // Recalculate total price with offer discounts applied
+      const offer = action.payload.offer;
+      const offerProducts = action.payload.selectedProducts || [];
+      
+      // Create a map of offer product keys for quick lookup
+      const offerProductMap = new Map<string, number>();
+      offerProducts.forEach((offerProduct) => {
+        const key = `${offerProduct.id}-${offerProduct.color || ''}`;
+        offerProductMap.set(key, offerProduct.quantity);
+      });
+      
+      // Calculate total price with offer discounts
+      const totalPrice = state.items.reduce((sum, item) => {
+        const key = `${item.id}-${item.color || ''}`;
+        const offerQuantity = offerProductMap.get(key) || 0;
+        const regularQuantity = item.quantity - offerQuantity;
+        
+        // Calculate price for this item
+        let itemTotal = 0;
+        
+        // Regular price items (not in offer)
+        if (regularQuantity > 0) {
+          itemTotal += item.price * regularQuantity;
+        }
+        
+        // Offer price items (in offer)
+        if (offerQuantity > 0 && offer) {
+          const offerPrice = calculateOfferPrice(item.price, offer);
+          itemTotal += offerPrice * offerQuantity;
+        }
+        
+        return sum + itemTotal;
+      }, 0);
+      
       return {
         ...state,
-        selectedOffer: action.payload.offer,
-        offerSelectedProducts: action.payload.selectedProducts,
+        selectedOffer: offer,
+        offerSelectedProducts: offerProducts,
+        totalPrice,
       };
+    }
 
     default:
       return state;
@@ -308,9 +452,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
             (sum: number, item: CartItem) => sum + item.quantity,
             0
           );
-          const totalPrice = validatedItems.reduce(
-            (sum: number, item: CartItem) => sum + item.price * item.quantity,
-            0
+          // Calculate total price with offer discounts if offer exists
+          const totalPrice = calculateTotalPriceWithOffer(
+            validatedItems,
+            parsedCart.selectedOffer || null,
+            parsedCart.offerSelectedProducts || []
           );
 
           const validatedCart = {

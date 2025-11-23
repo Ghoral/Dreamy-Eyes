@@ -4,6 +4,7 @@ import BillboardCarousel from "./components/landing/Swiper";
 import Footer from "./components/landing/Footer";
 import CompanyService from "./components/landing/CompanyService";
 import ProductWrapper from "./components/product/ProductWrapper";
+import SalesSection from "./components/landing/SalesSection";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 
 export default function Home() {
@@ -12,6 +13,7 @@ export default function Home() {
       <GlobalSupabaseListenerWrapper />
       <BillboardCarousel />
       <ItemListing />
+      <SalesSection />
       <TikTokCarousel />
       <ProductWrapper />
       <Footer />

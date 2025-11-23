@@ -285,7 +285,7 @@ export default function PaginatedSalesList() {
                     key={product.id}
                     className="bg-white rounded-2xl shadow-soft overflow-hidden hover:shadow-glow transition-all duration-300 transform hover:-translate-y-2"
                   >
-                    <Link href={`/${product.id}`}>
+                    <Link href={`/sales/${product.id}`}>
                       <div className="relative aspect-square bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
                         {thumbnailUrl ? (
                           <Image
@@ -315,7 +315,7 @@ export default function PaginatedSalesList() {
                     </Link>
 
                     <div className="p-6">
-                      <Link href={`/${product.id}`}>
+                      <Link href={`/sales/${product.id}`}>
                         <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 hover:text-primary-600 transition-colors">
                           {product.title}
                         </h3>

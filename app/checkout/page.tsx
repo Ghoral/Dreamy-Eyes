@@ -11,6 +11,78 @@ import {
 import { generateUniqueCode } from "../util";
 import ModalOffers from "../components/modals/ModalOffers";
 import { Offer } from "../context/CartContext";
+import { get_enabled_offers } from "../api/offers";
+import { useOfferStore } from "../store/offerStore";
+
+// Helper function to calculate offer price (same logic as CartContext)
+const calculateOfferPrice = (originalPrice: number, offer: Offer | null): number => {
+  if (!offer) return originalPrice;
+  
+  // If offer has a fixed price, use that directly
+  if (offer.price !== undefined && offer.price !== null) {
+    return offer.price;
+  }
+  
+  // If offer has discount field, use that
+  if (offer.discount !== undefined && offer.discount !== null) {
+    const discountType = offer.discount_type;
+    const discountValue = offer.discount;
+    
+    if (!discountType) {
+      // If no discount type specified, assume percentage
+      const percentageDiscount = (originalPrice * discountValue) / 100;
+      return Math.max(0, originalPrice - percentageDiscount);
+    }
+    
+    switch (discountType.toLowerCase()) {
+      case 'percentage':
+      case 'percent': {
+        const percentageDiscount = (originalPrice * discountValue) / 100;
+        return Math.max(0, originalPrice - percentageDiscount);
+      }
+      
+      case 'fixed':
+      case 'amount':
+        return Math.max(0, originalPrice - discountValue);
+      
+      case 'free':
+      case 'zero':
+        return 0;
+      
+      default: {
+        const defaultPercentageDiscount = (originalPrice * discountValue) / 100;
+        return Math.max(0, originalPrice - defaultPercentageDiscount);
+      }
+    }
+  }
+  
+  // Fallback to old discount_value field
+  const discountType2 = offer.discount_type;
+  const discountValue2 = offer.discount_value;
+  
+  if (!discountType2 || discountValue2 === undefined || discountValue2 === null) {
+    return originalPrice;
+  }
+  
+  switch (discountType2.toLowerCase()) {
+    case 'percentage':
+    case 'percent': {
+      const percentageDiscount = (originalPrice * discountValue2) / 100;
+      return Math.max(0, originalPrice - percentageDiscount);
+    }
+    
+    case 'fixed':
+    case 'amount':
+      return Math.max(0, originalPrice - discountValue2);
+    
+    case 'free':
+    case 'zero':
+      return 0;
+    
+    default:
+      return originalPrice;
+  }
+};
 
 interface Address {
   id: number;
@@ -26,6 +98,7 @@ interface Address {
 
 export default function CheckoutPage() {
   const { state: cartState, clearCart, setOffer } = useCart();
+  const { clearOffer } = useOfferStore();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -38,11 +111,71 @@ export default function CheckoutPage() {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
+  const [hasCheckedOffers, setHasCheckedOffers] = useState(false);
 
   useEffect(() => {
     loadUserAddresses();
     loadDeliveryCharge();
   }, []);
+
+  // Auto-open offers modal when cart value meets offer requirements
+  const { isOfferApplied } = useOfferStore();
+  
+  useEffect(() => {
+    const checkAndOpenOffers = async () => {
+      // Only check once and if cart has items
+      if (hasCheckedOffers || cartState.items.length === 0) return;
+
+      // Don't auto-open if user already selected an offer (check Zustand store)
+      if (isOfferApplied || cartState.selectedOffer) {
+        setHasCheckedOffers(true);
+        return;
+      }
+
+      try {
+        const response = await get_enabled_offers();
+        if (response.status && response.data && response.data.length > 0) {
+          const totalQuantity = cartState.items.reduce(
+            (sum, item) => sum + item.quantity,
+            0
+          );
+
+          // Filter offers to see if any qualify (same logic as ModalOffers filter)
+          const qualifyingOffers = response.data.filter((offer: Offer) => {
+            const minValue = offer.value !== undefined && offer.value !== null 
+              ? Number(offer.value) 
+              : offer.minimum_quantity;
+            
+            // Check if cart meets quantity requirement
+            if (minValue && totalQuantity < minValue) {
+              return false; // Don't show this offer
+            }
+            
+            // Check if cart meets price requirement
+            if (offer.minimum_value && cartState.totalPrice < offer.minimum_value) {
+              return false; // Don't show this offer
+            }
+            
+            return true; // Show this offer
+          });
+
+          // Auto-open modal only if there are qualifying offers after filtering
+          if (qualifyingOffers.length > 0) {
+            setIsOffersModalOpen(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking offers:", error);
+      } finally {
+        setHasCheckedOffers(true);
+      }
+    };
+
+    // Only check after addresses are loaded (page is ready)
+    if (!isLoading && cartState.items.length > 0) {
+      checkAndOpenOffers();
+    }
+  }, [cartState.items, cartState.totalPrice, cartState.selectedOffer, isLoading, hasCheckedOffers]);
 
   const loadDeliveryCharge = async () => {
     try {
@@ -196,9 +329,12 @@ export default function CheckoutPage() {
         }
       }
 
+      // Prepare offer data (ready for backend support)
+      const offerId = cartState.selectedOffer?.id || null;
+      const offerProducts = cartState.offerSelectedProducts || [];
+
       // Create order
-      // Note: p_offer_id and p_offer_products are not in the function signature
-      // If needed, they should be added to the database function first
+      // TODO: When backend supports offers, uncomment p_offer_id and p_offer_products
       const { data: orderData, error: orderError } =
         await supabaseBrowserClient.rpc("create_orders_and_update_stock", {
           p_address_id: selectedAddressId,
@@ -207,6 +343,8 @@ export default function CheckoutPage() {
           p_payment_method: paymentMethod,
           p_transaction_id: paymentMethod === "pre_payment" ? transactionId : null,
           p_payment_url: paymentUrl,
+          // p_offer_id: offerId,
+          // p_offer_products: offerProducts.length > 0 ? offerProducts : null,
         });
 
       if (orderError) {
@@ -218,8 +356,9 @@ export default function CheckoutPage() {
         throw new Error(errorMessage);
       }
 
-      // Clear cart
+      // Clear cart and offer (reset after order completion)
       clearCart();
+      clearOffer();
       // Redirect to success page
       router.push(`/checkout/success?order=${order_number}`);
     } catch (error: any) {
@@ -730,16 +869,243 @@ export default function CheckoutPage() {
 
                     {/* Item Total */}
                     <div className="text-right">
-                      <span className="text-lg font-bold text-primary-600">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </span>
+                      {(() => {
+                        // Check if this item has offer price
+                        const offerProductMap = new Map<string, number>();
+                        cartState.offerSelectedProducts?.forEach((offerProduct) => {
+                          const key = `${offerProduct.id}-${offerProduct.color || ''}`;
+                          offerProductMap.set(key, offerProduct.quantity);
+                        });
+                        
+                        const key = `${item.id}-${item.color || ''}`;
+                        const offerQuantity = offerProductMap.get(key) || 0;
+                        const regularQuantity = item.quantity - offerQuantity;
+                        
+                        if (offerQuantity > 0 && cartState.selectedOffer) {
+                          const offerPrice = calculateOfferPrice(item.price, cartState.selectedOffer);
+                          const regularTotal = item.price * regularQuantity;
+                          const offerTotal = offerPrice * offerQuantity;
+                          const itemTotal = regularTotal + offerTotal;
+                          const originalTotal = item.price * item.quantity;
+                          
+                          return (
+                            <div className="text-right">
+                              <div className="flex flex-col items-end">
+                                {regularQuantity > 0 && (
+                                  <span className="text-sm text-secondary-500">
+                                    Regular: ${regularTotal.toFixed(2)}
+                                  </span>
+                                )}
+                                {offerQuantity > 0 && (
+                                  <span className="text-sm text-green-600 font-semibold">
+                                    Offer: ${offerTotal.toFixed(2)}
+                                  </span>
+                                )}
+                                <span className="text-lg font-bold text-primary-600">
+                                  ${itemTotal.toFixed(2)}
+                                </span>
+                                {originalTotal > itemTotal && (
+                                  <span className="text-xs text-red-500 line-through">
+                                    ${originalTotal.toFixed(2)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <span className="text-lg font-bold text-primary-600">
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Offers Section */}
-              {cartState.items.length > 0 && (
+              {/* Offer Details Section */}
+              {cartState.selectedOffer && cartState.offerSelectedProducts && cartState.offerSelectedProducts.length > 0 && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-6 border-2 border-green-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                          OFFER APPLIED
+                        </span>
+                        <h3 className="font-bold text-lg text-green-800">
+                          {cartState.selectedOffer.name || cartState.selectedOffer.title || `Offer #${cartState.selectedOffer.id}`}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-green-700">
+                        {cartState.selectedOffer.description || "Special offer applied to your order"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsOffersModalOpen(true)}
+                      className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  {/* Offer Items Breakdown */}
+                  <div className="space-y-3 mb-4">
+                    <h4 className="font-semibold text-green-800 text-sm uppercase tracking-wide">
+                      Items with Offer Price:
+                    </h4>
+                    {cartState.offerSelectedProducts.map((offerItem, idx) => {
+                      const originalItem = cartState.items.find(
+                        (item) => item.id === offerItem.id && item.color === offerItem.color
+                      );
+                      if (!originalItem) return null;
+                      
+                      const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                      const originalTotal = originalItem.price * offerItem.quantity;
+                      const offerTotal = offerPrice * offerItem.quantity;
+                      const savings = originalTotal - offerTotal;
+                      
+                      return (
+                        <div key={idx} className="bg-white rounded-lg p-4 border border-green-200">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1">
+                              <p className="font-semibold text-secondary-800">
+                                {originalItem.title}
+                              </p>
+                              {originalItem.color && (
+                                <p className="text-sm text-secondary-600">
+                                  Color: {originalItem.color}
+                                </p>
+                              )}
+                              <p className="text-sm text-secondary-500">
+                                Quantity: {offerItem.quantity}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-secondary-600">Original Price:</span>
+                              <span className="ml-2 line-through text-red-500">
+                                ${originalTotal.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-secondary-600">Offer Price:</span>
+                              <span className="ml-2 font-bold text-green-600">
+                                ${offerTotal.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="col-span-2 text-right pt-2 border-t border-green-100">
+                              <span className="text-green-700 font-semibold">
+                                You Save: ${savings.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                          {cartState.selectedOffer?.price !== undefined && (
+                            <div className="mt-2 text-xs text-green-600">
+                              Fixed offer price: ${offerPrice.toFixed(2)} per item
+                            </div>
+                          )}
+                          {cartState.selectedOffer?.discount !== undefined && (
+                            <div className="mt-2 text-xs text-green-600">
+                              {cartState.selectedOffer.discount_type === 'percentage' || !cartState.selectedOffer.discount_type
+                                ? `${cartState.selectedOffer.discount}% discount applied`
+                                : `$${cartState.selectedOffer.discount} discount applied`}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Regular Price Items */}
+                  {(() => {
+                    const offerProductMap = new Map<string, number>();
+                    cartState.offerSelectedProducts.forEach((offerProduct) => {
+                      const key = `${offerProduct.id}-${offerProduct.color || ''}`;
+                      offerProductMap.set(key, offerProduct.quantity);
+                    });
+                    
+                    const regularItems = cartState.items.filter((item) => {
+                      const key = `${item.id}-${item.color || ''}`;
+                      const offerQuantity = offerProductMap.get(key) || 0;
+                      return item.quantity > offerQuantity;
+                    });
+                    
+                    if (regularItems.length === 0) return null;
+                    
+                    return (
+                      <div className="space-y-2 mt-4 pt-4 border-t border-green-200">
+                        <h4 className="font-semibold text-secondary-700 text-sm uppercase tracking-wide">
+                          Items at Regular Price:
+                        </h4>
+                        {regularItems.map((item, idx) => {
+                          const key = `${item.id}-${item.color || ''}`;
+                          const offerQuantity = offerProductMap.get(key) || 0;
+                          const regularQuantity = item.quantity - offerQuantity;
+                          
+                          return (
+                            <div key={idx} className="bg-white rounded-lg p-3 border border-secondary-100">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <p className="font-medium text-secondary-800 text-sm">
+                                    {item.title}
+                                  </p>
+                                  {item.color && (
+                                    <p className="text-xs text-secondary-500">
+                                      {item.color} × {regularQuantity}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className="font-semibold text-secondary-700">
+                                  ${(item.price * regularQuantity).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Total Savings */}
+                  {(() => {
+                    let totalSavings = 0;
+                    let originalTotal = 0;
+                    
+                    cartState.offerSelectedProducts.forEach((offerItem) => {
+                      const originalItem = cartState.items.find(
+                        (item) => item.id === offerItem.id && item.color === offerItem.color
+                      );
+                      if (originalItem) {
+                        const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                        originalTotal += originalItem.price * offerItem.quantity;
+                        totalSavings += (originalItem.price - offerPrice) * offerItem.quantity;
+                      }
+                    });
+                    
+                    if (totalSavings <= 0) return null;
+                    
+                    return (
+                      <div className="mt-4 pt-4 border-t-2 border-green-300">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-green-800 text-lg">
+                            Total Savings:
+                          </span>
+                          <span className="font-bold text-green-600 text-xl">
+                            ${totalSavings.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Offers Section - Show if no offer applied */}
+              {cartState.items.length > 0 && !cartState.selectedOffer && (
                 <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl p-6 mb-6 border border-primary-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -747,9 +1113,7 @@ export default function CheckoutPage() {
                         Special Offers Available
                       </h3>
                       <p className="text-sm text-secondary-600">
-                        {cartState.selectedOffer
-                          ? `Selected: ${cartState.selectedOffer.title}`
-                          : "Select an offer to save on your order"}
+                        Select an offer to save on your order
                       </p>
                     </div>
                     <button
@@ -757,7 +1121,7 @@ export default function CheckoutPage() {
                       onClick={() => setIsOffersModalOpen(true)}
                       className="px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors"
                     >
-                      {cartState.selectedOffer ? "Change Offer" : "View Offers"}
+                      View Offers
                     </button>
                   </div>
                 </div>
@@ -765,34 +1129,103 @@ export default function CheckoutPage() {
 
               {/* Order Totals */}
               <div className="border-t border-secondary-100 pt-6 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-secondary-600">Subtotal:</span>
-                  <span className="font-semibold text-secondary-800">
-                    ${cartState.totalPrice.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-secondary-600">Delivery Charge:</span>
-                  <span className="font-semibold text-secondary-800">
-                    ${deliveryCharge.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-secondary-600">Tax (8%):</span>
-                  <span className="font-semibold text-secondary-800">
-                    ${(cartState.totalPrice * 0.08).toFixed(2)}
-                  </span>
-                </div>
-                <div className="border-t border-secondary-100 pt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-secondary-800">
-                      Total:
-                    </span>
-                    <span className="text-2xl font-bold text-primary-600">
-                      ${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
+                {(() => {
+                  // Calculate original total (without offer discounts)
+                  const originalTotal = cartState.items.reduce(
+                    (sum, item) => sum + item.price * item.quantity,
+                    0
+                  );
+                  
+                  // Calculate total offer price to subtract: (offer price * quantity) for offer items
+                  let totalOfferPrice = 0;
+                  const hasOffer = cartState.selectedOffer && cartState.offerSelectedProducts && cartState.offerSelectedProducts.length > 0;
+                  
+                  if (hasOffer) {
+                    cartState.offerSelectedProducts.forEach((offerItem) => {
+                      const originalItem = cartState.items.find(
+                        (item) => item.id === offerItem.id && item.color === offerItem.color
+                      );
+                      if (originalItem && cartState.selectedOffer) {
+                        const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                        // Total offer price = offer price * quantity (this is what we subtract from total)
+                        totalOfferPrice += offerPrice * offerItem.quantity;
+                      }
+                    });
+                  }
+                  
+                  // Calculate offer savings for display (original price - offer price) * quantity
+                  let offerSavings = 0;
+                  if (hasOffer) {
+                    cartState.offerSelectedProducts.forEach((offerItem) => {
+                      const originalItem = cartState.items.find(
+                        (item) => item.id === offerItem.id && item.color === offerItem.color
+                      );
+                      if (originalItem && cartState.selectedOffer) {
+                        const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                        const savingsPerItem = originalItem.price - offerPrice;
+                        offerSavings += savingsPerItem * offerItem.quantity;
+                      }
+                    });
+                  }
+                  
+                  // Final total = Original total - (offer price * quantity) + delivery
+                  const finalTotal = originalTotal - totalOfferPrice + deliveryCharge;
+                  
+                  return (
+                    <>
+                      {hasOffer && offerSavings > 0 && (
+                        <div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-green-700 font-semibold">Offer Savings:</span>
+                            <span className="font-bold text-green-600 text-lg">
+                              -${offerSavings.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-green-600 mt-1">
+                            Offer applied to selected items
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-secondary-600">Subtotal:</span>
+                        <span className="font-semibold text-secondary-800">
+                          ${originalTotal.toFixed(2)}
+                        </span>
+                      </div>
+                      {hasOffer && offerSavings > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-secondary-600">Offer Discount:</span>
+                          <span className="font-semibold text-green-600">
+                            -${offerSavings.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-secondary-600">Delivery Charge:</span>
+                        <span className="font-semibold text-secondary-800">
+                          ${deliveryCharge.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="border-t border-secondary-100 pt-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xl font-bold text-secondary-800">
+                            Total:
+                          </span>
+                          <span className="text-2xl font-bold text-primary-600">
+                            ${finalTotal.toFixed(2)}
+                          </span>
+                        </div>
+                        {hasOffer && offerSavings > 0 && (
+                          <div className="mt-2 text-right">
+                            <span className="text-sm text-green-600 font-semibold">
+                              You saved ${offerSavings.toFixed(2)} with this offer!
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Complete Order Button */}
@@ -812,9 +1245,31 @@ export default function CheckoutPage() {
                       <span>Processing Order...</span>
                     </div>
                   ) : (
-                    `Complete Order - $${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(
-                      2
-                    )}`
+                    (() => {
+                      const originalTotal = cartState.items.reduce(
+                        (sum, item) => sum + item.price * item.quantity,
+                        0
+                      );
+                      
+                      // Calculate total offer price to subtract: (offer price * quantity) for offer items
+                      let totalOfferPrice = 0;
+                      if (cartState.selectedOffer && cartState.offerSelectedProducts && cartState.offerSelectedProducts.length > 0) {
+                        cartState.offerSelectedProducts.forEach((offerItem) => {
+                          const originalItem = cartState.items.find(
+                            (item) => item.id === offerItem.id && item.color === offerItem.color
+                          );
+                          if (originalItem && cartState.selectedOffer) {
+                            const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                            // Total offer price = offer price * quantity (this is what we subtract from total)
+                            totalOfferPrice += offerPrice * offerItem.quantity;
+                          }
+                        });
+                      }
+                      
+                      // Final total = Original total - (offer price * quantity) + delivery
+                      const finalTotal = originalTotal - totalOfferPrice + deliveryCharge;
+                      return `Complete Order - $${finalTotal.toFixed(2)}`;
+                    })()
                   )}
                 </button>
               </form>

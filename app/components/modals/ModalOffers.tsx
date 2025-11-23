@@ -3,15 +3,21 @@
 import { useState, useEffect } from "react";
 import { get_enabled_offers } from "@/app/api/offers";
 import { useCart } from "@/app/context/CartContext";
+import { useOfferStore } from "@/app/store/offerStore";
 
 interface Offer {
   id: number;
-  title: string;
+  name?: string; // Offer name
+  title?: string; // Alternative to name
   description?: string;
   discount_type?: string;
   discount_value?: number;
+  discount?: number; // New field: discount amount/percentage
+  price?: number; // New field: fixed price for offer items
   minimum_quantity?: number;
   minimum_value?: number;
+  value?: string | number; // Minimum items in cart required
+  quantity?: string | number; // How many items can be included in offer
   is_enabled: boolean;
   [key: string]: any;
 }
@@ -29,8 +35,16 @@ export default function ModalOffers({
 }: ModalOffersProps) {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const { state: cartState } = useCart();
+  const { selectedOffer: zustandOffer, setOffer: setOfferStore, isOfferApplied } = useOfferStore();
+  const [localSelectedOffer, setLocalSelectedOffer] = useState<Offer | null>(zustandOffer);
+
+  // Sync local state with Zustand store
+  useEffect(() => {
+    if (zustandOffer) {
+      setLocalSelectedOffer(zustandOffer);
+    }
+  }, [zustandOffer]);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,26 +59,41 @@ export default function ModalOffers({
       if (response.status && response.data) {
         setOffers(response.data);
         
-        // Auto-select offer based on quantity if applicable
+        // Pre-select offer ONLY if cart value/quantity meets requirement
+        // Don't auto-select, just check if eligible
         if (response.data.length > 0 && cartState.items.length > 0) {
-          const totalQuantity = cartState.items.reduce(
+          const totalItems = cartState.items.reduce(
             (sum, item) => sum + item.quantity,
             0
           );
           
-          // Find offer that matches quantity requirement
+          // Find offer that matches value requirement (minimum items in cart)
+          // value = minimum items required to qualify (e.g., need 2 items)
+          // quantity = how many items get the offer benefit (e.g., 1 item gets benefit)
+          // Only pre-select if requirements are met (cart items >= offer.value)
           const matchingOffer = response.data.find((offer) => {
-            if (offer.minimum_quantity) {
-              return totalQuantity >= offer.minimum_quantity;
+            // Check value field (minimum items required)
+            if (offer.value !== undefined && offer.value !== null) {
+              const minValue = Number(offer.value);
+              return totalItems >= minValue; // Only if cart has >= required items
             }
+            // Fallback to minimum_quantity for backward compatibility
+            if (offer.minimum_quantity) {
+              return totalItems >= offer.minimum_quantity;
+            }
+            // Check minimum_value (price-based)
             if (offer.minimum_value) {
               return cartState.totalPrice >= offer.minimum_value;
             }
             return false;
           });
           
-          if (matchingOffer) {
-            setSelectedOffer(matchingOffer);
+          // Only pre-select if requirements are met and no offer is already applied
+          if (matchingOffer && !isOfferApplied) {
+            setLocalSelectedOffer(matchingOffer);
+          } else if (zustandOffer) {
+            // If offer already applied, use that
+            setLocalSelectedOffer(zustandOffer);
           }
         }
       }
@@ -76,28 +105,40 @@ export default function ModalOffers({
   };
 
   const handleSelectOffer = (offer: Offer) => {
-    setSelectedOffer(offer);
+    setLocalSelectedOffer(offer);
   };
 
   const handleApplyOffer = () => {
-    if (!selectedOffer) return;
+    if (!localSelectedOffer) return;
 
-    // Select products based on offer quantity requirement
+    // Select products based on offer quantity
+    // value = buy X items (normal price) to qualify
+    // quantity = get Y items with offer benefit
+    // Example: value=2, quantity=1 means "buy 2 get 1" - buy 2 items normally, then 1 gets offer
     let selectedProducts: any[] = [];
-    let remainingQuantity = selectedOffer.minimum_quantity || 0;
+    const offerBenefitQuantity = localSelectedOffer.quantity 
+      ? Number(localSelectedOffer.quantity) 
+      : localSelectedOffer.minimum_quantity || 0;
+    let remainingBenefitQuantity = offerBenefitQuantity;
 
+    // Select items up to the offer benefit quantity limit
+    // Example: quantity=1 means only 1 item gets the benefit, rest are normal
     for (const item of cartState.items) {
-      if (remainingQuantity <= 0) break;
+      if (remainingBenefitQuantity <= 0) break;
       
-      const quantityToInclude = Math.min(item.quantity, remainingQuantity);
+      const quantityToInclude = Math.min(item.quantity, remainingBenefitQuantity);
       selectedProducts.push({
         ...item,
         quantity: quantityToInclude,
       });
-      remainingQuantity -= quantityToInclude;
+      remainingBenefitQuantity -= quantityToInclude;
     }
 
-    onSelectOffer(selectedOffer, selectedProducts);
+    // Save to Zustand store (persists across sessions)
+    setOfferStore(localSelectedOffer, selectedProducts);
+    
+    // Also call the callback for CartContext compatibility
+    onSelectOffer(localSelectedOffer, selectedProducts);
     onClose();
   };
 
@@ -122,6 +163,11 @@ export default function ModalOffers({
                 <p className="text-primary-100 text-sm mt-1">
                   Select an offer to apply to your order
                 </p>
+                <div className="bg-white/10 rounded-lg p-2 mt-2">
+                  <p className="text-primary-50 text-xs">
+                    💡 <strong>How it works:</strong> Add items to your cart. If you qualify, select an offer. Only the first items (up to offer limit) receive the offer benefit. Remaining items are charged at normal price.
+                  </p>
+                </div>
               </div>
               <button
                 onClick={onClose}
@@ -157,11 +203,37 @@ export default function ModalOffers({
               </div>
             ) : (
               <div className="space-y-4">
-                {offers.map((offer) => {
-                  const isSelected = selectedOffer?.id === offer.id;
+                {offers
+                  .filter((offer) => {
+                    // Filter out offers that don't meet quantity requirements
+                    // Don't show offers where required quantity is more than cart items
+                    const minValue = offer.value !== undefined && offer.value !== null 
+                      ? Number(offer.value) 
+                      : offer.minimum_quantity;
+                    
+                    // If offer has a minimum value requirement, check if cart meets it
+                    if (minValue && cartState.totalItems < minValue) {
+                      return false; // Don't show this offer
+                    }
+                    
+                    // If offer has a minimum price requirement, check if cart meets it
+                    if (offer.minimum_value && cartState.totalPrice < offer.minimum_value) {
+                      return false; // Don't show this offer
+                    }
+                    
+                    return true; // Show this offer
+                  })
+                  .map((offer) => {
+                  const isSelected = localSelectedOffer?.id === offer.id;
+                  
+                  // Check if offer requirements are met (for styling)
+                  // value = minimum items required, quantity = offer quantity limit
+                  const minValue = offer.value !== undefined && offer.value !== null 
+                    ? Number(offer.value) 
+                    : offer.minimum_quantity;
+                  
                   const meetsRequirement =
-                    (!offer.minimum_quantity ||
-                      cartState.totalItems >= offer.minimum_quantity) &&
+                    (!minValue || cartState.totalItems >= minValue) &&
                     (!offer.minimum_value ||
                       cartState.totalPrice >= offer.minimum_value);
 
@@ -169,26 +241,93 @@ export default function ModalOffers({
                     <div
                       key={offer.id}
                       onClick={() => meetsRequirement && handleSelectOffer(offer)}
-                      className={`p-6 rounded-2xl border-2 cursor-pointer transition-all ${
+                      className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all overflow-hidden transform hover:scale-[1.02] ${
                         isSelected
-                          ? "border-primary-500 bg-primary-50"
+                          ? "border-primary-500 bg-gradient-to-br from-primary-50 via-primary-100 to-primary-50 shadow-xl ring-2 ring-primary-300"
                           : meetsRequirement
-                          ? "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                          ? "border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-400 hover:shadow-lg"
                           : "border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed"
                       }`}
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-secondary-800 mb-2">
-                            {offer.title}
+                      {/* Offer Badge/Sticker - Top Right */}
+                      {isSelected && (
+                        <div className="absolute top-0 right-0 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 text-white px-5 py-2 rounded-bl-3xl rounded-tr-2xl shadow-xl transform rotate-3">
+                          <div className="flex items-center space-x-1.5">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className="text-xs font-extrabold tracking-wide">SELECTED</span>
+                          </div>
+                        </div>
+                      )}
+                      {!isSelected && meetsRequirement && (
+                        <div className="absolute top-0 right-0 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white px-5 py-2 rounded-bl-3xl rounded-tr-2xl shadow-lg transform rotate-3">
+                          <span className="text-xs font-extrabold tracking-wide">AVAILABLE</span>
+                        </div>
+                      )}
+                      {!meetsRequirement && (
+                        <div className="absolute top-0 right-0 bg-gradient-to-br from-gray-400 to-gray-500 text-white px-5 py-2 rounded-bl-3xl rounded-tr-2xl shadow-md transform rotate-3">
+                          <span className="text-xs font-extrabold tracking-wide">NOT ELIGIBLE</span>
+                        </div>
+                      )}
+                      {/* Offer Number Badge - Sticker Style */}
+                      <div className="absolute top-4 left-4 bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl font-extrabold text-xl border-4 border-white transform -rotate-12 z-10">
+                        #{offer.id}
+                      </div>
+
+                      <div className="flex items-start justify-between pt-2">
+                        <div className="flex-1 ml-20">
+                          <h3 className="text-2xl font-extrabold text-secondary-800 mb-2 mt-1">
+                            {offer.name || offer.title || `Offer #${offer.id}`}
                           </h3>
                           {offer.description && (
                             <p className="text-secondary-600 mb-3">
                               {offer.description}
                             </p>
                           )}
-                          <div className="space-y-1 text-sm text-secondary-500">
-                            {offer.minimum_quantity && (
+                          <div className="space-y-2 text-sm">
+                            {/* Show value (buy X items) */}
+                            {(offer.value !== undefined && offer.value !== null) && (
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+                                <p className="text-secondary-700 font-medium text-sm">
+                                  💰 <strong>Buy {Number(offer.value)} items</strong> (at normal price) to qualify
+                                  {cartState.totalItems >= Number(offer.value) ? (
+                                    <span className="text-green-600 ml-2 font-bold">✓ You qualify!</span>
+                                  ) : (
+                                    <span className="text-red-600 ml-2">
+                                      (Add {Number(offer.value) - cartState.totalItems} more item{Number(offer.value) - cartState.totalItems > 1 ? 's' : ''})
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                            {/* Show quantity (get Y items with offer) */}
+                            {(offer.quantity !== undefined && offer.quantity !== null) && (
+                              <div className="bg-primary-50 border border-primary-200 rounded-lg p-3 mb-2">
+                                <p className="text-primary-700 font-semibold text-sm mb-1">
+                                  🎁 <strong>Get {Number(offer.quantity)} item{Number(offer.quantity) > 1 ? 's' : ''} with offer benefit</strong>
+                                </p>
+                                {cartState.totalItems > Number(offer.quantity) ? (
+                                  <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                                    <p className="text-xs text-amber-800">
+                                      📊 <strong>You have {cartState.totalItems} items in cart.</strong><br/>
+                                      • <strong>{Number(offer.quantity)} item{Number(offer.quantity) > 1 ? 's' : ''}</strong> → Get offer benefit<br/>
+                                      • Remaining <strong>{cartState.totalItems - Number(offer.quantity)} items</strong> → Normal price
+                                    </p>
+                                  </div>
+                                ) : cartState.totalItems === Number(offer.quantity) ? (
+                                  <p className="text-xs text-secondary-600 mt-1">
+                                    All {cartState.totalItems} item{Number(offer.quantity) > 1 ? 's' : ''} will receive the offer benefit.
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-secondary-600 mt-1">
+                                    When you apply this offer, {Number(offer.quantity)} item{Number(offer.quantity) > 1 ? 's' : ''} will get the benefit.
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            {/* Fallback to minimum_quantity for backward compatibility */}
+                            {(!offer.value && offer.minimum_quantity) && (
                               <p>
                                 Minimum quantity: {offer.minimum_quantity} items
                                 {cartState.totalItems >= offer.minimum_quantity ? (
@@ -214,31 +353,10 @@ export default function ModalOffers({
                             )}
                             {offer.discount_type && offer.discount_value && (
                               <p className="text-primary-600 font-semibold">
-                                Discount: {offer.discount_type === "percentage" ? `${offer.discount_value}%` : `$${offer.discount_value}`}
+                                Benefit: {offer.discount_type === "percentage" ? `${offer.discount_value}%` : `$${offer.discount_value}`}
                               </p>
                             )}
                           </div>
-                        </div>
-                        <div className="ml-4">
-                          {isSelected ? (
-                            <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
-                              <svg
-                                className="w-4 h-4 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            </div>
-                          ) : (
-                            <div className="w-6 h-6 border-2 border-secondary-300 rounded-full"></div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -250,6 +368,35 @@ export default function ModalOffers({
 
           {/* Footer */}
           <div className="border-t border-secondary-100 p-6 bg-secondary-50">
+            {/* Info Note */}
+            {localSelectedOffer && (
+              <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm text-amber-800 font-medium mb-2">
+                  📋 <strong>How this offer works:</strong>
+                </p>
+                <div className="text-xs text-amber-700 space-y-1">
+                  {localSelectedOffer.value && localSelectedOffer.quantity ? (
+                    <>
+                      <p>• <strong>Buy {Number(localSelectedOffer.value)} items</strong> at normal price to qualify</p>
+                      <p>• <strong>Get {Number(localSelectedOffer.quantity)} item{Number(localSelectedOffer.quantity) > 1 ? 's' : ''}</strong> with offer benefit</p>
+                      {cartState.totalItems > Number(localSelectedOffer.quantity) && (
+                        <p>• <strong>Remaining {cartState.totalItems - Number(localSelectedOffer.quantity)} items</strong> → Normal price</p>
+                      )}
+                      <p className="text-amber-600 mt-2 italic">
+                        Example: Buy {Number(localSelectedOffer.value)} get {Number(localSelectedOffer.quantity)} → You have {cartState.totalItems} items, {Number(localSelectedOffer.quantity)} get offer, rest are normal price
+                      </p>
+                    </>
+                  ) : localSelectedOffer.quantity && cartState.totalItems > Number(localSelectedOffer.quantity) ? (
+                    <>
+                      <p>• <strong>{Number(localSelectedOffer.quantity)} item{Number(localSelectedOffer.quantity) > 1 ? 's' : ''}</strong> → Will receive offer benefit</p>
+                      <p>• <strong>Remaining {cartState.totalItems - Number(localSelectedOffer.quantity)} items</strong> → Will be charged at normal price</p>
+                    </>
+                  ) : (
+                    <p>• {Number(localSelectedOffer.quantity) || cartState.totalItems} item{Number(localSelectedOffer.quantity) > 1 || cartState.totalItems > 1 ? 's' : ''} in your cart will receive the offer benefit</p>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <button
                 onClick={onClose}
@@ -259,9 +406,9 @@ export default function ModalOffers({
               </button>
               <button
                 onClick={handleApplyOffer}
-                disabled={!selectedOffer}
+                disabled={!localSelectedOffer}
                 className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                  selectedOffer
+                  localSelectedOffer
                     ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow"
                     : "bg-gray-200 text-gray-500 cursor-not-allowed"
                 }`}
