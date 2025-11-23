@@ -43,3 +43,5 @@ CREATE POLICY "Allow admin users to update offers" ON public.offers
 CREATE POLICY "Allow admin users to delete offers" ON public.offers
     FOR DELETE USING (public.is_admin_or_super_admin());
 
+
+

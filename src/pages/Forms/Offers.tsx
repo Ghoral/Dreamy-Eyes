@@ -21,6 +21,7 @@ type Offer = {
   id: number;
   name: string | null;
   value: number | null;
+  quantity: number | null;
   is_enabled: boolean;
   created_at: string;
 };
@@ -34,6 +35,7 @@ export default function OffersForm() {
   const [editingOfferId, setEditingOfferId] = useState<number | null>(null);
   const [newOfferName, setNewOfferName] = useState<string>("");
   const [newOfferValue, setNewOfferValue] = useState<string>("");
+  const [newOfferQuantity, setNewOfferQuantity] = useState<string>("");
   const [newOfferEnabled, setNewOfferEnabled] = useState<boolean>(true);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function OffersForm() {
       setLoading(true);
       const { data, error } = await supabaseClient
         .from("offers")
-        .select("id, name, value, is_enabled, created_at")
+        .select("id, name, value, quantity, is_enabled, created_at")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -61,6 +63,7 @@ export default function OffersForm() {
     setEditingOfferId(offer.id);
     setNewOfferName(offer.name || "");
     setNewOfferValue(offer.value?.toString() || "");
+    setNewOfferQuantity(offer.quantity?.toString() || "");
     setNewOfferEnabled(offer.is_enabled);
   };
 
@@ -68,6 +71,7 @@ export default function OffersForm() {
     setEditingOfferId(null);
     setNewOfferName("");
     setNewOfferValue("");
+    setNewOfferQuantity("");
     setNewOfferEnabled(true);
   };
 
@@ -85,6 +89,14 @@ export default function OffersForm() {
     const numericValue = parseFloat(newOfferValue);
     if (isNaN(numericValue)) {
       showCustomToastError("Offer value must be a number", "Validation Error");
+      return;
+    }
+
+    const numericQuantity = newOfferQuantity.trim() 
+      ? parseFloat(newOfferQuantity) 
+      : null;
+    if (newOfferQuantity.trim() && isNaN(numericQuantity as number)) {
+      showCustomToastError("Offer quantity must be a number", "Validation Error");
       return;
     }
 
@@ -109,6 +121,7 @@ export default function OffersForm() {
           .update({
             name: newOfferName.trim(),
             value: numericValue,
+            quantity: numericQuantity,
             is_enabled: newOfferEnabled,
           })
           .eq("id", editingOfferId);
@@ -120,6 +133,7 @@ export default function OffersForm() {
         const { error } = await supabaseClient.from("offers").insert({
           name: newOfferName.trim(),
           value: numericValue,
+          quantity: numericQuantity,
           is_enabled: newOfferEnabled,
         });
 
@@ -225,6 +239,21 @@ export default function OffersForm() {
                 }}
               />
             </div>
+            <div className="flex-1">
+              <Label htmlFor="new-offer-quantity">Quantity</Label>
+              <Input
+                type="number"
+                id="new-offer-quantity"
+                placeholder="e.g., 10"
+                value={newOfferQuantity}
+                onChange={(e) => setNewOfferQuantity(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddOffer();
+                  }
+                }}
+              />
+            </div>
             <div className="flex items-center gap-2 pb-2">
               <input
                 type="checkbox"
@@ -294,6 +323,12 @@ export default function OffersForm() {
                       isHeader
                       className="px-5 py-4 text-gray-700 font-semibold text-start text-sm dark:text-gray-300 uppercase tracking-wider"
                     >
+                      Quantity
+                    </TableCell>
+                    <TableCell
+                      isHeader
+                      className="px-5 py-4 text-gray-700 font-semibold text-start text-sm dark:text-gray-300 uppercase tracking-wider"
+                    >
                       Status
                     </TableCell>
                     <TableCell
@@ -324,6 +359,11 @@ export default function OffersForm() {
                       <TableCell className="px-5 py-3 text-start">
                         <span className="font-mono text-sm text-gray-600 dark:text-gray-400">
                           {offer.value ?? "N/A"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-5 py-3 text-start">
+                        <span className="font-mono text-sm text-gray-600 dark:text-gray-400">
+                          {offer.quantity ?? "N/A"}
                         </span>
                       </TableCell>
                       <TableCell className="px-5 py-3 text-start">

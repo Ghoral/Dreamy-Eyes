@@ -40,7 +40,8 @@ const SpecificationsForm = ({
 
     // Always set specifications, even if empty array (to clear previous values)
     setSpecifications(validSpecifications);
-  }, [formik.values.specifications, setSpecifications]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.specifications]);
 
   return (
     <FormikProvider value={formik}>

@@ -27,3 +27,5 @@ CREATE POLICY "Allow authenticated users to update offers" ON public.offers
 CREATE POLICY "Allow authenticated users to delete offers" ON public.offers
     FOR DELETE USING (auth.role() = 'authenticated');
 
+
+

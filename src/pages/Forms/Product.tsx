@@ -6,7 +6,7 @@ import Input from "../../components/form/input/InputField";
 import { Editor } from "@tinymce/tinymce-react";
 import SpecificationsForm from "../Components/SpecificationForm";
 import { IProduct } from "../../interface/product";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ActivityType, logActivity } from "../../utils/activitylogger";
 import { supabaseClient } from "../../service/supabase";
 import {
@@ -78,12 +78,11 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
     }
   };
 
-
   // Fetch product/sales data by ID
   const fetchProductData = async (id: string) => {
     try {
       setLoading(true);
-      
+
       let product;
       if (tableName === "sales") {
         // For sales, query directly from the table
@@ -92,7 +91,7 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
           .select("*")
           .eq("id", id)
           .single();
-        
+
         if (error) throw error;
         product = data;
       } else {
@@ -100,7 +99,7 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
         const { data, error } = await supabaseClient.rpc("get_product_by_id", {
           pid: id,
         });
-        
+
         if (error) throw error;
         product = data;
       }
@@ -111,10 +110,11 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
         if (product?.specifications) {
           if (Array.isArray(product.specifications)) {
             parsedSpecifications = product.specifications;
-          } else if (typeof product.specifications === 'object') {
+          } else if (typeof product.specifications === "object") {
             // Convert object to array (handle numeric keys like {0: {...}, 1: {...}})
             parsedSpecifications = Object.values(product.specifications).filter(
-              (spec: any) => spec && typeof spec === 'object' && (spec.label || spec.value)
+              (spec: any) =>
+                spec && typeof spec === "object" && (spec.label || spec.value)
             );
           }
         }
@@ -133,7 +133,10 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
 
         setPrimaryThumbnail(product.primary_thumbnail || null);
         if (product.images && product.color_quantity) {
-          const images = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+          const images =
+            typeof product.images === "string"
+              ? JSON.parse(product.images)
+              : product.images;
           const colorQuantity = product.color_quantity;
 
           // Convert image names into public URLs
@@ -191,8 +194,10 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
       }
     } catch (error) {
       showCustomToastError(
-        error, 
-        tableName === "sales" ? "Failed to load sale data" : "Failed to load product data"
+        error,
+        tableName === "sales"
+          ? "Failed to load sale data"
+          : "Failed to load product data"
       );
     } finally {
       setLoading(false);
@@ -252,9 +257,10 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
 
       const body = {
         ...rest,
-        images: tableName === "sales" 
-          ? JSON.stringify(getColorFileNameMap(colorImageMap))
-          : getColorFileNameMap(colorImageMap),
+        images:
+          tableName === "sales"
+            ? JSON.stringify(getColorFileNameMap(colorImageMap))
+            : getColorFileNameMap(colorImageMap),
         primary_thumbnail: primaryThumbnail,
         specifications: rest.specifications,
         color_quantity: color_quantity,
@@ -269,7 +275,10 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
               title: body.title,
               sub_title: body.sub_title,
               description: body.description,
-              images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images),
+              images:
+                typeof body.images === "string"
+                  ? body.images
+                  : JSON.stringify(body.images),
               price: body.price,
               power: body.power,
               color_quantity: body.color_quantity,
@@ -280,11 +289,7 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
 
           if (error) throw error;
 
-          await logActivity(
-            ActivityType.PRODUCT_UPDATE,
-            "sales",
-            "Sales Form"
-          );
+          await logActivity(ActivityType.PRODUCT_UPDATE, "sales", "Sales Form");
 
           showCustomToastSuccess("Sale updated successfully");
         } else {
@@ -316,34 +321,41 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
             "Product Form"
           );
 
-          showCustomToastSuccess(data.message || "Product updated successfully");
+          showCustomToastSuccess(
+            data.message || "Product updated successfully"
+          );
         }
       } else {
         // Insert new product/sale
         const insertBody = {
           ...body,
-          images: typeof body.images === 'string' ? body.images : JSON.stringify(body.images),
+          images:
+            typeof body.images === "string"
+              ? body.images
+              : JSON.stringify(body.images),
         };
 
         const { data, error } = await supabaseClient
           .from(tableName)
           .insert(insertBody);
-        
+
         if (error) throw error;
 
         // Log creation activity
         await logActivity(
-          tableName === "sales" ? ActivityType.PRODUCT_CREATE : ActivityType.PRODUCT_CREATE,
+          tableName === "sales"
+            ? ActivityType.PRODUCT_CREATE
+            : ActivityType.PRODUCT_CREATE,
           tableName,
           tableName === "sales" ? "Sales Form" : "Product Form"
         );
 
         showCustomToastSuccess(
-          tableName === "sales" 
-            ? "Sale created successfully" 
+          tableName === "sales"
+            ? "Sale created successfully"
             : "Product created successfully"
         );
-        
+
         // Navigate to the respective table page after successful creation
         setTimeout(() => {
           navigate(tableName === "sales" ? "/sales" : "/products");
@@ -351,7 +363,7 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
       }
     } catch (error: any) {
       showCustomToastError(
-        error.message || error, 
+        error.message || error,
         tableName === "sales" ? "Failed to save sale" : "Failed to save product"
       );
     }
@@ -645,6 +657,14 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
     }
   };
 
+  // Memoize the callback to prevent infinite loops in SpecificationsForm
+  const handleSpecificationsChange = useCallback(
+    (data: Array<{ label: string; value: string }>) => {
+      formik.setFieldValue("specifications", data);
+    },
+    [formik]
+  );
+
   return (
     <form onSubmit={formik.handleSubmit}>
       <ComponentCard title={tableName === "sales" ? "Sale" : "Product"}>
@@ -776,9 +796,7 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
         <div className="mb-6">
           <Label htmlFor="quantity">Specification</Label>
           <SpecificationsForm
-            setSpecifications={(data) => {
-              formik.setFieldValue("specifications", data);
-            }}
+            setSpecifications={handleSpecificationsChange}
             initialSpecifications={formik.values?.specifications ?? []}
           />
         </div>
@@ -908,10 +926,13 @@ const ProductForm = ({ tableName = "products" }: ProductFormProps = {}) => {
         </div>
 
         <Button onClick={formik.handleSubmit} loading={isLoading}>
-          {isEditMode 
-            ? (tableName === "sales" ? "Update Sale" : "Update Product")
-            : (tableName === "sales" ? "Save Sale" : "Save Product")
-          }
+          {isEditMode
+            ? tableName === "sales"
+              ? "Update Sale"
+              : "Update Product"
+            : tableName === "sales"
+            ? "Save Sale"
+            : "Save Product"}
         </Button>
       </ComponentCard>
     </form>
