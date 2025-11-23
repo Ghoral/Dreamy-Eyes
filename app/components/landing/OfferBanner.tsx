@@ -17,7 +17,26 @@ const OfferBanner = () => {
     return null;
   }
 
-  const offerValue = selectedOffer.value ? Number(selectedOffer.value) : 0;
+  // Check if offer criteria is still met
+  const offerValue = selectedOffer.value !== undefined && selectedOffer.value !== null
+    ? Number(selectedOffer.value)
+    : selectedOffer.minimum_quantity || 0;
+  const minimumValue = selectedOffer.minimum_value ? Number(selectedOffer.minimum_value) : 0;
+  
+  const totalQuantity = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cartState.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+  // Check if criteria is met: quantity >= value OR price >= minimum_value
+  const meetsQuantityRequirement = offerValue > 0 ? totalQuantity >= offerValue : true;
+  const meetsPriceRequirement = minimumValue > 0 ? totalPrice >= minimumValue : true;
+  const criteriaMet = meetsQuantityRequirement && meetsPriceRequirement;
+  
+  // If criteria not met, clear offer and don't show banner
+  if (!criteriaMet) {
+    clearOffer();
+    return null;
+  }
+
   const offerQuantity = selectedOffer.quantity ? Number(selectedOffer.quantity) : 0;
 
   return (

@@ -63,6 +63,30 @@ const ProductDetail = ({
     }
   };
 
+  // Helper function to get Supabase public bucket URL for product images
+  const getProductImageUrl = (filename: string): string => {
+    if (!filename) return "";
+
+    // If it's already a full URL, return as is
+    if (filename.startsWith("http://") || filename.startsWith("https://")) {
+      return filename;
+    }
+
+    // Construct Supabase public bucket URL
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      return `${supabaseUrl}/storage/v1/object/public/product-image/${filename}`;
+    }
+
+    // Fallback to NEXT_PUBLIC_IMAGE_URL if available (for backward compatibility)
+    if (process.env.NEXT_PUBLIC_IMAGE_URL) {
+      return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${filename}`;
+    }
+
+    // Last resort fallback
+    return `/product-image/${filename}`;
+  };
+
   // Get the first image URL for a color (similar to ProductItems logic)
   const getFirstImageUrl = (images: string): string | null => {
     try {
@@ -71,7 +95,7 @@ const ProductDetail = ({
       const firstImage = parsed[firstKey]?.[0];
 
       if (firstImage) {
-        return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${firstImage}`;
+        return getProductImageUrl(firstImage);
       }
       return null;
     } catch (err) {
@@ -87,7 +111,7 @@ const ProductDetail = ({
     console.log("Images found for color:", images);
 
     if (images.length > 0) {
-      const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${images[0]}`;
+      const imageUrl = getProductImageUrl(images[0]);
       console.log("Returning image URL:", imageUrl);
       return imageUrl;
     }
@@ -110,7 +134,7 @@ const ProductDetail = ({
       Object.values(parsedImages).forEach((imageArray: any) => {
         if (Array.isArray(imageArray)) {
           imageArray.forEach((image: string) => {
-            const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${image}`;
+            const imageUrl = getProductImageUrl(image);
             if (!allImages.includes(imageUrl)) {
               allImages.push(imageUrl);
             }
@@ -451,7 +475,7 @@ const ProductDetail = ({
                   ? // Show images for the selected color
                     getImagesForColor(selectedColor.color).length > 0
                     ? getImagesForColor(selectedColor.color).map((image, i) => {
-                        const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${image}`;
+                        const imageUrl = getProductImageUrl(image);
                         return (
                           <div
                             key={i}

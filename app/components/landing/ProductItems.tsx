@@ -128,7 +128,7 @@ const ProductItems = ({ data }: { data: any }) => {
                 <div className="relative h-64 bg-gradient-to-br from-secondary-50 to-primary-50 overflow-hidden">
                   {imageUrl ? (
                     <Image
-                      src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${imageUrl}`}
+                      src={imageUrl}
                       className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                       alt={product.title}
                       fill

@@ -108,7 +108,7 @@ const SalesSection = () => {
                 >
                   {imageUrl ? (
                     <Image
-                      src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${imageUrl}`}
+                      src={imageUrl}
                       alt={product.title}
                       fill
                       className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"

@@ -1,3 +1,27 @@
+// Helper function to get Supabase public bucket URL for product images
+export const getProductImageUrl = (filename: string): string => {
+  if (!filename) return "";
+  
+  // If it's already a full URL, return as is
+  if (filename.startsWith("http://") || filename.startsWith("https://")) {
+    return filename;
+  }
+  
+  // Construct Supabase public bucket URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (supabaseUrl) {
+    return `${supabaseUrl}/storage/v1/object/public/product-image/${filename}`;
+  }
+  
+  // Fallback to NEXT_PUBLIC_IMAGE_URL if available (for backward compatibility)
+  if (process.env.NEXT_PUBLIC_IMAGE_URL) {
+    return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${filename}`;
+  }
+  
+  // Last resort fallback
+  return `/product-image/${filename}`;
+};
+
 export const getFirstImageUrl = (images: string): string | null => {
   try {
     const parsed = JSON.parse(images);
@@ -5,7 +29,7 @@ export const getFirstImageUrl = (images: string): string | null => {
     const firstImage = parsed[firstKey]?.[0];
 
     if (firstImage) {
-      return `/product-image/${firstImage}`;
+      return getProductImageUrl(firstImage);
     }
     return null;
   } catch (err) {
@@ -20,7 +44,7 @@ export const getThumbnailUrl = (product: { primary_thumbnail?: string | null; im
   
   // First check if primary_thumbnail exists and is not null/empty
   if (product.primary_thumbnail) {
-    return `/product-image/${product.primary_thumbnail}`;
+    return getProductImageUrl(product.primary_thumbnail);
   }
   
   // Fall back to the first image from images JSON if primary_thumbnail is not available

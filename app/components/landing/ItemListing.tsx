@@ -31,11 +31,20 @@ const ItemListing = () => {
         const raw = Array.isArray(res.data) ? res.data[0] : res.data;
         const normalized: Partial<Record<SectionKey, Product[]>> = {
           latest_arrival:
-            (raw as any)?.latest_arrival || (raw as any)?.latestArrivals || (raw as any)?.latest || [],
+            (raw as any)?.latest_arrival ||
+            (raw as any)?.latestArrivals ||
+            (raw as any)?.latest ||
+            [],
           top_seller:
-            (raw as any)?.top_seller || (raw as any)?.top_sellers || (raw as any)?.topSeller || [],
+            (raw as any)?.top_seller ||
+            (raw as any)?.top_sellers ||
+            (raw as any)?.topSeller ||
+            [],
           best_reviewed:
-            (raw as any)?.best_reviewed || (raw as any)?.bestReviewed || (raw as any)?.best || [],
+            (raw as any)?.best_reviewed ||
+            (raw as any)?.bestReviewed ||
+            (raw as any)?.best ||
+            [],
         };
         setSectionsData(normalized);
       }
@@ -94,17 +103,33 @@ const ItemListing = () => {
           {loading && (
             <div className="col-span-full flex flex-col items-center justify-center py-20">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
-              <p className="text-secondary-600 font-medium">Loading amazing products...</p>
+              <p className="text-secondary-600 font-medium">
+                Loading amazing products...
+              </p>
             </div>
           )}
 
           {!loading && orderedSections.length === 0 && (
             <div className="text-center py-16 bg-white rounded-xl shadow-md w-full">
-              <svg className="w-16 h-16 text-secondary-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 20h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
+              <svg
+                className="w-16 h-16 text-secondary-300 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 20h.01M12 4a8 8 0 100 16 8 8 0 000-16z"
+                />
               </svg>
-              <p className="text-secondary-600 text-lg">No collections to display</p>
-              <p className="text-secondary-500 mt-2">Please check back later for new products</p>
+              <p className="text-secondary-600 text-lg">
+                No collections to display
+              </p>
+              <p className="text-secondary-500 mt-2">
+                Please check back later for new products
+              </p>
             </div>
           )}
 
@@ -120,12 +145,16 @@ const ItemListing = () => {
                 <div
                   key={section.key}
                   className="group bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden w-full max-w-md animate-fade-in"
-                  style={{ animationDelay: `${orderedSections.indexOf(section) * 0.15}s` }}
+                  style={{
+                    animationDelay: `${
+                      orderedSections.indexOf(section) * 0.15
+                    }s`,
+                  }}
                 >
                   <div className="relative h-64 bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
                     {firstImage ? (
                       <Image
-                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${firstImage}`}
+                        src={firstImage}
                         alt={first?.title || section.label}
                         fill
                         className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
@@ -203,7 +232,9 @@ const ItemListing = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => {
-                  document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' });
+                  document
+                    .getElementById("products-section")
+                    ?.scrollIntoView({ behavior: "smooth" });
                 }}
                 className="inline-flex items-center px-8 py-4 bg-white text-primary-600 hover:bg-primary-50 font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
               >

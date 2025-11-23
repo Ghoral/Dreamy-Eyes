@@ -98,7 +98,7 @@ interface Address {
 
 export default function CheckoutPage() {
   const { state: cartState, clearCart, setOffer } = useCart();
-  const { clearOffer } = useOfferStore();
+  const { clearOffer, selectedOffer: zustandOffer, isOfferApplied: zustandIsOfferApplied } = useOfferStore();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -926,7 +926,35 @@ export default function CheckoutPage() {
               </div>
 
               {/* Offer Details Section */}
-              {cartState.selectedOffer && cartState.offerSelectedProducts && cartState.offerSelectedProducts.length > 0 && (
+              {(() => {
+                // Check if offer criteria is still met
+                const { selectedOffer: zustandOffer, isOfferApplied: zustandIsOfferApplied } = useOfferStore.getState();
+                const offer = cartState.selectedOffer || zustandOffer;
+                
+                if (!offer || !cartState.offerSelectedProducts || cartState.offerSelectedProducts.length === 0) {
+                  return null;
+                }
+                
+                // Check if offer criteria is met
+                const offerValue = offer.value !== undefined && offer.value !== null
+                  ? Number(offer.value)
+                  : offer.minimum_quantity || 0;
+                const minimumValue = offer.minimum_value ? Number(offer.minimum_value) : 0;
+                
+                const totalQuantity = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
+                const totalPrice = cartState.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                
+                // Check if criteria is met: quantity >= value OR price >= minimum_value
+                const meetsQuantityRequirement = offerValue > 0 ? totalQuantity >= offerValue : true;
+                const meetsPriceRequirement = minimumValue > 0 ? totalPrice >= minimumValue : true;
+                const criteriaMet = meetsQuantityRequirement && meetsPriceRequirement;
+                
+                // If criteria not met, don't show offer section
+                if (!criteriaMet) {
+                  return null;
+                }
+                
+                return (
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-6 border-2 border-green-200">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -935,11 +963,11 @@ export default function CheckoutPage() {
                           OFFER APPLIED
                         </span>
                         <h3 className="font-bold text-lg text-green-800">
-                          {cartState.selectedOffer.name || cartState.selectedOffer.title || `Offer #${cartState.selectedOffer.id}`}
+                          {offer.name || offer.title || `Offer #${offer.id}`}
                         </h3>
                       </div>
                       <p className="text-sm text-green-700">
-                        {cartState.selectedOffer.description || "Special offer applied to your order"}
+                        {offer.description || "Special offer applied to your order"}
                       </p>
                     </div>
                     <button
@@ -962,7 +990,7 @@ export default function CheckoutPage() {
                       );
                       if (!originalItem) return null;
                       
-                      const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                      const offerPrice = calculateOfferPrice(originalItem.price, offer);
                       const originalTotal = originalItem.price * offerItem.quantity;
                       const offerTotal = offerPrice * offerItem.quantity;
                       const savings = originalTotal - offerTotal;
@@ -1003,16 +1031,16 @@ export default function CheckoutPage() {
                               </span>
                             </div>
                           </div>
-                          {cartState.selectedOffer?.price !== undefined && (
+                          {offer?.price !== undefined && (
                             <div className="mt-2 text-xs text-green-600">
                               Fixed offer price: ${offerPrice.toFixed(2)} per item
                             </div>
                           )}
-                          {cartState.selectedOffer?.discount !== undefined && (
+                          {offer?.discount !== undefined && (
                             <div className="mt-2 text-xs text-green-600">
-                              {cartState.selectedOffer.discount_type === 'percentage' || !cartState.selectedOffer.discount_type
-                                ? `${cartState.selectedOffer.discount}% discount applied`
-                                : `$${cartState.selectedOffer.discount} discount applied`}
+                              {offer.discount_type === 'percentage' || !offer.discount_type
+                                ? `${offer.discount}% discount applied`
+                                : `$${offer.discount} discount applied`}
                             </div>
                           )}
                         </div>
@@ -1080,7 +1108,7 @@ export default function CheckoutPage() {
                         (item) => item.id === offerItem.id && item.color === offerItem.color
                       );
                       if (originalItem) {
-                        const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                        const offerPrice = calculateOfferPrice(originalItem.price, offer);
                         originalTotal += originalItem.price * offerItem.quantity;
                         totalSavings += (originalItem.price - offerPrice) * offerItem.quantity;
                       }
@@ -1102,7 +1130,8 @@ export default function CheckoutPage() {
                     );
                   })()}
                 </div>
-              )}
+                );
+              })()}
 
               {/* Offers Section - Show if no offer applied */}
               {cartState.items.length > 0 && !cartState.selectedOffer && (
@@ -1136,17 +1165,38 @@ export default function CheckoutPage() {
                     0
                   );
                   
+                  // Check if offer criteria is still met
+                  const offer = cartState.selectedOffer || zustandOffer;
+                  let hasOffer = false;
+                  
+                  if (offer && cartState.offerSelectedProducts && cartState.offerSelectedProducts.length > 0) {
+                    // Check if offer criteria is met
+                    const offerValue = offer.value !== undefined && offer.value !== null
+                      ? Number(offer.value)
+                      : offer.minimum_quantity || 0;
+                    const minimumValue = offer.minimum_value ? Number(offer.minimum_value) : 0;
+                    
+                    const totalQuantity = cartState.items.reduce((sum, item) => sum + item.quantity, 0);
+                    const totalPrice = cartState.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+                    
+                    // Check if criteria is met: quantity >= value OR price >= minimum_value
+                    const meetsQuantityRequirement = offerValue > 0 ? totalQuantity >= offerValue : true;
+                    const meetsPriceRequirement = minimumValue > 0 ? totalPrice >= minimumValue : true;
+                    const criteriaMet = meetsQuantityRequirement && meetsPriceRequirement;
+                    
+                    hasOffer = criteriaMet;
+                  }
+                  
                   // Calculate total offer price to subtract: (offer price * quantity) for offer items
                   let totalOfferPrice = 0;
-                  const hasOffer = cartState.selectedOffer && cartState.offerSelectedProducts && cartState.offerSelectedProducts.length > 0;
                   
-                  if (hasOffer) {
+                  if (hasOffer && offer) {
                     cartState.offerSelectedProducts.forEach((offerItem) => {
                       const originalItem = cartState.items.find(
                         (item) => item.id === offerItem.id && item.color === offerItem.color
                       );
-                      if (originalItem && cartState.selectedOffer) {
-                        const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                      if (originalItem) {
+                        const offerPrice = calculateOfferPrice(originalItem.price, offer);
                         // Total offer price = offer price * quantity (this is what we subtract from total)
                         totalOfferPrice += offerPrice * offerItem.quantity;
                       }
@@ -1155,13 +1205,13 @@ export default function CheckoutPage() {
                   
                   // Calculate offer savings for display (original price - offer price) * quantity
                   let offerSavings = 0;
-                  if (hasOffer) {
+                  if (hasOffer && offer) {
                     cartState.offerSelectedProducts.forEach((offerItem) => {
                       const originalItem = cartState.items.find(
                         (item) => item.id === offerItem.id && item.color === offerItem.color
                       );
-                      if (originalItem && cartState.selectedOffer) {
-                        const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                      if (originalItem) {
+                        const offerPrice = calculateOfferPrice(originalItem.price, offer);
                         const savingsPerItem = originalItem.price - offerPrice;
                         offerSavings += savingsPerItem * offerItem.quantity;
                       }

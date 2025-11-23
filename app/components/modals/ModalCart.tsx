@@ -1,7 +1,32 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useCart } from "../../context/CartContext";
 import { useRouter } from "next/navigation";
 import { update_product_quantity } from "../../api/quantity";
+import { useOfferStore } from "../../store/offerStore";
+
+// Helper function to get Supabase public bucket URL for product images
+const getProductImageUrl = (filename: string): string => {
+  if (!filename) return "";
+
+  // If it's already a full URL, return as is
+  if (filename.startsWith("http://") || filename.startsWith("https://")) {
+    return filename;
+  }
+
+  // Construct Supabase public bucket URL
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (supabaseUrl) {
+    return `${supabaseUrl}/storage/v1/object/public/product-image/${filename}`;
+  }
+
+  // Fallback to NEXT_PUBLIC_IMAGE_URL if available (for backward compatibility)
+  if (process.env.NEXT_PUBLIC_IMAGE_URL) {
+    return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${filename}`;
+  }
+
+  // Last resort fallback
+  return `/product-image/${filename}`;
+};
 
 const ModalCart = ({
   isOpen = false,
@@ -16,12 +41,35 @@ const ModalCart = ({
 }) => {
   const { state: cartItems, removeItem, updateQuantity } = useCart();
   const router = useRouter();
+  const { selectedOffer, isOfferApplied, clearOffer } = useOfferStore();
   const [checkingQuantities, setCheckingQuantities] = useState<
     Record<string, boolean>
   >({});
   const [quantityErrors, setQuantityErrors] = useState<Record<string, string>>(
     {}
   );
+
+  // Check if offer should be removed when quantity changes
+  useEffect(() => {
+    if (!isOfferApplied || !selectedOffer) return;
+
+    // Get the minimum quantity requirement from offer
+    const minValue =
+      selectedOffer.value !== undefined && selectedOffer.value !== null
+        ? Number(selectedOffer.value)
+        : selectedOffer.minimum_quantity || 0;
+
+    // Calculate total quantity in cart
+    const totalQuantity = cartItems.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    );
+
+    // If total quantity is below the offer's minimum requirement, remove the offer
+    if (minValue > 0 && totalQuantity < minValue) {
+      clearOffer();
+    }
+  }, [cartItems.items, selectedOffer, isOfferApplied, clearOffer]);
 
   const handleBackdropClick = useCallback(
     (e: any) => {
@@ -162,7 +210,7 @@ const ModalCart = ({
                       <div className="w-20 h-20 bg-gradient-to-br from-secondary-50 to-primary-50 rounded-xl overflow-hidden flex-shrink-0">
                         {item.primary_thumbnail ? (
                           <img
-                            src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${item.primary_thumbnail}`}
+                            src={getProductImageUrl(item.primary_thumbnail)}
                             alt={item.title}
                             className="w-full h-full object-contain"
                           />
