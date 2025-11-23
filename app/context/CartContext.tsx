@@ -70,9 +70,18 @@ const initialState: CartState = {
 const calculateOfferPrice = (originalPrice: number, offer: Offer | null): number => {
   if (!offer) return originalPrice;
   
-  // If offer has a fixed price, use that directly
+  // Check if offer name/title suggests "free" (Buy X Get Y Free)
+  const offerName = (offer.title || offer.name || "").toLowerCase();
+  const isFreeOffer = offerName.includes("free") || (offerName.includes("get") && offerName.includes("free"));
+  
+  // If offer has a fixed price, use that directly (including 0 for free items)
   if (offer.price !== undefined && offer.price !== null) {
-    return offer.price;
+    return Number(offer.price);
+  }
+  
+  // If it's a "free" offer and no price/discount is set, make it free
+  if (isFreeOffer && (offer.discount === undefined || offer.discount === null) && (offer.discount_value === undefined || offer.discount_value === null)) {
+    return 0;
   }
   
   // If offer has discount field, use that
@@ -172,9 +181,9 @@ const calculateTotalPriceWithOffer = (
       itemTotal += item.price * regularQuantity;
     }
     
-    // Offer price items (in offer)
+    // Offer price items (in offer) - these are always FREE (price = 0)
     if (offerQuantity > 0) {
-      const offerPrice = calculateOfferPrice(item.price, offer);
+      const offerPrice = 0; // Items in offerSelectedProducts are always free
       itemTotal += offerPrice * offerQuantity;
     }
     
@@ -478,6 +487,23 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       setIsInitialized(true);
     }
   }, [isClient]);
+
+  // Clear offer from Zustand store when cart is cleared or becomes empty
+  useEffect(() => {
+    if (!isInitialized || !isClient) return;
+    
+    // If cart is empty, clear the offer from Zustand store
+    if (state.items.length === 0) {
+      // Dynamically import to avoid circular dependency
+      import("../store/offerStore").then(({ useOfferStore }) => {
+        const { isOfferApplied, clearOffer } = useOfferStore.getState();
+        if (isOfferApplied) {
+          console.log("Cart is empty, clearing offer");
+          clearOffer();
+        }
+      });
+    }
+  }, [state.items.length, isInitialized, isClient]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {

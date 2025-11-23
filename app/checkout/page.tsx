@@ -16,42 +16,80 @@ import { useOfferStore } from "../store/offerStore";
 
 // Helper function to calculate offer price (same logic as CartContext)
 const calculateOfferPrice = (originalPrice: number, offer: Offer | null): number => {
-  if (!offer) return originalPrice;
+  if (!offer) {
+    console.log("No offer provided, returning original price:", originalPrice);
+    return originalPrice;
+  }
   
-  // If offer has a fixed price, use that directly
+  console.log("Calculating offer price:", {
+    originalPrice,
+    offerId: offer.id,
+    offerName: offer.name || offer.title,
+    offerPrice: offer.price,
+    offerDiscount: offer.discount,
+    offerDiscountType: offer.discount_type,
+    offerDiscountValue: offer.discount_value,
+    fullOffer: offer
+  });
+  
+  // Check if offer name/title suggests "free" (Buy X Get Y Free)
+  const offerName = (offer.name || offer.title || "").toLowerCase();
+  const isFreeOffer = offerName.includes("free") || offerName.includes("get") && offerName.includes("free");
+  
+  // If offer has a fixed price, use that directly (including 0 for free items)
   if (offer.price !== undefined && offer.price !== null) {
-    return offer.price;
+    const fixedPrice = Number(offer.price);
+    console.log("Using fixed offer price:", fixedPrice);
+    return fixedPrice;
+  }
+  
+  // If it's a "free" offer and no price/discount is set, make it free
+  if (isFreeOffer && (offer.discount === undefined || offer.discount === null) && (offer.discount_value === undefined || offer.discount_value === null)) {
+    console.log("Detected free offer from name, returning 0");
+    return 0;
   }
   
   // If offer has discount field, use that
   if (offer.discount !== undefined && offer.discount !== null) {
     const discountType = offer.discount_type;
-    const discountValue = offer.discount;
+    const discountValue = Number(offer.discount);
+    
+    console.log("Using discount field:", { discountType, discountValue });
     
     if (!discountType) {
       // If no discount type specified, assume percentage
       const percentageDiscount = (originalPrice * discountValue) / 100;
-      return Math.max(0, originalPrice - percentageDiscount);
+      const finalPrice = Math.max(0, originalPrice - percentageDiscount);
+      console.log("Percentage discount (no type):", { percentageDiscount, finalPrice });
+      return finalPrice;
     }
     
     switch (discountType.toLowerCase()) {
       case 'percentage':
       case 'percent': {
         const percentageDiscount = (originalPrice * discountValue) / 100;
-        return Math.max(0, originalPrice - percentageDiscount);
+        const finalPrice = Math.max(0, originalPrice - percentageDiscount);
+        console.log("Percentage discount:", { percentageDiscount, finalPrice });
+        return finalPrice;
       }
       
       case 'fixed':
-      case 'amount':
-        return Math.max(0, originalPrice - discountValue);
+      case 'amount': {
+        const finalPrice = Math.max(0, originalPrice - discountValue);
+        console.log("Fixed discount:", { discountValue, finalPrice });
+        return finalPrice;
+      }
       
       case 'free':
       case 'zero':
+        console.log("Free item offer");
         return 0;
       
       default: {
         const defaultPercentageDiscount = (originalPrice * discountValue) / 100;
-        return Math.max(0, originalPrice - defaultPercentageDiscount);
+        const finalPrice = Math.max(0, originalPrice - defaultPercentageDiscount);
+        console.log("Default percentage discount:", { defaultPercentageDiscount, finalPrice });
+        return finalPrice;
       }
     }
   }
@@ -60,28 +98,41 @@ const calculateOfferPrice = (originalPrice: number, offer: Offer | null): number
   const discountType2 = offer.discount_type;
   const discountValue2 = offer.discount_value;
   
-  if (!discountType2 || discountValue2 === undefined || discountValue2 === null) {
-    return originalPrice;
+  if (discountValue2 !== undefined && discountValue2 !== null) {
+    console.log("Using discount_value field:", { discountType2, discountValue2 });
+    
+    switch ((discountType2 || '').toLowerCase()) {
+      case 'percentage':
+      case 'percent': {
+        const percentageDiscount = (originalPrice * Number(discountValue2)) / 100;
+        const finalPrice = Math.max(0, originalPrice - percentageDiscount);
+        console.log("Percentage discount (discount_value):", { percentageDiscount, finalPrice });
+        return finalPrice;
+      }
+      
+      case 'fixed':
+      case 'amount': {
+        const finalPrice = Math.max(0, originalPrice - Number(discountValue2));
+        console.log("Fixed discount (discount_value):", { discountValue2, finalPrice });
+        return finalPrice;
+      }
+      
+      case 'free':
+      case 'zero':
+        console.log("Free item offer (discount_value)");
+        return 0;
+      
+      default:
+        // If no type specified, assume percentage
+        const percentageDiscount = (originalPrice * Number(discountValue2)) / 100;
+        const finalPrice = Math.max(0, originalPrice - percentageDiscount);
+        console.log("Default percentage (discount_value, no type):", { percentageDiscount, finalPrice });
+        return finalPrice;
+    }
   }
   
-  switch (discountType2.toLowerCase()) {
-    case 'percentage':
-    case 'percent': {
-      const percentageDiscount = (originalPrice * discountValue2) / 100;
-      return Math.max(0, originalPrice - percentageDiscount);
-    }
-    
-    case 'fixed':
-    case 'amount':
-      return Math.max(0, originalPrice - discountValue2);
-    
-    case 'free':
-    case 'zero':
-      return 0;
-    
-    default:
-      return originalPrice;
-  }
+  console.log("No discount found, returning original price:", originalPrice);
+  return originalPrice;
 };
 
 interface Address {
@@ -188,10 +239,18 @@ export default function CheckoutPage() {
         .single();
 
       if (!error && data?.delivery_charge) {
-        setDeliveryCharge(Number(data.delivery_charge));
+        const charge = Number(data.delivery_charge);
+        console.log("Delivery charge loaded from database:", charge);
+        setDeliveryCharge(charge);
+      } else {
+        console.error("Error loading delivery charge:", error);
+        // Default to 250 if not found
+        setDeliveryCharge(250);
       }
     } catch (error) {
       console.error("Error loading delivery charge:", error);
+      // Default to 250 on error
+      setDeliveryCharge(250);
     }
   };
 
@@ -357,8 +416,8 @@ export default function CheckoutPage() {
       }
 
       // Clear cart and offer (reset after order completion)
+      clearOffer(); // Clear offer first
       clearCart();
-      clearOffer();
       // Redirect to success page
       router.push(`/checkout/success?order=${order_number}`);
     } catch (error: any) {
@@ -990,10 +1049,24 @@ export default function CheckoutPage() {
                       );
                       if (!originalItem) return null;
                       
-                      const offerPrice = calculateOfferPrice(originalItem.price, offer);
+                      // Items selected for offer should be FREE (price = 0)
+                      // This is for "Buy X Get Y Free" offers
+                      const offerPrice = 0; // Items in offerSelectedProducts are always free
                       const originalTotal = originalItem.price * offerItem.quantity;
                       const offerTotal = offerPrice * offerItem.quantity;
                       const savings = originalTotal - offerTotal;
+                      
+                      // Debug logging
+                      console.log("Offer Price Calculation:", {
+                        originalPrice: originalItem.price,
+                        offerPrice,
+                        offer: offer,
+                        offerPriceField: offer?.price,
+                        offerDiscountField: offer?.discount,
+                        offerDiscountType: offer?.discount_type,
+                        offerDiscountValue: offer?.discount_value,
+                        savings
+                      });
                       
                       return (
                         <div key={idx} className="bg-white rounded-lg p-4 border border-green-200">
@@ -1108,7 +1181,8 @@ export default function CheckoutPage() {
                         (item) => item.id === offerItem.id && item.color === offerItem.color
                       );
                       if (originalItem) {
-                        const offerPrice = calculateOfferPrice(originalItem.price, offer);
+                        // Items selected for offer should be FREE (price = 0)
+                        const offerPrice = 0;
                         originalTotal += originalItem.price * offerItem.quantity;
                         totalSavings += (originalItem.price - offerPrice) * offerItem.quantity;
                       }
@@ -1187,39 +1261,30 @@ export default function CheckoutPage() {
                     hasOffer = criteriaMet;
                   }
                   
-                  // Calculate total offer price to subtract: (offer price * quantity) for offer items
-                  let totalOfferPrice = 0;
-                  
-                  if (hasOffer && offer) {
-                    cartState.offerSelectedProducts.forEach((offerItem) => {
-                      const originalItem = cartState.items.find(
-                        (item) => item.id === offerItem.id && item.color === offerItem.color
-                      );
-                      if (originalItem) {
-                        const offerPrice = calculateOfferPrice(originalItem.price, offer);
-                        // Total offer price = offer price * quantity (this is what we subtract from total)
-                        totalOfferPrice += offerPrice * offerItem.quantity;
-                      }
-                    });
-                  }
-                  
-                  // Calculate offer savings for display (original price - offer price) * quantity
+                  // Calculate offer savings: items in offerSelectedProducts are FREE (price = 0)
+                  // So we subtract the full original price of those items
                   let offerSavings = 0;
+                  let totalOfferPriceToSubtract = 0;
+                  
                   if (hasOffer && offer) {
                     cartState.offerSelectedProducts.forEach((offerItem) => {
                       const originalItem = cartState.items.find(
                         (item) => item.id === offerItem.id && item.color === offerItem.color
                       );
                       if (originalItem) {
-                        const offerPrice = calculateOfferPrice(originalItem.price, offer);
+                        // Items selected for offer should be FREE (price = 0)
+                        const offerPrice = 0;
                         const savingsPerItem = originalItem.price - offerPrice;
                         offerSavings += savingsPerItem * offerItem.quantity;
+                        // Total to subtract = original price of offer items (since they're free)
+                        totalOfferPriceToSubtract += originalItem.price * offerItem.quantity;
                       }
                     });
                   }
                   
-                  // Final total = Original total - (offer price * quantity) + delivery
-                  const finalTotal = originalTotal - totalOfferPrice + deliveryCharge;
+                  // Final total = Original total - (original price of offer items) + delivery
+                  // Since offer items are free, we subtract their full original price
+                  const finalTotal = originalTotal - totalOfferPriceToSubtract + deliveryCharge;
                   
                   return (
                     <>
@@ -1308,8 +1373,9 @@ export default function CheckoutPage() {
                           const originalItem = cartState.items.find(
                             (item) => item.id === offerItem.id && item.color === offerItem.color
                           );
-                          if (originalItem && cartState.selectedOffer) {
-                            const offerPrice = calculateOfferPrice(originalItem.price, cartState.selectedOffer);
+                          if (originalItem) {
+                            // Items selected for offer should be FREE (price = 0)
+                            const offerPrice = 0;
                             // Total offer price = offer price * quantity (this is what we subtract from total)
                             totalOfferPrice += offerPrice * offerItem.quantity;
                           }
