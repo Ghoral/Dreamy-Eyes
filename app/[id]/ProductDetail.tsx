@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import Toast from "../components/ui/Toast";
 import { getThumbnailUrl } from "../util";
+import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
 
 const ProductDetail = ({ product }: { product: any }) => {
   // Get images for a specific color from product.images
@@ -22,9 +23,25 @@ const ProductDetail = ({ product }: { product: any }) => {
       console.log("Looking for color:", colorHex);
       console.log("Available colors:", Object.keys(parsedImages));
 
-      const images = parsedImages[colorHex] || [];
+      // Normalize color hex: remove # if present, convert to lowercase for matching
+      const normalizedColorHex = colorHex.replace(/^#/, '').toLowerCase();
+      
+      // Try exact match first
+      let images = parsedImages[colorHex] || parsedImages[`#${colorHex}`] || parsedImages[normalizedColorHex] || parsedImages[`#${normalizedColorHex}`];
+      
+      // If not found, try case-insensitive matching
+      if (!images || images.length === 0) {
+        const availableKeys = Object.keys(parsedImages);
+        const matchingKey = availableKeys.find(key => 
+          key.replace(/^#/, '').toLowerCase() === normalizedColorHex
+        );
+        if (matchingKey) {
+          images = parsedImages[matchingKey];
+        }
+      }
+      
       console.log("Images found for color:", images);
-      return images;
+      return images || [];
     } catch (error) {
       console.error("Error parsing product images:", error);
       return [];
@@ -73,14 +90,28 @@ const ProductDetail = ({ product }: { product: any }) => {
 
     if (images.length > 0) {
       const imageUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${images[0]}`;
-      console.log("Returning image URL:", imageUrl);
+      console.log("Returning image URL for selected color:", imageUrl);
       return imageUrl;
     }
 
     // Fallback to primary_thumbnail or first available image or default
-    const fallbackUrl =
-      getThumbnailUrl(product) || "/images/product-default.jpg";
-    console.log("Using fallback URL:", fallbackUrl);
+    const thumbnailPath = getThumbnailUrl(product);
+    let fallbackUrl: string;
+    
+    if (thumbnailPath) {
+      // If thumbnailPath is already a full URL, use it; otherwise prepend base URL
+      if (thumbnailPath.startsWith('http://') || thumbnailPath.startsWith('https://')) {
+        fallbackUrl = thumbnailPath;
+      } else {
+        // Ensure it starts with / if it doesn't already
+        const path = thumbnailPath.startsWith('/') ? thumbnailPath : `/${thumbnailPath}`;
+        fallbackUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}${path}`;
+      }
+    } else {
+      fallbackUrl = `${process.env.NEXT_PUBLIC_IMAGE_URL}/images/product-default.jpg`;
+    }
+    
+    console.log("Using fallback URL (no color-specific image found):", fallbackUrl);
     return fallbackUrl;
   };
 
@@ -130,6 +161,8 @@ const ProductDetail = ({ product }: { product: any }) => {
 
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
+  const [isCheckingQuantity, setIsCheckingQuantity] = useState(false);
+  const [quantityError, setQuantityError] = useState("");
 
   const { addItem, state: cartState, updateQuantity, removeItem } = useCart();
 
@@ -218,10 +251,57 @@ const ProductDetail = ({ product }: { product: any }) => {
     setQuantity(1);
   };
 
-  const handleQuantityChange = (newQuantity: number) => {
+  const handleQuantityChange = async (newQuantity: number) => {
+    if (!selectedColor) {
+      setQuantityError("Please select a color first");
+      return;
+    }
+
     const maxQuantity = getMaxQuantityForThisSession();
-    if (newQuantity >= 1 && newQuantity <= maxQuantity) {
-      setQuantity(newQuantity);
+    if (newQuantity < 1 || newQuantity > maxQuantity) {
+      setQuantityError(`Quantity must be between 1 and ${maxQuantity}`);
+      return;
+    }
+
+    setIsCheckingQuantity(true);
+    setQuantityError("");
+
+    try {
+      const supabase = createSupabaseClient();
+      
+      // Call the API to check if quantity is available
+      const { data, error } = await (supabase as any).rpc("check_product_quantity", {
+        p_product_id: product.id,
+        p_color_hex: selectedColor.color,
+        p_requested_quantity: newQuantity,
+      });
+
+      if (error) {
+        console.error("Quantity check error:", error);
+        setQuantityError(error.message || "Unable to check quantity. Please try again.");
+        setIsCheckingQuantity(false);
+        return;
+      }
+
+      // If API returns success, update the quantity
+      if (data !== null && data !== undefined) {
+        // Assuming API returns true/false or success indicator
+        // Adjust based on your actual API response format
+        if (data === true || data === "success" || (typeof data === "object" && data.success !== false)) {
+          setQuantity(newQuantity);
+          setQuantityError("");
+        } else {
+          setQuantityError("Requested quantity is not available");
+        }
+      } else {
+        setQuantity(newQuantity);
+        setQuantityError("");
+      }
+    } catch (error: any) {
+      console.error("Error checking quantity:", error);
+      setQuantityError(error.message || "Failed to check quantity. Please try again.");
+    } finally {
+      setIsCheckingQuantity(false);
     }
   };
 
@@ -231,6 +311,15 @@ const ProductDetail = ({ product }: { product: any }) => {
       return;
     }
 
+    // Get the image for the selected color
+    const selectedColorImage = getImageUrlForColor(selectedColor.color);
+    
+    console.log("=== ADDING TO CART ===");
+    console.log("Selected color:", selectedColor);
+    console.log("Color hex:", selectedColor.color);
+    console.log("Selected color image URL:", selectedColorImage);
+    console.log("Product images available:", product.images ? "Yes" : "No");
+    
     const cartItem = {
       id: product.id || product.title,
       title: product.title,
@@ -239,10 +328,14 @@ const ProductDetail = ({ product }: { product: any }) => {
       quantity: quantity,
       color: selectedColor.label,
       colorHex: selectedColor.color,
-      image: getImageUrlForColor(selectedColor.color),
+      image: selectedColorImage, // Store the selected color's image
       primary_thumbnail: product.primary_thumbnail || undefined,
+      productImages: product.images || undefined, // Store product images JSON for dynamic image retrieval
       maxQuantity: parseInt(selectedColor.quantity),
     };
+    
+    console.log("Cart item being added:", cartItem);
+    console.log("=== END ADD TO CART ===");
 
     addItem(cartItem);
     setShowToast(true);
@@ -267,7 +360,8 @@ const ProductDetail = ({ product }: { product: any }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
+    <div>
+      <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Left Column - Product Images */}
@@ -587,60 +681,78 @@ const ProductDetail = ({ product }: { product: any }) => {
               )}
 
               {/* Quantity Selector */}
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center border border-secondary-200 rounded-xl overflow-hidden bg-white">
-                  <button
-                    className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => handleQuantityChange(quantity - 1)}
-                    disabled={quantity <= 1}
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center border border-secondary-200 rounded-xl overflow-hidden bg-white relative">
+                    {isCheckingQuantity && (
+                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 rounded-xl">
+                        <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    <button
+                      className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleQuantityChange(quantity - 1)}
+                      disabled={quantity <= 1 || isCheckingQuantity}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20 12H4"
-                      />
-                    </svg>
-                  </button>
-                  <input
-                    type="number"
-                    className="w-20 text-center border-0 focus:ring-0 text-lg font-semibold text-secondary-800"
-                    value={quantity}
-                    min={1}
-                    max={getMaxQuantityForThisSession()}
-                    onChange={(e) =>
-                      handleQuantityChange(Number(e.target.value))
-                    }
-                  />
-                  <button
-                    className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => handleQuantityChange(quantity + 1)}
-                    disabled={
-                      quantity >= getMaxQuantityForThisSession() ||
-                      getMaxQuantityForThisSession() === 0
-                    }
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 12H4"
+                        />
+                      </svg>
+                    </button>
+                    <input
+                      type="number"
+                      className="w-20 text-center border-0 focus:ring-0 text-lg font-semibold text-secondary-800"
+                      value={quantity}
+                      min={1}
+                      max={getMaxQuantityForThisSession()}
+                      onChange={(e) =>
+                        handleQuantityChange(Number(e.target.value))
+                      }
+                      disabled={isCheckingQuantity}
+                    />
+                    <button
+                      className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => handleQuantityChange(quantity + 1)}
+                      disabled={
+                        quantity >= getMaxQuantityForThisSession() ||
+                        getMaxQuantityForThisSession() === 0 ||
+                        isCheckingQuantity
+                      }
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
+                {quantityError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-2 flex items-center space-x-2">
+                    <svg className="w-4 h-4 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm text-red-700">{quantityError}</span>
+                  </div>
+                )}
+              </div>
                 <div className="text-sm text-secondary-500">
                   <div>Total available: {getMaxQuantity()}</div>
                 </div>
@@ -714,38 +826,154 @@ const ProductDetail = ({ product }: { product: any }) => {
         </div>
 
         {/* Specifications Section */}
+        {(() => {
+          console.log("=== SPECIFICATIONS DEBUG ===");
+          console.log("Product specifications:", product.specifications);
+          console.log("Specifications type:", typeof product.specifications);
+          console.log("Is object?", typeof product.specifications === 'object' && product.specifications !== null);
+          if (product.specifications) {
+            console.log("Specifications keys:", Object.keys(product.specifications));
+            console.log("Specifications entries:", Object.entries(product.specifications));
+            Object.entries(product.specifications).forEach(([key, value]) => {
+              console.log(`  ${key}:`, value, `(type: ${typeof value})`);
+              if (typeof value === 'object' && value !== null) {
+                console.log(`    Is array:`, Array.isArray(value));
+                if (!Array.isArray(value)) {
+                  console.log(`    Object keys:`, Object.keys(value));
+                }
+              }
+            });
+          }
+          console.log("Power value:", product.power, `(type: ${typeof product.power})`);
+          console.log("=== END SPECIFICATIONS DEBUG ===");
+          return null;
+        })()}
         {product.specifications &&
           Object.keys(product.specifications).length > 0 && (
             <div className="mt-20">
-              <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
-                <h3 className="text-3xl font-bold text-secondary-800 mb-8 text-center">
-                  Specifications
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Object.entries(product.specifications).map(
-                    ([key, value], index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center py-4 border-b border-secondary-100 last:border-b-0"
-                      >
-                        <span className="font-semibold text-secondary-600 capitalize">
-                          {key.charAt(0).toUpperCase() +
-                            key.slice(1).replace(/([A-Z])/g, " $1")}
-                        </span>
-                        <span className="font-medium text-secondary-800">
-                          {String(value)}
-                        </span>
+              <div className="bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 rounded-3xl shadow-xl p-8 md:p-12 border border-primary-100/50">
+                {/* Header */}
+                <div className="text-center mb-10">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl mb-4 shadow-lg">
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-4xl font-bold text-secondary-800 mb-2 font-serif">
+                    Specifications
+                  </h3>
+                  <p className="text-secondary-600">Detailed product information</p>
+                </div>
+
+                {/* Specifications Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(product.specifications)
+                    .filter(([key, value]) => {
+                      // Filter out null, undefined, empty strings, and empty objects
+                      if (value === null || value === undefined || value === '') return false;
+                      if (typeof value === 'object' && Object.keys(value).length === 0) return false;
+                      return true;
+                    })
+                    .map(([key, value], index) => {
+                      // Format the value properly
+                      let displayLabel: string;
+                      let displayValue: string;
+                      
+                      // Check if value is an object with label and value properties
+                      if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                        const specObj = value as any;
+                        // Use label from the object if it exists, otherwise use the key
+                        displayLabel = specObj.label || key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1");
+                        // Use value from the object
+                        displayValue = specObj.value !== null && specObj.value !== undefined ? String(specObj.value) : 'N/A';
+                      } else {
+                        // Use the key as label
+                        displayLabel = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1");
+                        
+                        // Format the value
+                        if (value === null || value === undefined) {
+                          displayValue = 'N/A';
+                        } else if (Array.isArray(value)) {
+                          displayValue = value.length > 0 ? value.join(', ') : 'N/A';
+                        } else if (typeof value === 'boolean') {
+                          displayValue = value ? 'Yes' : 'No';
+                        } else if (typeof value === 'number') {
+                          displayValue = String(value);
+                        } else {
+                          displayValue = String(value);
+                        }
+                      }
+                      
+                      return (
+                        <div
+                          key={index}
+                          className="group bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-secondary-100 hover:border-primary-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-50 rounded-xl flex items-center justify-center group-hover:from-primary-200 group-hover:to-primary-100 transition-colors duration-300">
+                              <svg
+                                className="w-6 h-6 text-primary-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-1">
+                                {displayLabel}
+                              </div>
+                              <div className="text-lg font-bold text-secondary-800 break-words">
+                                {displayValue}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {product.power !== null && product.power !== undefined && product.power !== '' && (
+                    <div className="group bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-secondary-100 hover:border-primary-200 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                      <div className="flex items-start space-x-4">
+                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-50 rounded-xl flex items-center justify-center group-hover:from-primary-200 group-hover:to-primary-100 transition-colors duration-300">
+                          <svg
+                            className="w-6 h-6 text-primary-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-1">
+                            Power Rating
+                          </div>
+                          <div className="text-lg font-bold text-secondary-800">
+                            {product.power}W
+                          </div>
+                        </div>
                       </div>
-                    )
-                  )}
-                  {product.power && (
-                    <div className="flex justify-between items-center py-4 border-b border-secondary-100 last:border-b-0">
-                      <span className="font-semibold text-secondary-600">
-                        Power Rating
-                      </span>
-                      <span className="font-medium text-secondary-800">
-                        {product.power}W
-                      </span>
                     </div>
                   )}
                 </div>
@@ -753,7 +981,7 @@ const ProductDetail = ({ product }: { product: any }) => {
             </div>
           )}
       </div>
-
+      
       {/* Toast Notification */}
       <Toast
         message={

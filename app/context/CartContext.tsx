@@ -19,7 +19,8 @@ export interface CartItem {
   colorHex?: string;
   image?: string;
   maxQuantity?: number; 
-  primary_thumbnail?:string// Add maximum quantity limit
+  primary_thumbnail?: string;
+  productImages?: string; // Store product images JSON to get color-specific images
 }
 
 interface CartState {

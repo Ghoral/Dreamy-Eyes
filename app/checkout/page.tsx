@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCart } from "../context/CartContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -31,10 +31,42 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"cash_on_delivery" | "pre_payment">("cash_on_delivery");
+  const [transactionId, setTransactionId] = useState("");
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
+  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState<string>("");
+  const [deliveryCharge, setDeliveryCharge] = useState<number>(250); // Default delivery charge
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadUserAddresses();
+    loadDeliveryCharge();
   }, []);
+
+  const loadDeliveryCharge = async () => {
+    try {
+      const supabase = createSupabaseClient();
+      const { data, error } = await (supabase as any)
+        .from("detail")
+        .select("delivery_charge")
+        .order("id", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) {
+        console.error("Error loading delivery charge:", error);
+        // Keep default value if fetch fails
+        return;
+      }
+
+      if (data && data.delivery_charge) {
+        setDeliveryCharge(parseFloat(data.delivery_charge) || 250);
+      }
+    } catch (error) {
+      console.error("Error fetching delivery charge:", error);
+      // Keep default value if fetch fails
+    }
+  };
 
   const loadUserAddresses = async () => {
     try {
@@ -78,15 +110,132 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      console.log("No file selected");
+      setPaymentScreenshot(null);
+      setPaymentScreenshotUrl("");
+      return;
+    }
+
+    console.log("File selected:", file.name, file.type, file.size);
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError("Please upload an image file");
+      setPaymentScreenshot(null);
+      setPaymentScreenshotUrl("");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size should be less than 5MB");
+      setPaymentScreenshot(null);
+      setPaymentScreenshotUrl("");
+      return;
+    }
+
+    // Set the file in state
+    setPaymentScreenshot(file);
+    setError(""); // Clear any previous errors
+    console.log("Screenshot set in state:", file.name, "File object:", file);
+
+    // Create preview URL for display
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPaymentScreenshotUrl(reader.result as string);
+      console.log("Preview URL created");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadScreenshotToStorage = async (file: File, orderNumber: string): Promise<string | null> => {
+    try {
+      const supabase = createSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return null;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${orderNumber}_payment.${fileExt}`;
+      const filePath = `payment-screenshots/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('payment') // Bucket name is 'payment'
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        console.error("Upload error:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
+        return null;
+      }
+
+      // Return only the storage key/path (not full URL) since bucket is private
+      // Format: payment-screenshots/{user_id}/{order_number}_payment.{ext}
+      return filePath;
+    } catch (error) {
+      console.error("Error uploading screenshot:", error);
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for file in input if state is not set (fallback)
+    let screenshotFile = paymentScreenshot;
+    if (!screenshotFile && fileInputRef.current?.files && fileInputRef.current.files.length > 0) {
+      screenshotFile = fileInputRef.current.files[0];
+      console.log("Found file in input ref:", screenshotFile.name);
+    }
+    
+    console.log("Form submitted", {
+      selectedAddressId,
+      paymentMethod,
+      transactionId,
+      hasScreenshot: !!paymentScreenshot,
+      hasScreenshotFromRef: !!screenshotFile,
+      fileInputFiles: fileInputRef.current?.files?.length || 0,
+    });
 
     if (!selectedAddressId || selectedAddressId <= 0) {
       setError("Please select a shipping address");
       return;
     }
 
+    // Validate pre-payment requirements - BOTH transaction ID AND screenshot are required
+    if (paymentMethod === "pre_payment") {
+      const hasTransactionId = transactionId.trim().length > 0;
+      const hasScreenshot = !!screenshotFile;
+      
+      if (!hasTransactionId) {
+        setError("Transaction ID is required for pre-payment");
+        return;
+      }
+      
+      if (!hasScreenshot) {
+        setError("Payment screenshot is required for pre-payment");
+        return;
+      }
+      
+      console.log("Pre-payment validation passed", {
+        hasTransactionId,
+        hasScreenshot,
+        transactionId: transactionId.trim(),
+        screenshotFile: screenshotFile?.name
+      });
+    }
+
     setIsProcessing(true);
+    setError("");
 
     try {
       const supabase = createSupabaseClient();
@@ -100,7 +249,45 @@ export default function CheckoutPage() {
       if (userError || !user) {
         throw new Error("User not authenticated");
       }
+
       const order_number = generateUniqueCode();
+      let paymentUrl = "";
+
+      // Upload screenshot FIRST (required for pre-payment)
+      if (screenshotFile) {
+        console.log("Uploading screenshot on submit:", screenshotFile.name);
+        try {
+          const uploadedUrl = await uploadScreenshotToStorage(screenshotFile, order_number);
+          if (uploadedUrl) {
+            paymentUrl = uploadedUrl;
+            console.log("Screenshot uploaded successfully, storage key:", uploadedUrl);
+          } else {
+            console.error("Screenshot upload returned null");
+            setError("Screenshot upload failed. Please try uploading the screenshot again.");
+            setIsProcessing(false);
+            return;
+          }
+        } catch (uploadError: any) {
+          console.error("Screenshot upload error:", uploadError);
+          setError(`Screenshot upload failed: ${uploadError.message || "Unknown error"}. Please try uploading again.`);
+          setIsProcessing(false);
+          return;
+        }
+      }
+      
+      // Final validation: we need BOTH transaction ID AND successful screenshot upload
+      if (paymentMethod === "pre_payment") {
+        if (!transactionId.trim()) {
+          setError("Transaction ID is required");
+          setIsProcessing(false);
+          return;
+        }
+        if (!paymentUrl) {
+          setError("Payment screenshot upload is required");
+          setIsProcessing(false);
+          return;
+        }
+      }
 
       // Create order
       const { data: orderData, error: orderError } =
@@ -108,19 +295,23 @@ export default function CheckoutPage() {
           p_address_id: selectedAddressId,
           p_order_number: order_number,
           p_items: cartState.items,
+          p_payment_method: paymentMethod,
+          p_transaction_id: transactionId.trim() || null,
+          p_payment_url: paymentUrl || null,
         });
 
       if (orderError) {
-        throw new Error("Failed to create order");
+        console.error("Order creation error:", orderError);
+        throw new Error(orderError.message || "Failed to create order");
       }
 
       // Clear cart
       clearCart();
       // Redirect to success page
       router.push(`/checkout/success?order=${order_number}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Checkout error:", error);
-      setError("Failed to process order. Please try again.");
+      setError(error.message || "Failed to process order. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -366,6 +557,194 @@ export default function CheckoutPage() {
                 </Link>
               </div>
             </div>
+
+            {/* Payment Method Selection */}
+            <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-primary-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-secondary-800">
+                  Payment Method
+                </h2>
+              </div>
+
+              <div className="space-y-4">
+                {/* Cash on Delivery */}
+                <div className="relative">
+                  <input
+                    type="radio"
+                    id="cash_on_delivery"
+                    name="paymentMethod"
+                    value="cash_on_delivery"
+                    checked={paymentMethod === "cash_on_delivery"}
+                    onChange={(e) => setPaymentMethod(e.target.value as "cash_on_delivery")}
+                    className="sr-only"
+                  />
+                  <label
+                    htmlFor="cash_on_delivery"
+                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                      paymentMethod === "cash_on_delivery"
+                        ? "border-primary-500 bg-primary-50 shadow-glow"
+                        : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                    }`}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        paymentMethod === "cash_on_delivery"
+                          ? "border-primary-500 bg-primary-500"
+                          : "border-secondary-300"
+                      }`}>
+                        {paymentMethod === "cash_on_delivery" && (
+                          <div className="w-3 h-3 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-secondary-800 text-lg">
+                            Cash on Delivery
+                          </h3>
+                          <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                            Pay on Delivery
+                          </span>
+                        </div>
+                        <p className="text-secondary-600 text-sm">
+                          Pay with cash when your order is delivered. Delivery charge of ${deliveryCharge.toFixed(2)} will be included.
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Pre Payment */}
+                <div className="relative">
+                  <input
+                    type="radio"
+                    id="pre_payment"
+                    name="paymentMethod"
+                    value="pre_payment"
+                    checked={paymentMethod === "pre_payment"}
+                    onChange={(e) => setPaymentMethod(e.target.value as "pre_payment")}
+                    className="sr-only"
+                  />
+                  <label
+                    htmlFor="pre_payment"
+                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                      paymentMethod === "pre_payment"
+                        ? "border-primary-500 bg-primary-50 shadow-glow"
+                        : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                    }`}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                        paymentMethod === "pre_payment"
+                          ? "border-primary-500 bg-primary-500"
+                          : "border-secondary-300"
+                      }`}>
+                        {paymentMethod === "pre_payment" && (
+                          <div className="w-3 h-3 rounded-full bg-white"></div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-secondary-800 text-lg">
+                            Pre Payment
+                          </h3>
+                          <span className="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full">
+                            Pay Now
+                          </span>
+                        </div>
+                        <p className="text-secondary-600 text-sm mb-4">
+                          Pay in advance via bank transfer or payment gateway. Delivery charge of ${deliveryCharge.toFixed(2)} will be included.
+                        </p>
+
+                        {/* Pre Payment Fields */}
+                        {paymentMethod === "pre_payment" && (
+                          <div className="mt-4 space-y-4 pt-4 border-t border-secondary-200">
+                            {/* Transaction ID */}
+                            <div>
+                              <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                                Transaction ID <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={transactionId}
+                                onChange={(e) => {
+                                  setTransactionId(e.target.value);
+                                  setError(""); // Clear error when user types
+                                }}
+                                placeholder="Enter your transaction ID"
+                                required
+                                className="w-full px-4 py-3 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
+                              />
+                              <p className="text-xs text-secondary-500 mt-1">
+                                Enter the transaction ID from your payment receipt
+                              </p>
+                            </div>
+
+                            {/* Payment Screenshot */}
+                            <div>
+                              <label className="block text-sm font-semibold text-secondary-700 mb-2">
+                                Payment Screenshot <span className="text-red-500">*</span>
+                              </label>
+                              <div className="space-y-2">
+                                <input
+                                  ref={fileInputRef}
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleScreenshotUpload}
+                                  required
+                                  className="w-full px-4 py-3 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                                />
+                                {paymentScreenshotUrl && (
+                                  <div className="relative mt-2">
+                                    <img
+                                      src={paymentScreenshotUrl}
+                                      alt="Payment screenshot"
+                                      className="w-full max-w-xs rounded-xl border border-secondary-200"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setPaymentScreenshot(null);
+                                        setPaymentScreenshotUrl("");
+                                        if (fileInputRef.current) {
+                                          fileInputRef.current.value = "";
+                                        }
+                                      }}
+                                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs text-secondary-500 mt-1">
+                                Upload a screenshot of your payment confirmation (Required)
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Right Column - Order Summary */}
@@ -503,8 +882,10 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-secondary-600">Shipping:</span>
-                  <span className="text-green-600 font-semibold">Free</span>
+                  <span className="text-secondary-600">Delivery Charge:</span>
+                  <span className="font-semibold text-secondary-800">
+                    ${deliveryCharge.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-secondary-600">Tax (8%):</span>
@@ -518,17 +899,26 @@ export default function CheckoutPage() {
                       Total:
                     </span>
                     <span className="text-2xl font-bold text-primary-600">
-                      ${(cartState.totalPrice * 1.08).toFixed(2)}
+                      ${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(2)}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Complete Order Button */}
-              <form onSubmit={handleSubmit} className="mt-8">
+              <form onSubmit={handleSubmit} className="mt-8" noValidate>
                 <button
                   type="submit"
                   disabled={isProcessing || !selectedAddressId}
+                  onClick={(e) => {
+                    console.log("Button clicked", {
+                      isProcessing,
+                      selectedAddressId,
+                      paymentMethod,
+                      transactionId,
+                      hasScreenshot: !!paymentScreenshot,
+                    });
+                  }}
                   className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
                     isProcessing || !selectedAddressId
                       ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
@@ -541,9 +931,7 @@ export default function CheckoutPage() {
                       <span>Processing Order...</span>
                     </div>
                   ) : (
-                    `Complete Order - $${(cartState.totalPrice * 1.08).toFixed(
-                      2
-                    )}`
+                    `Complete Order - $${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(2)}`
                   )}
                 </button>
               </form>
