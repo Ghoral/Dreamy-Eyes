@@ -64,36 +64,53 @@ const ModalCart = ({
 
       if (error) {
         console.error("Quantity check error:", error);
+        // Extract error message from Supabase RPC error
+        const errorMessage =
+          error.message ||
+          error.details ||
+          error.hint ||
+          "Unable to check quantity. Please try again.";
         setQuantityErrors(prev => ({ 
           ...prev, 
-          [itemKey]: error.message || "Unable to check quantity. Please try again." 
+          [itemKey]: errorMessage
         }));
         setCheckingQuantities(prev => ({ ...prev, [itemKey]: false }));
         return;
       }
 
-      // If API returns success, update the quantity
+      // Check the API response structure
       if (data !== null && data !== undefined) {
-        // Assuming API returns true/false or success indicator
-        if (data === true || data === "success" || (typeof data === "object" && data.success !== false)) {
+        // API returns: { available: boolean, message: string, ... }
+        if (data.available === true) {
+          // Quantity is available, update it
           updateQuantity(item.id, newQuantity, item.color);
           setQuantityErrors(prev => ({ ...prev, [itemKey]: "" }));
         } else {
+          // Quantity not available, show the message from API
+          const apiMessage = data.message || "Requested quantity is not available";
           setQuantityErrors(prev => ({ 
             ...prev, 
-            [itemKey]: "Requested quantity is not available" 
+            [itemKey]: apiMessage
           }));
         }
       } else {
-        // If no explicit error, proceed with update
-        updateQuantity(item.id, newQuantity, item.color);
-        setQuantityErrors(prev => ({ ...prev, [itemKey]: "" }));
+        // If no data returned, show error
+        setQuantityErrors(prev => ({ 
+          ...prev, 
+          [itemKey]: "Unable to check quantity. Please try again." 
+        }));
       }
     } catch (error: any) {
       console.error("Error checking quantity:", error);
+      // Extract error message from caught error
+      const errorMessage =
+        error?.message ||
+        error?.details ||
+        error?.hint ||
+        "Failed to check quantity. Please try again.";
       setQuantityErrors(prev => ({ 
         ...prev, 
-        [itemKey]: error.message || "Failed to check quantity. Please try again." 
+        [itemKey]: errorMessage
       }));
     } finally {
       setCheckingQuantities(prev => ({ ...prev, [itemKey]: false }));

@@ -31,7 +31,9 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash_on_delivery" | "pre_payment">("cash_on_delivery");
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cash_on_delivery" | "pre_payment"
+  >("cash_on_delivery");
   const [transactionId, setTransactionId] = useState("");
   const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
   const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState<string>("");
@@ -110,7 +112,9 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleScreenshotUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     if (!file) {
       console.log("No file selected");
@@ -122,7 +126,7 @@ export default function CheckoutPage() {
     console.log("File selected:", file.name, file.type, file.size);
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       setError("Please upload an image file");
       setPaymentScreenshot(null);
       setPaymentScreenshotUrl("");
@@ -151,7 +155,10 @@ export default function CheckoutPage() {
     reader.readAsDataURL(file);
   };
 
-  const uploadScreenshotToStorage = async (file: File, orderNumber: string): Promise<string | null> => {
+  const uploadScreenshotToStorage = async (
+    file: File,
+    orderNumber: string
+  ): Promise<string | null> => {
     try {
       const supabase = createSupabaseClient();
       const {
@@ -160,16 +167,16 @@ export default function CheckoutPage() {
 
       if (!user) return null;
 
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}/${orderNumber}_payment.${fileExt}`;
       const filePath = `payment-screenshots/${fileName}`;
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
-        .from('payment') // Bucket name is 'payment'
+        .from("payment") // Bucket name is 'payment'
         .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
+          cacheControl: "3600",
+          upsert: false,
         });
 
       if (error) {
@@ -189,14 +196,18 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check for file in input if state is not set (fallback)
     let screenshotFile = paymentScreenshot;
-    if (!screenshotFile && fileInputRef.current?.files && fileInputRef.current.files.length > 0) {
+    if (
+      !screenshotFile &&
+      fileInputRef.current?.files &&
+      fileInputRef.current.files.length > 0
+    ) {
       screenshotFile = fileInputRef.current.files[0];
       console.log("Found file in input ref:", screenshotFile.name);
     }
-    
+
     console.log("Form submitted", {
       selectedAddressId,
       paymentMethod,
@@ -215,22 +226,22 @@ export default function CheckoutPage() {
     if (paymentMethod === "pre_payment") {
       const hasTransactionId = transactionId.trim().length > 0;
       const hasScreenshot = !!screenshotFile;
-      
+
       if (!hasTransactionId) {
         setError("Transaction ID is required for pre-payment");
         return;
       }
-      
+
       if (!hasScreenshot) {
         setError("Payment screenshot is required for pre-payment");
         return;
       }
-      
+
       console.log("Pre-payment validation passed", {
         hasTransactionId,
         hasScreenshot,
         transactionId: transactionId.trim(),
-        screenshotFile: screenshotFile?.name
+        screenshotFile: screenshotFile?.name,
       });
     }
 
@@ -257,24 +268,36 @@ export default function CheckoutPage() {
       if (screenshotFile) {
         console.log("Uploading screenshot on submit:", screenshotFile.name);
         try {
-          const uploadedUrl = await uploadScreenshotToStorage(screenshotFile, order_number);
+          const uploadedUrl = await uploadScreenshotToStorage(
+            screenshotFile,
+            order_number
+          );
           if (uploadedUrl) {
             paymentUrl = uploadedUrl;
-            console.log("Screenshot uploaded successfully, storage key:", uploadedUrl);
+            console.log(
+              "Screenshot uploaded successfully, storage key:",
+              uploadedUrl
+            );
           } else {
             console.error("Screenshot upload returned null");
-            setError("Screenshot upload failed. Please try uploading the screenshot again.");
+            setError(
+              "Screenshot upload failed. Please try uploading the screenshot again."
+            );
             setIsProcessing(false);
             return;
           }
         } catch (uploadError: any) {
           console.error("Screenshot upload error:", uploadError);
-          setError(`Screenshot upload failed: ${uploadError.message || "Unknown error"}. Please try uploading again.`);
+          setError(
+            `Screenshot upload failed: ${
+              uploadError.message || "Unknown error"
+            }. Please try uploading again.`
+          );
           setIsProcessing(false);
           return;
         }
       }
-      
+
       // Final validation: we need BOTH transaction ID AND successful screenshot upload
       if (paymentMethod === "pre_payment") {
         if (!transactionId.trim()) {
@@ -302,7 +325,14 @@ export default function CheckoutPage() {
 
       if (orderError) {
         console.error("Order creation error:", orderError);
-        throw new Error(orderError.message || "Failed to create order");
+        // Extract the actual error message from Supabase RPC error
+        // PostgreSQL exceptions are usually in error.message or error.details
+        const errorMessage =
+          orderError.message ||
+          orderError.details ||
+          orderError.hint ||
+          "Failed to create order";
+        throw new Error(errorMessage);
       }
 
       // Clear cart
@@ -311,7 +341,15 @@ export default function CheckoutPage() {
       router.push(`/checkout/success?order=${order_number}`);
     } catch (error: any) {
       console.error("Checkout error:", error);
-      setError(error.message || "Failed to process order. Please try again.");
+      // Display the actual error message from the API
+      // For Supabase RPC errors, the message is usually in error.message
+      // For PostgreSQL exceptions raised in the function, it's in the error message
+      const errorMessage =
+        error?.message ||
+        error?.details ||
+        error?.hint ||
+        "Failed to process order. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -590,7 +628,9 @@ export default function CheckoutPage() {
                     name="paymentMethod"
                     value="cash_on_delivery"
                     checked={paymentMethod === "cash_on_delivery"}
-                    onChange={(e) => setPaymentMethod(e.target.value as "cash_on_delivery")}
+                    onChange={(e) =>
+                      setPaymentMethod(e.target.value as "cash_on_delivery")
+                    }
                     className="sr-only"
                   />
                   <label
@@ -602,11 +642,13 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <div className="flex items-start space-x-4">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        paymentMethod === "cash_on_delivery"
-                          ? "border-primary-500 bg-primary-500"
-                          : "border-secondary-300"
-                      }`}>
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                          paymentMethod === "cash_on_delivery"
+                            ? "border-primary-500 bg-primary-500"
+                            : "border-secondary-300"
+                        }`}
+                      >
                         {paymentMethod === "cash_on_delivery" && (
                           <div className="w-3 h-3 rounded-full bg-white"></div>
                         )}
@@ -621,7 +663,9 @@ export default function CheckoutPage() {
                           </span>
                         </div>
                         <p className="text-secondary-600 text-sm">
-                          Pay with cash when your order is delivered. Delivery charge of ${deliveryCharge.toFixed(2)} will be included.
+                          Pay with cash when your order is delivered. Delivery
+                          charge of ${deliveryCharge.toFixed(2)} will be
+                          included.
                         </p>
                       </div>
                     </div>
@@ -636,7 +680,9 @@ export default function CheckoutPage() {
                     name="paymentMethod"
                     value="pre_payment"
                     checked={paymentMethod === "pre_payment"}
-                    onChange={(e) => setPaymentMethod(e.target.value as "pre_payment")}
+                    onChange={(e) =>
+                      setPaymentMethod(e.target.value as "pre_payment")
+                    }
                     className="sr-only"
                   />
                   <label
@@ -648,11 +694,13 @@ export default function CheckoutPage() {
                     }`}
                   >
                     <div className="flex items-start space-x-4">
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                        paymentMethod === "pre_payment"
-                          ? "border-primary-500 bg-primary-500"
-                          : "border-secondary-300"
-                      }`}>
+                      <div
+                        className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                          paymentMethod === "pre_payment"
+                            ? "border-primary-500 bg-primary-500"
+                            : "border-secondary-300"
+                        }`}
+                      >
                         {paymentMethod === "pre_payment" && (
                           <div className="w-3 h-3 rounded-full bg-white"></div>
                         )}
@@ -667,7 +715,9 @@ export default function CheckoutPage() {
                           </span>
                         </div>
                         <p className="text-secondary-600 text-sm mb-4">
-                          Pay in advance via bank transfer or payment gateway. Delivery charge of ${deliveryCharge.toFixed(2)} will be included.
+                          Pay in advance via bank transfer or payment gateway.
+                          Delivery charge of ${deliveryCharge.toFixed(2)} will
+                          be included.
                         </p>
 
                         {/* Pre Payment Fields */}
@@ -676,7 +726,8 @@ export default function CheckoutPage() {
                             {/* Transaction ID */}
                             <div>
                               <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                                Transaction ID <span className="text-red-500">*</span>
+                                Transaction ID{" "}
+                                <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="text"
@@ -690,14 +741,16 @@ export default function CheckoutPage() {
                                 className="w-full px-4 py-3 border border-secondary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300"
                               />
                               <p className="text-xs text-secondary-500 mt-1">
-                                Enter the transaction ID from your payment receipt
+                                Enter the transaction ID from your payment
+                                receipt
                               </p>
                             </div>
 
                             {/* Payment Screenshot */}
                             <div>
                               <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                                Payment Screenshot <span className="text-red-500">*</span>
+                                Payment Screenshot{" "}
+                                <span className="text-red-500">*</span>
                               </label>
                               <div className="space-y-2">
                                 <input
@@ -726,15 +779,26 @@ export default function CheckoutPage() {
                                       }}
                                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                                     >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                      <svg
+                                        className="w-4 h-4"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M6 18L18 6M6 6l12 12"
+                                        />
                                       </svg>
                                     </button>
                                   </div>
                                 )}
                               </div>
                               <p className="text-xs text-secondary-500 mt-1">
-                                Upload a screenshot of your payment confirmation (Required)
+                                Upload a screenshot of your payment confirmation
+                                (Required)
                               </p>
                             </div>
                           </div>
@@ -899,7 +963,10 @@ export default function CheckoutPage() {
                       Total:
                     </span>
                     <span className="text-2xl font-bold text-primary-600">
-                      ${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(2)}
+                      $
+                      {(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(
+                        2
+                      )}
                     </span>
                   </div>
                 </div>
@@ -931,7 +998,10 @@ export default function CheckoutPage() {
                       <span>Processing Order...</span>
                     </div>
                   ) : (
-                    `Complete Order - $${(cartState.totalPrice * 1.08 + deliveryCharge).toFixed(2)}`
+                    `Complete Order - $${(
+                      cartState.totalPrice * 1.08 +
+                      deliveryCharge
+                    ).toFixed(2)}`
                   )}
                 </button>
               </form>

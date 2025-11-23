@@ -278,28 +278,42 @@ const ProductDetail = ({ product }: { product: any }) => {
 
       if (error) {
         console.error("Quantity check error:", error);
-        setQuantityError(error.message || "Unable to check quantity. Please try again.");
+        // Extract error message from Supabase RPC error
+        const errorMessage =
+          error.message ||
+          error.details ||
+          error.hint ||
+          "Unable to check quantity. Please try again.";
+        setQuantityError(errorMessage);
         setIsCheckingQuantity(false);
         return;
       }
 
-      // If API returns success, update the quantity
+      // Check the API response structure
       if (data !== null && data !== undefined) {
-        // Assuming API returns true/false or success indicator
-        // Adjust based on your actual API response format
-        if (data === true || data === "success" || (typeof data === "object" && data.success !== false)) {
+        // API returns: { available: boolean, message: string, ... }
+        if (data.available === true) {
+          // Quantity is available, update it
           setQuantity(newQuantity);
           setQuantityError("");
         } else {
-          setQuantityError("Requested quantity is not available");
+          // Quantity not available, show the message from API
+          const apiMessage = data.message || "Requested quantity is not available";
+          setQuantityError(apiMessage);
         }
       } else {
-        setQuantity(newQuantity);
-        setQuantityError("");
+        // If no data returned, show error
+        setQuantityError("Unable to check quantity. Please try again.");
       }
     } catch (error: any) {
       console.error("Error checking quantity:", error);
-      setQuantityError(error.message || "Failed to check quantity. Please try again.");
+      // Extract error message from caught error
+      const errorMessage =
+        error?.message ||
+        error?.details ||
+        error?.hint ||
+        "Failed to check quantity. Please try again.";
+      setQuantityError(errorMessage);
     } finally {
       setIsCheckingQuantity(false);
     }
