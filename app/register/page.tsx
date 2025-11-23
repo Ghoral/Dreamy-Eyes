@@ -102,7 +102,7 @@ export default function RegisterPage() {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-            phone: formData.phone,
+            mobile_number: formData.phone,
           },
         },
       });
@@ -119,7 +119,7 @@ export default function RegisterPage() {
           email: formData.email,
           first_name: formData.firstName,
           last_name: formData.lastName,
-          phone: formData.phone,
+          mobile_number: formData.phone,
           profile_completed: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
