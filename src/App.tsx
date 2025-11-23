@@ -12,6 +12,7 @@ import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import BasicTables from "./pages/Tables/BasicTables";
 import Orders from "./pages/Tables/Orders";
+import DeliveryOrders from "./pages/Tables/DeliveryOrders";
 // import FormElements from "./pages/Forms/FormElements";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -19,6 +20,7 @@ import Home from "./pages/Dashboard/Home";
 import LandingForm from "./pages/Forms/Landing";
 import ProductForm from "./pages/Forms/Product";
 import ColorsForm from "./pages/Forms/Colors";
+import OffersForm from "./pages/Forms/Offers";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import Users from "./pages/Tables/Users";
@@ -63,9 +65,11 @@ function AppRoutes() {
         <Route path="/form/landing" element={<LandingForm />} />
         <Route path="/form/product" element={<ProductForm />} />
         <Route path="/form/colors" element={<ColorsForm />} />
+        <Route path="/form/offers" element={<OffersForm />} />
         {/* Tables */}
         <Route path="/basic-tables" element={<BasicTables />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/delivery-orders" element={<DeliveryOrders />} />
         <Route path="/activity-logs" element={<ActivityLogs />} />
         <Route path="/report-generation" element={<ReportGeneration />} />
         {/* UI Elements */}

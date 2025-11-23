@@ -22,7 +22,7 @@ const createAdminValidationSchema = Yup.object({
     .min(6, "Password must be at least 6 characters")
     .required("Password is required"),
   user_type: Yup.string()
-    .oneOf(["admin"], "Invalid user type")
+    .oneOf(["admin", "delivery"], "Invalid user type")
     .required("User type is required"),
   identification: Yup.mixed().required("Identification document is required"),
 });
@@ -35,7 +35,7 @@ const editAdminValidationSchema = Yup.object({
     .required("Email is required"),
   password: Yup.string().min(6, "Password must be at least 6 characters"),
   user_type: Yup.string()
-    .oneOf(["admin"], "Invalid user type")
+    .oneOf(["admin", "delivery"], "Invalid user type")
     .required("User type is required"),
 });
 
@@ -60,9 +60,9 @@ export default function InviteAdmin() {
 
   const formik = useFormik({
     initialValues: {
-      first_name: "",
-      last_name: "",
-      email: "",
+    first_name: "",
+    last_name: "",
+    email: "",
       password: "",
       user_type: "admin",
       identification: null,
@@ -200,8 +200,8 @@ export default function InviteAdmin() {
   useEffect(() => {
     if (isEditMode && id) {
       const fetchAdminData = async () => {
-        try {
-          setLoading(true);
+    try {
+      setLoading(true);
 
           console.log("Fetching admin data for ID:", id);
 
@@ -315,8 +315,8 @@ export default function InviteAdmin() {
           );
           // DON'T navigate away - let user see the error and stay on page
           // User can manually go back if needed
-        } finally {
-          setLoading(false);
+    } finally {
+      setLoading(false);
         }
       };
 
@@ -368,7 +368,7 @@ export default function InviteAdmin() {
         <div className="mb-6">
           <Label htmlFor="first_name">First Name</Label>
           <Input
-            type="text"
+          type="text"
             id="first_name"
             name="first_name"
             placeholder="Enter first name"
@@ -387,7 +387,7 @@ export default function InviteAdmin() {
         <div className="mb-6">
           <Label htmlFor="last_name">Last Name</Label>
           <Input
-            type="text"
+          type="text"
             id="last_name"
             name="last_name"
             placeholder="Enter last name"
@@ -426,7 +426,7 @@ export default function InviteAdmin() {
           <div className="mb-6">
             <Label htmlFor="password">Password</Label>
             <div className="relative">
-              <input
+        <input
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
@@ -475,6 +475,7 @@ export default function InviteAdmin() {
             }`}
           >
             <option value="admin">Admin</option>
+            <option value="delivery">Delivery</option>
           </select>
           {formik.touched.user_type && formik.errors.user_type && (
             <div className="text-red-500 text-sm mt-1">
@@ -553,7 +554,7 @@ export default function InviteAdmin() {
                 {formik.errors.identification}
               </div>
             )}
-        </div>
+      </div>
 
         <div className="flex gap-4">
           <button
@@ -581,8 +582,8 @@ export default function InviteAdmin() {
           >
             {isEditMode ? "Cancel" : "Reset"}
           </button>
-        </div>
-      </ComponentCard>
+      </div>
+    </ComponentCard>
     </form>
   );
 }
