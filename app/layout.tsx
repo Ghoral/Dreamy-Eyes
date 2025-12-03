@@ -6,6 +6,7 @@ import OfferBanner from "./components/landing/OfferBanner";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 import { AddressGuard } from "./hooks/AddressGuard";
 import { CartProvider } from "./context/CartContext";
+import { UserMetadataLogger } from "./components/UserMetadataLogger";
 
 const raleway = Raleway({
   subsets: ["latin"],
@@ -38,6 +39,7 @@ export default function RootLayout({
         <CartProvider>
           <GlobalSupabaseListenerWrapper />
           <AddressGuard />
+          <UserMetadataLogger />
           <Header />
           <OfferBanner />
           {children}
