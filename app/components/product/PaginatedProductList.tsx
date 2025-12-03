@@ -174,6 +174,7 @@ const Pagination = ({
 };
 
 const ProductCard = ({ product }: { product: Product }) => {
+  const { country } = useUserCountry();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [toastConfig, setToastConfig] = useState<{
     message: string;

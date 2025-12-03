@@ -185,7 +185,7 @@ const calculateTotalPriceWithOffer = (
   });
 
   // Calculate total price with offer discounts
-  return items.reduce((sum, item) => {
+  const total = items.reduce((sum, item) => {
     const key = `${item.id}-${item.color || ""}`;
     const offerQuantity = offerProductMap.get(key) || 0;
     const regularQuantity = item.quantity - offerQuantity;
@@ -196,14 +196,16 @@ const calculateTotalPriceWithOffer = (
       itemTotal += item.price * regularQuantity;
     }
 
-    // Offer price items (in offer) - these are always FREE (price = 0)
-    if (offerQuantity > 0) {
-      const offerPrice = 0; // Items in offerSelectedProducts are always free
+    // Offer price items (in offer) - use calculateOfferPrice to get the actual offer price
+    if (offerQuantity > 0 && offer) {
+      const offerPrice = calculateOfferPrice(item.price, offer);
       itemTotal += offerPrice * offerQuantity;
     }
 
     return sum + itemTotal;
   }, 0);
+
+  return total;
 };
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
