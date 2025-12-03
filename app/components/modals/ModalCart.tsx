@@ -3,6 +3,13 @@ import { useCart } from "../../context/CartContext";
 import { useRouter } from "next/navigation";
 import { update_product_quantity } from "../../api/quantity";
 import { useOfferStore } from "../../store/offerStore";
+import { useUserCountry } from "../../hooks/useUserCountry";
+import {
+  formatPriceWithCurrency,
+  calculatePriceSync,
+  calculateTotalPrice,
+  formatPrice,
+} from "../../util";
 
 // Helper function to get Supabase public bucket URL for product images
 const getProductImageUrl = (filename: string): string => {
@@ -42,6 +49,7 @@ const ModalCart = ({
   const { state: cartItems, removeItem, updateQuantity } = useCart();
   const router = useRouter();
   const { selectedOffer, isOfferApplied, clearOffer } = useOfferStore();
+  const { country } = useUserCountry();
   const [checkingQuantities, setCheckingQuantities] = useState<
     Record<string, boolean>
   >({});
@@ -246,7 +254,7 @@ const ModalCart = ({
                         {/* Price and Quantity */}
                         <div className="flex items-center justify-between">
                           <span className="text-xl font-bold text-primary-600">
-                            ${item.price}
+                            {formatPriceWithCurrency(item.price, country)}
                           </span>
                           <div className="flex items-center space-x-2">
                             <button
@@ -531,7 +539,10 @@ const ModalCart = ({
                   Total:
                 </span>
                 <span className="text-3xl font-bold text-primary-600">
-                  ${cartItems.totalPrice.toFixed(2)}
+                  {formatPrice(
+                    calculatePriceSync(cartItems.totalPrice, country),
+                    country
+                  )}
                 </span>
               </div>
 

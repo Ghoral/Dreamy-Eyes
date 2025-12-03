@@ -4,7 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { get_all_products_with_types } from "@/app/api/product";
-import { getFirstImageUrl, getThumbnailUrl } from "@/app/util";
+import {
+  getFirstImageUrl,
+  getThumbnailUrl,
+  formatPriceWithCurrency,
+} from "@/app/util";
+import { useUserCountry } from "@/app/hooks/useUserCountry";
 
 type Product = {
   id: string;
@@ -17,6 +22,7 @@ type Product = {
 type SectionKey = "latest_arrival" | "top_seller" | "best_reviewed";
 
 const ItemListing = () => {
+  const { country } = useUserCountry();
   const [sectionsData, setSectionsData] = useState<
     Partial<Record<SectionKey, Product[]>>
   >({});
@@ -185,10 +191,12 @@ const ItemListing = () => {
                     <div className="mb-4">
                       {first && (
                         <span className="text-2xl font-bold text-primary-600">
-                          $
-                          {typeof first.price === "number"
-                            ? first.price
-                            : first.price}
+                          {formatPriceWithCurrency(
+                            typeof first.price === "number"
+                              ? first.price
+                              : parseFloat(first.price),
+                            country
+                          )}
                         </span>
                       )}
                     </div>

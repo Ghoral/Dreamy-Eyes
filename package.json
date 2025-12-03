@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.50.0",
     "bootstrap": "^5.3.6",
     "bootstrap-icons": "^1.13.1",
+    "exchange-rates-api": "^1.1.0",
     "formik": "^2.4.6",
     "google-libphonenumber": "^3.2.43",
     "next": "15.3.2",

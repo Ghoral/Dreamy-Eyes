@@ -1,13 +1,15 @@
 "use client";
 
-import { getThumbnailUrl } from "@/app/util";
+import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import Image from "next/image";
 import React, { useState } from "react";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
+import { useUserCountry } from "../../hooks/useUserCountry";
 
 const ProductItems = ({ data }: { data: any }) => {
+  const { country } = useUserCountry();
   const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [toastConfig, setToastConfig] = useState<{
     message: string;
@@ -114,7 +116,7 @@ const ProductItems = ({ data }: { data: any }) => {
                     </span>
                   </div>
                 )}
-                
+
                 {/* HOT Badge for popular products */}
                 {product.order_count && product.order_count > 10 && (
                   <div className="absolute top-3 left-3 z-10">
@@ -155,7 +157,7 @@ const ProductItems = ({ data }: { data: any }) => {
                   {/* Hover Overlay */}
                   {isHovered && (
                     <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent flex items-center justify-center">
-                      <button 
+                      <button
                         className="bg-white text-primary-600 font-medium py-2 px-4 rounded-full shadow-xl transform scale-100 animate-fade-in hover:bg-primary-50 transition-all duration-300"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -197,7 +199,7 @@ const ProductItems = ({ data }: { data: any }) => {
                       {product.sub_title}
                     </div>
                   )}
-                  
+
                   {/* Title */}
                   <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
                     {product.title}
@@ -227,7 +229,7 @@ const ProductItems = ({ data }: { data: any }) => {
                         ? `4.9 (${product.review_count})`
                         : "4.9 (120)"}
                     </span>
-                    
+
                     {/* Order Count Badge */}
                     {product.order_count && product.order_count > 0 && (
                       <span className="ml-auto text-xs bg-secondary-100 text-secondary-700 px-2 py-1 rounded-full">
@@ -239,10 +241,15 @@ const ProductItems = ({ data }: { data: any }) => {
                   {/* Price */}
                   <div className="mb-2">
                     <span className="text-xl font-bold text-primary-600">
-                      ${typeof product.price === "number" ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}
+                      {formatPriceWithCurrency(
+                        typeof product.price === "number"
+                          ? product.price
+                          : parseFloat(product.price),
+                        country
+                      )}
                     </span>
                   </div>
-                  
+
                   {/* Action Button - Moved to bottom */}
                   <button
                     onClick={(e) => handleAddToCart(e, product)}

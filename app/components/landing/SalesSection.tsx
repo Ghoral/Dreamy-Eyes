@@ -4,8 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { get_sales } from "@/app/api/sales";
-import { getThumbnailUrl } from "@/app/util";
+import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import { useRouter } from "next/navigation";
+import { useUserCountry } from "@/app/hooks/useUserCountry";
 
 type Product = {
   id: string;
@@ -24,6 +25,7 @@ type Product = {
 };
 
 const SalesSection = () => {
+  const { country } = useUserCountry();
   const [salesData, setSalesData] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
@@ -49,7 +51,6 @@ const SalesSection = () => {
     // Navigate to sales product detail page
     router.push(`/sales/${encodeURIComponent(productId)}`);
   };
-
 
   if (loading || salesData.length === 0) {
     return null; // Don't show section if no sales
@@ -79,7 +80,8 @@ const SalesSection = () => {
             🔥 On Sale Now
           </h2>
           <p className="text-xl text-secondary-600 max-w-3xl mx-auto leading-relaxed">
-            Don't miss out on these amazing deals! Limited time offers on our best products.
+            Don't miss out on these amazing deals! Limited time offers on our
+            best products.
           </p>
         </div>
 
@@ -129,7 +131,9 @@ const SalesSection = () => {
                     {product.title}
                   </h3>
                   {product.sub_title && (
-                    <p className="text-sm text-secondary-500 mb-3">{product.sub_title}</p>
+                    <p className="text-sm text-secondary-500 mb-3">
+                      {product.sub_title}
+                    </p>
                   )}
                   <div
                     className="text-secondary-500 text-sm mb-4 line-clamp-2"
@@ -142,7 +146,12 @@ const SalesSection = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <span className="text-2xl font-bold text-red-600">
-                        ${typeof product.price === "string" ? parseFloat(product.price) : product.price}
+                        {formatPriceWithCurrency(
+                          typeof product.price === "string"
+                            ? parseFloat(product.price)
+                            : product.price,
+                          country
+                        )}
                       </span>
                     </div>
                   </div>
@@ -207,10 +216,8 @@ const SalesSection = () => {
           </div>
         )}
       </div>
-
     </section>
   );
 };
 
 export default SalesSection;
-

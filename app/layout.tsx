@@ -7,6 +7,7 @@ import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 import { AddressGuard } from "./hooks/AddressGuard";
 import { CartProvider } from "./context/CartContext";
 import { UserMetadataLogger } from "./components/UserMetadataLogger";
+import ExchangeRateLoader from "./components/ExchangeRateLoader";
 
 const raleway = Raleway({
   subsets: ["latin"],
@@ -40,6 +41,7 @@ export default function RootLayout({
           <GlobalSupabaseListenerWrapper />
           <AddressGuard />
           <UserMetadataLogger />
+          <ExchangeRateLoader />
           <Header />
           <OfferBanner />
           {children}

@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import Toast from "../components/ui/Toast";
-import { getThumbnailUrl } from "../util";
+import { getThumbnailUrl, formatPriceWithCurrency } from "../util";
 import { update_product_quantity } from "../api/quantity";
 import ModalOffers from "../components/modals/ModalOffers";
 import { Offer } from "../context/CartContext";
 import { get_enabled_offers } from "../api/offers";
 import { useOfferStore } from "../store/offerStore";
+import { useUserCountry } from "../hooks/useUserCountry";
 
 const ProductDetail = ({
   product,
@@ -159,6 +160,7 @@ const ProductDetail = ({
       ? parsedSpecs.length > 0
       : Object.keys(parsedSpecs).length > 0);
 
+  const { country } = useUserCountry();
   const [mainImage, setMainImage] = useState<string>(() => {
     // Try to get the first image from the first available color
     if (product?.color_quantity?.[0]) {
@@ -530,7 +532,7 @@ const ProductDetail = ({
             {/* Price */}
             <div className="bg-gradient-to-r from-primary-50 to-secondary-50 p-6 rounded-2xl border border-primary-100">
               <span className="text-5xl font-bold text-primary-600">
-                ${product.price}
+                {formatPriceWithCurrency(product.price, country)}
               </span>
             </div>
 

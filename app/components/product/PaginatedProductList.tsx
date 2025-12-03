@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { get_products_by_type } from "@/app/api/product";
-import { getThumbnailUrl } from "@/app/util";
+import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import Image from "next/image";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
+import { useUserCountry } from "@/app/hooks/useUserCountry";
 
 type Product = {
   id: string;
@@ -335,7 +336,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         {/* Price */}
         <div className="mb-2">
           <span className="text-xl font-bold text-primary-600">
-            ${product.price.toFixed(2)}
+            {formatPriceWithCurrency(product.price, country)}
           </span>
         </div>
 
@@ -377,6 +378,7 @@ const ProductCard = ({ product }: { product: Product }) => {
 };
 
 const PaginatedProductList = ({ type }: { type: string }) => {
+  const { country } = useUserCountry();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);

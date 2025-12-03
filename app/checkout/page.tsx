@@ -8,10 +8,17 @@ import {
   createSupabaseClient,
   supabaseBrowserClient,
 } from "../services/supabase/client/supabaseBrowserClient";
-import { generateUniqueCode } from "../util";
+import {
+  generateUniqueCode,
+  formatPriceWithCurrency,
+  calculatePriceSync,
+  formatPrice,
+  calculateTotalPrice,
+} from "../util";
 import { useOfferStore } from "../store/offerStore";
 import ModalOffers from "../components/modals/ModalOffers";
 import { Offer } from "../context/CartContext";
+import { useUserCountry } from "../hooks/useUserCountry";
 
 // Helper function to calculate offer price (same logic as CartContext)
 const calculateOfferPrice = (
@@ -140,6 +147,7 @@ export default function CheckoutPage() {
     isOfferApplied: zustandIsOfferApplied,
   } = useOfferStore();
   const router = useRouter();
+  const { country } = useUserCountry();
   const [isProcessing, setIsProcessing] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number>(0);
@@ -663,8 +671,12 @@ export default function CheckoutPage() {
                         </div>
                         <p className="text-secondary-600 text-sm">
                           Pay with cash when your order is delivered. Delivery
-                          charge of ${deliveryCharge.toFixed(2)} will be
-                          included.
+                          charge of{" "}
+                          {formatPrice(
+                            calculatePriceSync(deliveryCharge, country),
+                            country
+                          )}{" "}
+                          will be included.
                         </p>
                       </div>
                     </div>
@@ -702,7 +714,11 @@ export default function CheckoutPage() {
                         </div>
                         <p className="text-secondary-600 text-sm mb-4">
                           Pay in advance. Delivery charge of $
-                          {deliveryCharge.toFixed(2)} will be included.
+                          {formatPrice(
+                            calculatePriceSync(deliveryCharge, country),
+                            country
+                          )}{" "}
+                          will be included.
                         </p>
 
                         {paymentMethod === "pre_payment" && (
@@ -909,7 +925,8 @@ export default function CheckoutPage() {
                               </div>
                             )}
                             <div className="text-sm text-secondary-500 mb-1">
-                              Qty: {item.quantity} × ${item.price}
+                              Qty: {item.quantity} ×{" "}
+                              {formatPriceWithCurrency(item.price, country)}
                             </div>
                             <div className="text-xs text-green-600 font-semibold mt-1">
                               Offer Applied
@@ -920,17 +937,32 @@ export default function CheckoutPage() {
                           <div className="text-right">
                             <div className="flex flex-col items-end">
                               <span className="text-xs text-secondary-500 line-through">
-                                ${(item.price * item.quantity).toFixed(2)}
+                                {formatPrice(
+                                  calculatePriceSync(
+                                    item.price * item.quantity,
+                                    country
+                                  ),
+                                  country
+                                )}
                               </span>
                               <span className="text-lg font-bold text-green-600">
-                                ${(offerPrice * item.quantity).toFixed(2)}
+                                {formatPrice(
+                                  calculatePriceSync(
+                                    offerPrice * item.quantity,
+                                    country
+                                  ),
+                                  country
+                                )}
                               </span>
                               <span className="text-xs text-green-600 font-semibold">
-                                Save: $
-                                {(
-                                  (item.price - offerPrice) *
-                                  item.quantity
-                                ).toFixed(2)}
+                                Save:{" "}
+                                {formatPrice(
+                                  calculatePriceSync(
+                                    (item.price - offerPrice) * item.quantity,
+                                    country
+                                  ),
+                                  country
+                                )}
                               </span>
                             </div>
                           </div>
@@ -1051,7 +1083,13 @@ export default function CheckoutPage() {
                           {/* Item Total */}
                           <div className="text-right">
                             <span className="text-lg font-bold text-primary-600">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              {formatPrice(
+                                calculatePriceSync(
+                                  item.price * item.quantity,
+                                  country
+                                ),
+                                country
+                              )}
                             </span>
                           </div>
                         </div>
@@ -1146,7 +1184,11 @@ export default function CheckoutPage() {
                               Offer Savings:
                             </span>
                             <span className="font-bold text-green-600 text-lg">
-                              -${offerSavings.toFixed(2)}
+                              -
+                              {formatPrice(
+                                calculatePriceSync(offerSavings, country),
+                                country
+                              )}
                             </span>
                           </div>
                           <div className="text-xs text-green-600 mt-1">
@@ -1157,7 +1199,10 @@ export default function CheckoutPage() {
                       <div className="flex justify-between items-center">
                         <span className="text-secondary-600">Subtotal:</span>
                         <span className="font-semibold text-secondary-800">
-                          ${originalTotal.toFixed(2)}
+                          {formatPrice(
+                            calculatePriceSync(originalTotal, country),
+                            country
+                          )}
                         </span>
                       </div>
                       {hasOffer && offerSavings > 0 && (
@@ -1166,7 +1211,11 @@ export default function CheckoutPage() {
                             Offer Discount:
                           </span>
                           <span className="font-semibold text-green-600">
-                            -${offerSavings.toFixed(2)}
+                            -
+                            {formatPrice(
+                              calculatePriceSync(offerSavings, country),
+                              country
+                            )}
                           </span>
                         </div>
                       )}
@@ -1175,7 +1224,10 @@ export default function CheckoutPage() {
                           Delivery Charge:
                         </span>
                         <span className="font-semibold text-secondary-800">
-                          ${deliveryCharge.toFixed(2)}
+                          {formatPrice(
+                            calculatePriceSync(deliveryCharge, country),
+                            country
+                          )}
                         </span>
                       </div>
                       <div className="border-t border-secondary-100 pt-3">
@@ -1184,14 +1236,21 @@ export default function CheckoutPage() {
                             Total:
                           </span>
                           <span className="text-2xl font-bold text-primary-600">
-                            ${finalTotal.toFixed(2)}
+                            {formatPrice(
+                              calculatePriceSync(finalTotal, country),
+                              country
+                            )}
                           </span>
                         </div>
                         {hasOffer && offerSavings > 0 && (
                           <div className="mt-2 text-right">
                             <span className="text-sm text-green-600 font-semibold">
-                              You saved ${offerSavings.toFixed(2)} with this
-                              offer!
+                              You saved{" "}
+                              {formatPrice(
+                                calculatePriceSync(offerSavings, country),
+                                country
+                              )}{" "}
+                              with this offer!
                             </span>
                           </div>
                         )}
@@ -1249,7 +1308,10 @@ export default function CheckoutPage() {
                       // Final total = Original total - (offer price * quantity) + delivery
                       const finalTotal =
                         originalTotal - totalOfferPrice + deliveryCharge;
-                      return `Complete Order - $${finalTotal.toFixed(2)}`;
+                      return `Complete Order - ${formatPrice(
+                        calculatePriceSync(finalTotal, country),
+                        country
+                      )}`;
                     })()
                   )}
                 </button>

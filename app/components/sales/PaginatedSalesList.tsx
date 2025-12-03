@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { get_sales } from "@/app/api/sales";
-import { getThumbnailUrl } from "@/app/util";
+import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import Image from "next/image";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import Link from "next/link";
+import { useUserCountry } from "@/app/hooks/useUserCountry";
 
 type Product = {
   id: string;
@@ -160,8 +161,10 @@ const Pagination = ({
 
       <div className="text-center mt-4">
         <p className="text-sm text-secondary-500">
-          Showing {Math.min((currentPage - 1) * productsPerPage + 1, totalProducts)} to{" "}
-          {Math.min(currentPage * productsPerPage, totalProducts)} of {totalProducts} products
+          Showing{" "}
+          {Math.min((currentPage - 1) * productsPerPage + 1, totalProducts)} to{" "}
+          {Math.min(currentPage * productsPerPage, totalProducts)} of{" "}
+          {totalProducts} products
         </p>
       </div>
     </div>
@@ -267,7 +270,9 @@ export default function PaginatedSalesList() {
 
         {products.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-secondary-600 text-lg">No sales products found</p>
+            <p className="text-secondary-600 text-lg">
+              No sales products found
+            </p>
           </div>
         ) : (
           <>
@@ -276,9 +281,7 @@ export default function PaginatedSalesList() {
                 const thumbnailUrl = getThumbnailUrl(product);
                 const hasStock =
                   product.color_quantity &&
-                  product.color_quantity.some(
-                    (cq) => Number(cq.quantity) > 0
-                  );
+                  product.color_quantity.some((cq) => Number(cq.quantity) > 0);
 
                 return (
                   <div
@@ -329,7 +332,10 @@ export default function PaginatedSalesList() {
 
                       <div className="flex items-center justify-between mb-4">
                         <span className="text-2xl font-bold text-primary-600">
-                          ${Number(product.price).toFixed(2)}
+                          {formatPriceWithCurrency(
+                            Number(product.price),
+                            country
+                          )}
                         </span>
                         {hasStock ? (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
@@ -382,4 +388,3 @@ export default function PaginatedSalesList() {
     </div>
   );
 }
-
