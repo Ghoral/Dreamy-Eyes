@@ -133,48 +133,86 @@ export const fetchExchangeRate = async (): Promise<number> => {
       return exchangeRateCache.rate;
     }
 
-    // Fetch from API
-    const ExchangeRatesApi = await import("exchange-rates-api");
+    // Fetch from API using fawazahmed0/currency-api
     console.log("Fetching exchange rate from API...");
 
+    // Primary URL: cdn.jsdelivr.net
+    // Fallback URL: currency-api.pages.dev
+    const primaryUrl =
+      "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/npr.json";
+    const fallbackUrl =
+      "https://latest.currency-api.pages.dev/v1/currencies/npr.json";
+
+    let response;
     let rates;
+
+    // Try primary URL first
     try {
-      rates = await ExchangeRatesApi.default({
-        baseCurrency: "NPR",
-        currencies: ["INR"],
-      });
+      console.log("Fetching from primary URL:", primaryUrl);
+      response = await fetch(primaryUrl);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      rates = await response.json();
       console.log("Exchange rate API response:", rates);
-      console.log("Full response object:", JSON.stringify(rates, null, 2));
-    } catch (apiError) {
-      console.error("API call failed:", apiError);
-      throw apiError; // Re-throw to be caught by outer catch
+    } catch (primaryError) {
+      console.warn("Primary URL failed, trying fallback:", primaryError);
+      // Try fallback URL
+      try {
+        console.log("Fetching from fallback URL:", fallbackUrl);
+        response = await fetch(fallbackUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        rates = await response.json();
+        console.log("Exchange rate API response (fallback):", rates);
+      } catch (fallbackError) {
+        console.error("Both URLs failed:", fallbackError);
+        throw fallbackError;
+      }
     }
 
-    const rate = rates?.INR || FALLBACK_RATE;
-    console.log("Extracted INR rate:", rate);
+    // Extract INR rate from response
+    // Response format: { "npr": { "inr": 0.625, ... } }
+    let finalRate: number;
 
-    if (!rates?.INR) {
-      console.warn("INR rate not found in response, using fallback");
+    if (rates && typeof rates === "object" && "npr" in rates) {
+      const nprRates = (rates as { npr: { [key: string]: number } }).npr;
+      if (nprRates && typeof nprRates === "object" && "inr" in nprRates) {
+        finalRate = nprRates.inr;
+        console.log("Extracted INR rate:", finalRate);
+      } else {
+        console.warn("INR rate not found in response, using fallback");
+        finalRate = FALLBACK_RATE;
+      }
+    } else {
+      console.warn("Unexpected response format, using fallback rate");
+      finalRate = FALLBACK_RATE;
+    }
+
+    // Validate rate is a reasonable number
+    if (
+      typeof finalRate !== "number" ||
+      finalRate <= 0 ||
+      !isFinite(finalRate)
+    ) {
+      console.warn("Invalid rate received, using fallback");
+      finalRate = FALLBACK_RATE;
     }
 
     // Update cache
     exchangeRateCache = {
-      rate,
+      rate: finalRate,
       timestamp: Date.now(),
     };
 
     console.log("Cached exchange rate:", exchangeRateCache);
-    return rate;
+    return finalRate;
   } catch (error) {
     console.error("Error fetching exchange rate:", error);
     console.error("Error details:", {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       name: error instanceof Error ? error.name : undefined,
-      fullError: error,
     });
     console.log("Using fallback rate:", FALLBACK_RATE);
-    // If API fails, use fallback rate
+
     return FALLBACK_RATE;
   }
 };
@@ -252,7 +290,7 @@ export const calculateTotalPrice = (
 
   // Calculate regular items total
   items.forEach((item) => {
-    const itemPrice = calculatePrice(item.price, country);
+    const itemPrice = calculatePriceSync(item.price, country);
     total += itemPrice * item.quantity;
   });
 
@@ -273,7 +311,7 @@ export const calculateTotalPrice = (
         offerPrice = item.price - Number(offer.discount_value);
       }
 
-      const calculatedOfferPrice = calculatePrice(offerPrice, country);
+      const calculatedOfferPrice = calculatePriceSync(offerPrice, country);
       total += calculatedOfferPrice * item.quantity;
     });
   }
