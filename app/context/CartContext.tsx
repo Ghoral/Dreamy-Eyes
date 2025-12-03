@@ -25,7 +25,8 @@ export interface CartItem {
 
 export interface Offer {
   id: number;
-  title: string;
+  title?: string;
+  name?: string;
   description?: string;
   discount_type?: string;
   discount_value?: number;
@@ -33,7 +34,9 @@ export interface Offer {
   price?: number; // New field: fixed price for offer items
   minimum_quantity?: number;
   minimum_value?: number;
-  is_enabled: boolean;
+  value?: string | number;
+  quantity?: string | number;
+  is_enabled?: boolean;
   [key: string]: any;
 }
 
@@ -510,20 +513,64 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
   }, [isClient]);
 
+  // Sync offer from Zustand store to CartContext after hydration
+  useEffect(() => {
+    if (!isInitialized || !isClient) return;
+
+    const syncOffer = () => {
+      import("../store/offerStore").then(({ useOfferStore }) => {
+        const {
+          _hasHydrated,
+          selectedOffer,
+          offerSelectedProducts,
+          isOfferApplied,
+        } = useOfferStore.getState();
+
+        // Wait for offer store to hydrate
+        if (!_hasHydrated) {
+          // Retry after a short delay if not hydrated yet
+          setTimeout(syncOffer, 100);
+          return;
+        }
+
+        // Sync offer from Zustand to CartContext if offer is applied
+        if (
+          isOfferApplied &&
+          selectedOffer &&
+          offerSelectedProducts &&
+          offerSelectedProducts.length > 0
+        ) {
+          // Only sync if CartContext doesn't already have this offer or if items changed
+          if (
+            state.selectedOffer?.id !== selectedOffer.id ||
+            JSON.stringify(state.offerSelectedProducts || []) !==
+              JSON.stringify(offerSelectedProducts)
+          ) {
+            setOffer(selectedOffer as any, offerSelectedProducts);
+          }
+        } else if (!isOfferApplied && state.selectedOffer) {
+          // Clear offer in CartContext if it's cleared in Zustand
+          setOffer(null, []);
+        }
+      });
+    };
+
+    syncOffer();
+  }, [isInitialized, isClient]);
+
   // Clear offer from Zustand store when cart is cleared or becomes empty
   useEffect(() => {
     if (!isInitialized || !isClient) return;
 
-    // If cart is empty, clear the offer from Zustand store
-    if (state.items.length === 0) {
-      // Dynamically import to avoid circular dependency
-      import("../store/offerStore").then(({ useOfferStore }) => {
-        const { isOfferApplied, clearOffer } = useOfferStore.getState();
-        if (isOfferApplied) {
-          clearOffer();
-        }
-      });
-    }
+    // Wait for offer store to hydrate before clearing
+    import("../store/offerStore").then(({ useOfferStore }) => {
+      const { _hasHydrated, clearOffer } = useOfferStore.getState();
+
+      // Only clear if offer store has hydrated and cart is empty
+      if (_hasHydrated && state.items.length === 0) {
+        clearOffer(); // Always clear when cart is empty
+      }
+    });
   }, [state.items.length, isInitialized, isClient]);
 
   // Save cart to localStorage whenever it changes

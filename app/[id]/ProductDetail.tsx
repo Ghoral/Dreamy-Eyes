@@ -191,45 +191,6 @@ const ProductDetail = ({
 
   const { isOfferApplied, selectedOffer, clearOffer } = useOfferStore();
 
-  // Check if offer should be removed when cart quantity changes
-  useEffect(() => {
-    if (!isOfferApplied || !selectedOffer) return;
-
-    // Get the minimum quantity requirement from offer
-    const offerValue =
-      selectedOffer.value !== undefined && selectedOffer.value !== null
-        ? Number(selectedOffer.value)
-        : selectedOffer.minimum_quantity || 0;
-    const minimumValue = selectedOffer.minimum_value
-      ? Number(selectedOffer.minimum_value)
-      : 0;
-
-    // Use totalItems directly from cart state
-    const totalQuantity = cartState.totalItems;
-    const totalPrice = cartState.totalPrice;
-
-    // Check if criteria is met: quantity must be >= value
-    // Example: if offerValue = 2, keep offer when quantity >= 2, remove when quantity < 2
-    // So: quantity = 2 with requirement = 2 → keep (2 >= 2 = true)
-    //     quantity = 1 with requirement = 2 → remove (1 >= 2 = false)
-    const meetsQuantityRequirement =
-      offerValue > 0 ? totalQuantity >= offerValue : true;
-    const meetsPriceRequirement =
-      minimumValue > 0 ? totalPrice >= minimumValue : true;
-    const criteriaMet = meetsQuantityRequirement && meetsPriceRequirement;
-
-    // Only remove offer if criteria is NOT met
-    if (!criteriaMet) {
-      clearOffer();
-    }
-  }, [
-    cartState.totalItems,
-    cartState.totalPrice,
-    selectedOffer,
-    isOfferApplied,
-    clearOffer,
-  ]);
-
   // Update main image when color changes
   useEffect(() => {
     if (selectedColor) {

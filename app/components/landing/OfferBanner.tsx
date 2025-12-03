@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useOfferStore } from "../../store/offerStore";
 import { useCart } from "../../context/CartContext";
 // Close icon SVG
@@ -21,12 +21,30 @@ const CloseIcon = () => (
 );
 
 const OfferBanner = () => {
-  const { selectedOffer, offerSelectedProducts, isOfferApplied, clearOffer } =
-    useOfferStore();
+  const {
+    selectedOffer,
+    offerSelectedProducts,
+    isOfferApplied,
+    clearOffer,
+    _hasHydrated,
+  } = useOfferStore();
   const { state: cartState } = useCart();
+  const [isMounted, setIsMounted] = useState(false);
+  console.log("isOfferApplied -> ", isOfferApplied);
 
-  // Show banner if offer is applied, selected, and cart has items
-  if (!isOfferApplied || !selectedOffer || cartState.items.length === 0) {
+  // Ensure component is mounted (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Show banner if offer is applied, selected, cart has items, and store has hydrated
+  if (
+    !isMounted ||
+    !_hasHydrated ||
+    !isOfferApplied ||
+    !selectedOffer ||
+    cartState.items.length === 0
+  ) {
     return null;
   }
 

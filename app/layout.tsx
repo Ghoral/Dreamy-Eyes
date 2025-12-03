@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Raleway, Cinzel } from "next/font/google";
 import "./globals.css";
 import Header from "./components/landing/Header";
+import OfferBanner from "./components/landing/OfferBanner";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 import { AddressGuard } from "./hooks/AddressGuard";
 import { CartProvider } from "./context/CartContext";
@@ -38,6 +39,7 @@ export default function RootLayout({
           <GlobalSupabaseListenerWrapper />
           <AddressGuard />
           <Header />
+          <OfferBanner />
           {children}
         </CartProvider>
       </body>

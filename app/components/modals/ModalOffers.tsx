@@ -48,6 +48,7 @@ export default function ModalOffers({
   );
   const [hasAppliedOffer, setHasAppliedOffer] = useState(false);
   const hasClearedRef = useRef(false);
+  const justAppliedRef = useRef(false);
 
   // Sync local state with Zustand store
   useEffect(() => {
@@ -61,17 +62,20 @@ export default function ModalOffers({
       fetchOffers();
       setHasAppliedOffer(isOfferApplied); // Track if offer was already applied when modal opens
       hasClearedRef.current = false; // Reset clear flag when modal opens
-    } else if (!hasClearedRef.current) {
-      // When modal closes, check if offer should be cleared (only once)
-      // Clear offer if user didn't apply offer OR if there are no offer items selected
-      const { offerSelectedProducts } = useOfferStore.getState();
+      justAppliedRef.current = false; // Reset just applied flag when modal opens
+    } else if (!hasClearedRef.current && !justAppliedRef.current) {
+      // When modal closes, only clear offer if user didn't apply offer in this session
+      // Don't clear if justAppliedRef is true (user just applied an offer)
+      const { offerSelectedProducts, isOfferApplied: storeIsOfferApplied } =
+        useOfferStore.getState();
       const hasOfferItems =
         offerSelectedProducts && offerSelectedProducts.length > 0;
 
-      // Clear offer if:
+      // Only clear if:
       // 1. User didn't apply offer in this session (hasAppliedOffer is false)
-      // 2. OR there are no offer items selected (hasOfferItems is false)
-      if (!hasAppliedOffer || !hasOfferItems) {
+      // 2. AND there are no offer items selected (hasOfferItems is false)
+      // 3. AND the store doesn't have an offer applied
+      if (!hasAppliedOffer && !hasOfferItems && !storeIsOfferApplied) {
         clearOffer();
         hasClearedRef.current = true; // Mark as cleared to prevent infinite loop
       }
@@ -135,6 +139,7 @@ export default function ModalOffers({
 
     // Mark that offer was explicitly applied
     setHasAppliedOffer(true);
+    justAppliedRef.current = true; // Mark that we just applied an offer
 
     // Also call the callback for CartContext compatibility
     onSelectOffer(localSelectedOffer, selectedProducts);

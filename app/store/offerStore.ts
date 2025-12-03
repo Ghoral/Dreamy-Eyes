@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface Offer {
   id: number;
@@ -14,6 +14,8 @@ interface OfferState {
   selectedOffer: Offer | null;
   offerSelectedProducts: any[];
   isOfferApplied: boolean;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   setOffer: (offer: Offer | null, selectedProducts: any[]) => void;
   clearOffer: () => void;
 }
@@ -24,22 +26,33 @@ export const useOfferStore = create<OfferState>()(
       selectedOffer: null,
       offerSelectedProducts: [],
       isOfferApplied: false,
-      setOffer: (offer, selectedProducts) =>
+      _hasHydrated: false,
+      setHasHydrated: (state) => {
+        set({
+          _hasHydrated: state,
+        });
+      },
+      setOffer: (offer, selectedProducts) => {
         set({
           selectedOffer: offer,
           offerSelectedProducts: selectedProducts,
           isOfferApplied: true,
-        }),
-      clearOffer: () =>
+        });
+      },
+      clearOffer: () => {
         set({
           selectedOffer: null,
           offerSelectedProducts: [],
           isOfferApplied: false,
-        }),
+        });
+      },
     }),
     {
       name: "offer-storage",
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );
-
