@@ -513,18 +513,21 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     }
   }, [isClient]);
 
-  // Sync offer from Zustand store to CartContext after hydration
+  // Sync offer from Zustand store to CartContext after hydration and on changes
   useEffect(() => {
     if (!isInitialized || !isClient) return;
 
+    let unsubscribe: (() => void) | null = null;
+
     const syncOffer = () => {
       import("../store/offerStore").then(({ useOfferStore }) => {
+        const store = useOfferStore.getState();
         const {
           _hasHydrated,
           selectedOffer,
           offerSelectedProducts,
           isOfferApplied,
-        } = useOfferStore.getState();
+        } = store;
 
         // Wait for offer store to hydrate
         if (!_hasHydrated) {
@@ -552,10 +555,40 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           // Clear offer in CartContext if it's cleared in Zustand
           setOffer(null, []);
         }
+
+        // Subscribe to Zustand store changes to sync immediately
+        unsubscribe = useOfferStore.subscribe((store) => {
+          const {
+            _hasHydrated: hydrated,
+            selectedOffer: offer,
+            offerSelectedProducts: products,
+            isOfferApplied: applied,
+          } = store;
+
+          if (!hydrated) return;
+
+          if (applied && offer && products && products.length > 0) {
+            if (
+              state.selectedOffer?.id !== offer.id ||
+              JSON.stringify(state.offerSelectedProducts || []) !==
+                JSON.stringify(products)
+            ) {
+              setOffer(offer as any, products);
+            }
+          } else if (!applied && state.selectedOffer) {
+            setOffer(null, []);
+          }
+        });
       });
     };
 
     syncOffer();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, [isInitialized, isClient]);
 
   // Clear offer from Zustand store when cart is cleared or becomes empty

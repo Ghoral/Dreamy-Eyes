@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useOfferStore } from "../../store/offerStore";
 import { useCart } from "../../context/CartContext";
+import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
 // Close icon SVG
 const CloseIcon = () => (
   <svg
@@ -30,16 +31,48 @@ const OfferBanner = () => {
   } = useOfferStore();
   const { state: cartState } = useCart();
   const [isMounted, setIsMounted] = useState(false);
-  console.log("isOfferApplied -> ", isOfferApplied);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Show banner if offer is applied, selected, cart has items, and store has hydrated
+  // Check authentication status
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const checkAuthStatus = async () => {
+      try {
+        const supabase = createSupabaseClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        setIsAuthenticated(!!user);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuthStatus();
+
+    // Set up auth state change listener
+    const supabase = createSupabaseClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session?.user);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isMounted]);
+
+  // Show banner only if user is authenticated, offer is applied, selected, cart has items, and store has hydrated
   if (
     !isMounted ||
+    !isAuthenticated ||
     !_hasHydrated ||
     !isOfferApplied ||
     !selectedOffer ||

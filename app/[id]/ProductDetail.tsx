@@ -328,9 +328,17 @@ const ProductDetail = ({
     setQuantity(1);
 
     // Open offers modal when item is added to cart (only if no offer is already applied)
-    const checkAndOpenOffers = async () => {
+    // Use setTimeout to ensure cart state is updated before checking
+    setTimeout(async () => {
+      // Get fresh state from Zustand store to ensure we have the latest values
+      const { useOfferStore } = await import("@/app/store/offerStore");
+      const {
+        isOfferApplied: currentIsOfferApplied,
+        selectedOffer: currentSelectedOffer,
+      } = useOfferStore.getState();
+
       // Don't open modal if an offer is already applied
-      if (isOfferApplied || selectedOffer || cartState.selectedOffer) {
+      if (currentIsOfferApplied || currentSelectedOffer) {
         return;
       }
 
@@ -343,10 +351,7 @@ const ProductDetail = ({
       } catch (error) {
         console.error("Error checking offers:", error);
       }
-    };
-
-    // Open offers modal when item is added (only if no offer is applied)
-    checkAndOpenOffers();
+    }, 100);
   };
 
   const handleOfferSelect = (offer: any, selectedProducts: any[]) => {
