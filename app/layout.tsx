@@ -31,7 +31,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${raleway.variable} ${cinzel.variable} font-sans antialiased`}>
+      <body
+        className={`${raleway.variable} ${cinzel.variable} font-sans antialiased`}
+      >
         <CartProvider>
           <GlobalSupabaseListenerWrapper />
           <AddressGuard />

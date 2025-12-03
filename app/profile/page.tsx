@@ -47,7 +47,6 @@ export default function ProfilePage() {
       });
       setIsLoading(false);
     } catch (error) {
-      console.error("Error loading user profile:", error);
       router.push("/login");
     }
   };
@@ -62,7 +61,6 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     // Here you would typically save the form data to your database
-    console.log("Saving profile data:", formData);
     setIsEditing(false);
     // Add your save logic here
   };
@@ -73,7 +71,7 @@ export default function ProfilePage() {
       await supabase.auth.signOut();
       router.push("/");
     } catch (error) {
-      console.error("Error signing out:", error);
+      // Error signing out
     }
   };
 

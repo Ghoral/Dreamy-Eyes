@@ -291,6 +291,18 @@ const ModalCart = ({
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={async () => {
+                                // Clear offer if checkout was completed (after any quantity change)
+                                if (typeof window !== "undefined") {
+                                  const checkoutCompleted =
+                                    localStorage.getItem("checkout_completed");
+                                  if (checkoutCompleted === "true") {
+                                    clearOffer();
+                                    localStorage.removeItem(
+                                      "checkout_completed"
+                                    );
+                                  }
+                                }
+
                                 const newQuantity = Math.max(
                                   1,
                                   item.quantity - 1
@@ -400,6 +412,18 @@ const ModalCart = ({
                             </span>
                             <button
                               onClick={async () => {
+                                // Clear offer if checkout was completed (after any quantity change)
+                                if (typeof window !== "undefined") {
+                                  const checkoutCompleted =
+                                    localStorage.getItem("checkout_completed");
+                                  if (checkoutCompleted === "true") {
+                                    clearOffer();
+                                    localStorage.removeItem(
+                                      "checkout_completed"
+                                    );
+                                  }
+                                }
+
                                 const newQuantity = Math.min(
                                   item.maxQuantity || 999,
                                   item.quantity + 1

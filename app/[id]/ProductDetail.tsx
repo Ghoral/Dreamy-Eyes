@@ -23,25 +23,15 @@ const ProductDetail = ({
   }
   // Get images for a specific color from product.images
   const getImagesForColor = (colorHex: string): string[] => {
-    console.log("getImagesForColor called with hex:", colorHex);
-    console.log("Product images:", product?.images);
-
     if (!product?.images) {
-      console.log("No product images found");
       return [];
     }
 
     try {
       const parsedImages = JSON.parse(product.images);
-      console.log("Parsed images:", parsedImages);
-      console.log("Looking for color:", colorHex);
-      console.log("Available colors:", Object.keys(parsedImages));
-
       const images = parsedImages[colorHex] || [];
-      console.log("Images found for color:", images);
       return images;
     } catch (error) {
-      console.error("Error parsing product images:", error);
       return [];
     }
   };
@@ -106,20 +96,16 @@ const ProductDetail = ({
 
   // Get image URL for a specific color
   const getImageUrlForColor = (colorHex: string): string => {
-    console.log("Getting image for color:", colorHex);
     const images = getImagesForColor(colorHex);
-    console.log("Images found for color:", images);
 
     if (images.length > 0) {
       const imageUrl = getProductImageUrl(images[0]);
-      console.log("Returning image URL:", imageUrl);
       return imageUrl;
     }
 
     // Fallback to primary_thumbnail or first available image or default
     const fallbackUrl =
       getThumbnailUrl(product) || "/images/product-default.jpg";
-    console.log("Using fallback URL:", fallbackUrl);
     return fallbackUrl;
   };
 
@@ -188,7 +174,6 @@ const ProductDetail = ({
   const [selectedColor, setSelectedColor] = useState(
     product?.color_quantity?.[0] || null
   );
-  console.log("selectedColor", selectedColor);
 
   const [quantity, setQuantity] = useState(1);
   const [showToast, setShowToast] = useState(false);
@@ -224,6 +209,9 @@ const ProductDetail = ({
     const totalPrice = cartState.totalPrice;
 
     // Check if criteria is met: quantity must be >= value
+    // Example: if offerValue = 2, keep offer when quantity >= 2, remove when quantity < 2
+    // So: quantity = 2 with requirement = 2 → keep (2 >= 2 = true)
+    //     quantity = 1 with requirement = 2 → remove (1 >= 2 = false)
     const meetsQuantityRequirement =
       offerValue > 0 ? totalQuantity >= offerValue : true;
     const meetsPriceRequirement =
@@ -246,12 +234,6 @@ const ProductDetail = ({
   useEffect(() => {
     if (selectedColor) {
       const colorImage = getImageUrlForColor(selectedColor.color);
-      console.log(
-        "Color changed to:",
-        selectedColor.color,
-        "Image:",
-        colorImage
-      );
       setMainImage(colorImage);
     }
   }, [selectedColor]);
@@ -260,15 +242,9 @@ const ProductDetail = ({
   useEffect(() => {
     if (selectedColor) {
       const colorImage = getImageUrlForColor(selectedColor.color);
-      console.log("Initial color image:", colorImage);
       setMainImage(colorImage);
     }
   }, []);
-
-  // Monitor mainImage changes for debugging
-  useEffect(() => {
-    console.log("Main image changed to:", mainImage);
-  }, [mainImage]);
 
   // Get current cart quantity for this product and color
   const getCurrentCartQuantity = () => {
@@ -315,12 +291,10 @@ const ProductDetail = ({
   }, [selectedColor, cartState.items]);
 
   const handleColorSelect = (colorOption: any) => {
-    console.log("Color selected:", colorOption);
     setSelectedColor(colorOption);
 
     // Immediately update main image for the selected color
     const colorImage = getImageUrlForColor(colorOption.color);
-    console.log("Setting main image to:", colorImage);
     setMainImage(colorImage);
 
     // Reset quantity to 1 when color changes
@@ -392,58 +366,25 @@ const ProductDetail = ({
     // Reset quantity to 1 after adding to cart
     setQuantity(1);
 
-    // Check if there are any qualifying offers before opening modal
+    // Open offers modal when item is added to cart (only if no offer is already applied)
     const checkAndOpenOffers = async () => {
       // Don't open modal if an offer is already applied
-      if (isOfferApplied) {
+      if (isOfferApplied || selectedOffer || cartState.selectedOffer) {
         return;
       }
 
       try {
         const response = await get_enabled_offers();
+        // Open modal if there are any enabled offers
         if (response.status && response.data && response.data.length > 0) {
-          // Get current cart total items (including the item we just added)
-          const currentCartItems =
-            cartState.items.reduce((sum, item) => sum + item.quantity, 0) +
-            quantity;
-          const currentTotal =
-            cartState.totalPrice +
-            (typeof product.price === "string"
-              ? parseFloat(product.price)
-              : product.price) *
-              quantity;
-
-          // Filter offers to see if any qualify (same logic as ModalOffers filter)
-          const qualifyingOffers = response.data.filter((offer: any) => {
-            const minValue =
-              offer.value !== undefined && offer.value !== null
-                ? Number(offer.value)
-                : offer.minimum_quantity;
-
-            // Check if cart meets quantity requirement
-            if (minValue && currentCartItems < minValue) {
-              return false; // Don't show this offer
-            }
-
-            // Check if cart meets price requirement
-            if (offer.minimum_value && currentTotal < offer.minimum_value) {
-              return false; // Don't show this offer
-            }
-
-            return true; // Show this offer
-          });
-
-          // Only open modal if there are qualifying offers after filtering
-          if (qualifyingOffers.length > 0) {
-            setIsOffersModalOpen(true);
-          }
+          setIsOffersModalOpen(true);
         }
       } catch (error) {
         console.error("Error checking offers:", error);
       }
     };
 
-    // Check and open offers modal if there are qualifying offers
+    // Open offers modal when item is added (only if no offer is applied)
     checkAndOpenOffers();
   };
 

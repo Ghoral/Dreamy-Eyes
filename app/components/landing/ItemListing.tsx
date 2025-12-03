@@ -135,8 +135,6 @@ const ItemListing = () => {
 
           {!loading &&
             orderedSections.map((section) => {
-              console.log("section", section);
-
               const products = (sectionsData[section.key] || []).slice(0, 3);
               const first = products[0];
               const firstImage = first ? getThumbnailUrl(first) : null;

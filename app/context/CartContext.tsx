@@ -18,7 +18,7 @@ export interface CartItem {
   color?: string;
   colorHex?: string;
   image?: string;
-  maxQuantity?: number; 
+  maxQuantity?: number;
   primary_thumbnail?: string;
   productImages?: string; // Store full product images JSON
 }
@@ -55,7 +55,10 @@ type CartAction =
     }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: CartState }
-  | { type: "SET_OFFER"; payload: { offer: Offer | null; selectedProducts: CartItem[] } };
+  | {
+      type: "SET_OFFER";
+      payload: { offer: Offer | null; selectedProducts: CartItem[] };
+    };
 
 const initialState: CartState = {
   items: [],
@@ -67,83 +70,92 @@ const initialState: CartState = {
 };
 
 // Helper function to calculate offer price based on discount type
-const calculateOfferPrice = (originalPrice: number, offer: Offer | null): number => {
+const calculateOfferPrice = (
+  originalPrice: number,
+  offer: Offer | null
+): number => {
   if (!offer) return originalPrice;
-  
+
   // Check if offer name/title suggests "free" (Buy X Get Y Free)
   const offerName = (offer.title || offer.name || "").toLowerCase();
-  const isFreeOffer = offerName.includes("free") || (offerName.includes("get") && offerName.includes("free"));
-  
+  const isFreeOffer =
+    offerName.includes("free") ||
+    (offerName.includes("get") && offerName.includes("free"));
+
   // If offer has a fixed price, use that directly (including 0 for free items)
   if (offer.price !== undefined && offer.price !== null) {
     return Number(offer.price);
   }
-  
+
   // If it's a "free" offer and no price/discount is set, make it free
-  if (isFreeOffer && (offer.discount === undefined || offer.discount === null) && (offer.discount_value === undefined || offer.discount_value === null)) {
+  if (
+    isFreeOffer &&
+    (offer.discount === undefined || offer.discount === null) &&
+    (offer.discount_value === undefined || offer.discount_value === null)
+  ) {
     return 0;
   }
-  
+
   // If offer has discount field, use that
   if (offer.discount !== undefined && offer.discount !== null) {
     const discountType = offer.discount_type;
     const discountValue = offer.discount;
-    
+
     if (!discountType) {
       // If no discount type specified, assume percentage
       const percentageDiscount = (originalPrice * discountValue) / 100;
       return Math.max(0, originalPrice - percentageDiscount);
     }
-    
+
     switch (discountType.toLowerCase()) {
-      case 'percentage':
-      case 'percent':
+      case "percentage":
+      case "percent":
         // Percentage discount: reduce by X%
         const percentageDiscount = (originalPrice * discountValue) / 100;
         return Math.max(0, originalPrice - percentageDiscount);
-      
-      case 'fixed':
-      case 'amount':
+
+      case "fixed":
+      case "amount":
         // Fixed amount discount: reduce by fixed amount
         return Math.max(0, originalPrice - discountValue);
-      
-      case 'free':
-      case 'zero':
+
+      case "free":
+      case "zero":
         // Free item: price is 0
         return 0;
-      
+
       default:
         // Unknown discount type, assume percentage
         const defaultPercentageDiscount = (originalPrice * discountValue) / 100;
         return Math.max(0, originalPrice - defaultPercentageDiscount);
     }
   }
-  
+
   // Fallback to old discount_value field for backward compatibility
   const discountType = offer.discount_type;
   const discountValue = offer.discount_value;
-  
+
   if (!discountType || discountValue === undefined || discountValue === null) {
     return originalPrice; // No discount, return original price
   }
-  
+
   switch (discountType.toLowerCase()) {
-    case 'percentage':
-    case 'percent':
+    case "percentage":
+    case "percent":
       // Percentage discount: reduce by X%
       const percentageDiscount = (originalPrice * discountValue) / 100;
       return Math.max(0, originalPrice - percentageDiscount);
-    
-    case 'fixed':
-    case 'amount':
+
+    case "fixed":
+    case "amount":
       // Fixed amount discount: reduce by fixed amount
       return Math.max(0, originalPrice - discountValue);
-    
-    case 'free':
-    case 'zero':
+
+    case "free":
+    case "zero":
       // Free item: price is 0
       return 0;
-    
+
     default:
       // Unknown discount type, return original price
       return originalPrice;
@@ -160,33 +172,33 @@ const calculateTotalPriceWithOffer = (
     // No offer, calculate regular total
     return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
-  
+
   // Create a map of offer product keys and quantities for quick lookup
   const offerProductMap = new Map<string, number>();
   offerProducts.forEach((offerProduct) => {
-    const key = `${offerProduct.id}-${offerProduct.color || ''}`;
+    const key = `${offerProduct.id}-${offerProduct.color || ""}`;
     const existing = offerProductMap.get(key) || 0;
     offerProductMap.set(key, existing + offerProduct.quantity);
   });
-  
+
   // Calculate total price with offer discounts
   return items.reduce((sum, item) => {
-    const key = `${item.id}-${item.color || ''}`;
+    const key = `${item.id}-${item.color || ""}`;
     const offerQuantity = offerProductMap.get(key) || 0;
     const regularQuantity = item.quantity - offerQuantity;
-    
+
     // Regular price items (not in offer)
     let itemTotal = 0;
     if (regularQuantity > 0) {
       itemTotal += item.price * regularQuantity;
     }
-    
+
     // Offer price items (in offer) - these are always FREE (price = 0)
     if (offerQuantity > 0) {
       const offerPrice = 0; // Items in offerSelectedProducts are always free
       itemTotal += offerPrice * offerQuantity;
     }
-    
+
     return sum + itemTotal;
   }, 0);
 };
@@ -213,7 +225,11 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           0
         );
         // Calculate total price with offer discounts
-        const totalPrice = calculateTotalPriceWithOffer(updatedItems, state.selectedOffer, state.offerSelectedProducts);
+        const totalPrice = calculateTotalPriceWithOffer(
+          updatedItems,
+          state.selectedOffer || null,
+          state.offerSelectedProducts || []
+        );
 
         return {
           ...state,
@@ -230,7 +246,11 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           0
         );
         // Calculate total price with offer discounts
-        const totalPrice = calculateTotalPriceWithOffer(newItems, state.selectedOffer, state.offerSelectedProducts);
+        const totalPrice = calculateTotalPriceWithOffer(
+          newItems,
+          state.selectedOffer || null,
+          state.offerSelectedProducts || []
+        );
 
         return {
           ...state,
@@ -254,7 +274,11 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         0
       );
       // Calculate total price with offer discounts
-      const totalPrice = calculateTotalPriceWithOffer(filteredItems, state.selectedOffer, state.offerSelectedProducts);
+      const totalPrice = calculateTotalPriceWithOffer(
+        filteredItems,
+        state.selectedOffer || null,
+        state.offerSelectedProducts || []
+      );
 
       return {
         ...state,
@@ -277,11 +301,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       // If there's a maxQuantity limit, respect it strictly
       if (item.maxQuantity !== undefined) {
         newQuantity = Math.min(newQuantity, item.maxQuantity);
-        // If the requested quantity exceeds max, log a warning
+        // If the requested quantity exceeds max, adjust to max
         if (action.payload.quantity > item.maxQuantity) {
-          console.warn(
-            `Requested quantity ${action.payload.quantity} exceeds max ${item.maxQuantity} for item ${item.id}`
-          );
+          // Quantity will be adjusted to maxQuantity
         }
       }
 
@@ -299,7 +321,11 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           0
         );
         // Calculate total price with offer discounts
-        const totalPrice = calculateTotalPriceWithOffer(filteredItems, state.selectedOffer, state.offerSelectedProducts);
+        const totalPrice = calculateTotalPriceWithOffer(
+          filteredItems,
+          state.selectedOffer || null,
+          state.offerSelectedProducts || []
+        );
 
         return {
           ...state,
@@ -317,7 +343,11 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       );
 
       // Calculate total price with offer discounts
-      const totalPrice = calculateTotalPriceWithOffer(updatedItems, state.selectedOffer, state.offerSelectedProducts);
+      const totalPrice = calculateTotalPriceWithOffer(
+        updatedItems,
+        state.selectedOffer || null,
+        state.offerSelectedProducts || []
+      );
 
       return {
         ...state,
@@ -346,37 +376,37 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       // Recalculate total price with offer discounts applied
       const offer = action.payload.offer;
       const offerProducts = action.payload.selectedProducts || [];
-      
+
       // Create a map of offer product keys for quick lookup
       const offerProductMap = new Map<string, number>();
       offerProducts.forEach((offerProduct) => {
-        const key = `${offerProduct.id}-${offerProduct.color || ''}`;
+        const key = `${offerProduct.id}-${offerProduct.color || ""}`;
         offerProductMap.set(key, offerProduct.quantity);
       });
-      
+
       // Calculate total price with offer discounts
       const totalPrice = state.items.reduce((sum, item) => {
-        const key = `${item.id}-${item.color || ''}`;
+        const key = `${item.id}-${item.color || ""}`;
         const offerQuantity = offerProductMap.get(key) || 0;
         const regularQuantity = item.quantity - offerQuantity;
-        
+
         // Calculate price for this item
         let itemTotal = 0;
-        
+
         // Regular price items (not in offer)
         if (regularQuantity > 0) {
           itemTotal += item.price * regularQuantity;
         }
-        
+
         // Offer price items (in offer)
         if (offerQuantity > 0 && offer) {
           const offerPrice = calculateOfferPrice(item.price, offer);
           itemTotal += offerPrice * offerQuantity;
         }
-        
+
         return sum + itemTotal;
       }, 0);
-      
+
       return {
         ...state,
         selectedOffer: offer,
@@ -434,11 +464,9 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
     try {
       const savedCart = localStorage.getItem("dreamy-eyes-cart");
-      console.log("Loading cart from localStorage:", savedCart);
 
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart);
-        console.log("Parsed cart data:", parsedCart);
 
         // Only load if the parsed cart has items
         if (parsedCart.items && parsedCart.items.length > 0) {
@@ -448,9 +476,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
               item.maxQuantity !== undefined &&
               item.quantity > item.maxQuantity
             ) {
-              console.warn(
-                `Item ${item.id} quantity ${item.quantity} exceeds max ${item.maxQuantity}, adjusting to max`
-              );
               return { ...item, quantity: item.maxQuantity };
             }
             return item;
@@ -478,12 +503,9 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
           dispatch({ type: "LOAD_CART", payload: validatedCart });
         }
-      } else {
-        console.log("No saved cart found in localStorage");
       }
       setIsInitialized(true);
     } catch (error) {
-      console.error("Error loading cart from localStorage:", error);
       setIsInitialized(true);
     }
   }, [isClient]);
@@ -491,14 +513,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   // Clear offer from Zustand store when cart is cleared or becomes empty
   useEffect(() => {
     if (!isInitialized || !isClient) return;
-    
+
     // If cart is empty, clear the offer from Zustand store
     if (state.items.length === 0) {
       // Dynamically import to avoid circular dependency
       import("../store/offerStore").then(({ useOfferStore }) => {
         const { isOfferApplied, clearOffer } = useOfferStore.getState();
         if (isOfferApplied) {
-          console.log("Cart is empty, clearing offer");
           clearOffer();
         }
       });
@@ -510,8 +531,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     if (!isInitialized || !isClient) return; // Don't save until after initial load and on client
 
     try {
-      console.log("Saving cart to localStorage:", state);
-
       // Only save if cart has items, otherwise remove from localStorage
       if (state.items && state.items.length > 0) {
         localStorage.setItem("dreamy-eyes-cart", JSON.stringify(state));
@@ -519,7 +538,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         localStorage.removeItem("dreamy-eyes-cart");
       }
     } catch (error) {
-      console.error("Error saving cart to localStorage:", error);
+      // Error saving cart
     }
   }, [state, isInitialized, isClient]);
 
@@ -533,18 +552,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     );
 
     if (hasInvalidQuantities) {
-      console.log("Invalid quantities detected, auto-validating cart...");
       validateCart();
     }
   }, [state.items, isInitialized, isClient]);
 
   const addItem = (item: CartItem) => {
-    console.log("Adding item to cart:", item);
     dispatch({ type: "ADD_ITEM", payload: item });
   };
 
   const removeItem = (id: string | number, color?: string) => {
-    console.log("Removing item from cart:", id, color);
     dispatch({ type: "REMOVE_ITEM", payload: { id, color } });
   };
 
@@ -553,22 +569,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     quantity: number,
     color?: string
   ) => {
-    console.log("Updating quantity for item:", id, color, "to:", quantity);
     dispatch({ type: "UPDATE_QUANTITY", payload: { id, color, quantity } });
   };
 
   const clearCart = () => {
-    console.log("Clearing cart");
     dispatch({ type: "CLEAR_CART" });
   };
 
   const validateCart = () => {
-    console.log("Validating cart...");
     const updatedItems = state.items.map((item) => {
       if (item.maxQuantity !== undefined && item.quantity > item.maxQuantity) {
-        console.warn(
-          `Item ${item.id} quantity ${item.quantity} exceeds max ${item.maxQuantity}, adjusting to max`
-        );
         return { ...item, quantity: item.maxQuantity };
       }
       return item;
@@ -595,24 +605,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       type: "LOAD_CART",
       payload: validatedState,
     });
-
-    console.log("Cart validated. New state:", validatedState);
   };
 
   const setOffer = (offer: Offer | null, selectedProducts: CartItem[]) => {
-    console.log("Setting offer:", offer, "with products:", selectedProducts);
     dispatch({
       type: "SET_OFFER",
       payload: { offer, selectedProducts },
     });
   };
-
-  // Debug: Log current cart state
-  useEffect(() => {
-    if (isClient) {
-      console.log("Current cart state:", state);
-    }
-  }, [state, isClient]);
 
   return (
     <CartContext.Provider
