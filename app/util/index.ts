@@ -129,17 +129,33 @@ export const fetchExchangeRate = async (): Promise<number> => {
       exchangeRateCache &&
       Date.now() - exchangeRateCache.timestamp < CACHE_DURATION
     ) {
+      console.log("Using cached exchange rate:", exchangeRateCache.rate);
       return exchangeRateCache.rate;
     }
 
     // Fetch from API
     const ExchangeRatesApi = await import("exchange-rates-api");
-    const rates = await ExchangeRatesApi.default({
-      baseCurrency: "NPR",
-      currencies: ["INR"],
-    });
+    console.log("Fetching exchange rate from API...");
 
-    const rate = rates.INR || FALLBACK_RATE;
+    let rates;
+    try {
+      rates = await ExchangeRatesApi.default({
+        baseCurrency: "NPR",
+        currencies: ["INR"],
+      });
+      console.log("Exchange rate API response:", rates);
+      console.log("Full response object:", JSON.stringify(rates, null, 2));
+    } catch (apiError) {
+      console.error("API call failed:", apiError);
+      throw apiError; // Re-throw to be caught by outer catch
+    }
+
+    const rate = rates?.INR || FALLBACK_RATE;
+    console.log("Extracted INR rate:", rate);
+
+    if (!rates?.INR) {
+      console.warn("INR rate not found in response, using fallback");
+    }
 
     // Update cache
     exchangeRateCache = {
@@ -147,8 +163,17 @@ export const fetchExchangeRate = async (): Promise<number> => {
       timestamp: Date.now(),
     };
 
+    console.log("Cached exchange rate:", exchangeRateCache);
     return rate;
   } catch (error) {
+    console.error("Error fetching exchange rate:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+      fullError: error,
+    });
+    console.log("Using fallback rate:", FALLBACK_RATE);
     // If API fails, use fallback rate
     return FALLBACK_RATE;
   }
@@ -161,11 +186,13 @@ export const calculatePrice = async (
   nprPrice: number,
   country: string | null
 ): Promise<number> => {
-  if (!country || country.toLowerCase() === "nepal") {
+  const countryLower = country?.toLowerCase() || "";
+
+  if (!country || countryLower === "nepal") {
     return nprPrice; // Return NPR price as is
   }
 
-  if (country.toLowerCase() === "india") {
+  if (countryLower === "india") {
     const rate = await fetchExchangeRate();
     return nprPrice * rate; // Convert NPR to INR using real-time rate
   }
@@ -179,11 +206,13 @@ export const calculatePriceSync = (
   nprPrice: number,
   country: string | null
 ): number => {
-  if (!country || country.toLowerCase() === "nepal") {
+  const countryLower = country?.toLowerCase() || "";
+
+  if (!country || countryLower === "nepal") {
     return nprPrice; // Return NPR price as is
   }
 
-  if (country.toLowerCase() === "india") {
+  if (countryLower === "india") {
     const rate = exchangeRateCache?.rate || FALLBACK_RATE;
     return nprPrice * rate; // Convert NPR to INR using cached rate
   }
@@ -194,7 +223,8 @@ export const calculatePriceSync = (
 
 // Format price with currency symbol
 export const formatPrice = (price: number, country: string | null): string => {
-  const currency = country?.toLowerCase() === "india" ? "INR" : "NPR";
+  const countryLower = country?.toLowerCase() || "";
+  const currency = countryLower === "india" ? "INR" : "NPR";
   const symbol = currency === "INR" ? "₹" : "Rs";
 
   // Format with 2 decimal places
