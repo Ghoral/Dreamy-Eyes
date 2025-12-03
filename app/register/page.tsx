@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
+import { PhoneNumberUtil, PhoneNumberType } from "google-libphonenumber";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -12,21 +13,266 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    phone: "",
+    phone: "+977 ", // Default to Nepal with country code
+    country: "Nepal", // Default to Nepal
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const router = useRouter();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
     setError(""); // Clear error when user types
+  };
+
+  // Auto-detect country from phone number and format with country code
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhoneTouched(true); // Mark as touched when user starts typing
+    let phoneValue = e.target.value;
+    const cleanedPhone = phoneValue.replace(/\D/g, ''); // Remove non-digits
+    
+    setFormData((prev) => {
+      let country = prev.country;
+      
+      // Auto-detect country based on phone number
+      // India: starts with +91 or 91
+      // Nepal: starts with +977 or 977
+      if (cleanedPhone.startsWith('91')) {
+        country = "India";
+        // Format: +91 XXXXXXXXXX (remove leading 91 if present and add +91)
+        if (cleanedPhone.length > 2) {
+          const numberWithoutCode = cleanedPhone.substring(2);
+          // India: first digit must be 6, 7, 8, or 9
+          if (numberWithoutCode.length > 0 && numberWithoutCode[0] >= '6' && numberWithoutCode[0] <= '9') {
+            if (numberWithoutCode.length <= 10) {
+              phoneValue = `+91 ${numberWithoutCode}`;
+            } else {
+              phoneValue = `+91 ${numberWithoutCode.substring(0, 10)}`;
+            }
+          } else if (numberWithoutCode.length === 0) {
+            phoneValue = '+91 ';
+          } else {
+            // Invalid first digit, don't update
+            return prev;
+          }
+        } else if (cleanedPhone.length === 2) {
+          phoneValue = '+91 ';
+        }
+      } else if (cleanedPhone.startsWith('977')) {
+        country = "Nepal";
+        // Format: +977 XXXXXXXXX (remove leading 977 if present and add +977)
+        if (cleanedPhone.length > 3) {
+          const numberWithoutCode = cleanedPhone.substring(3);
+          // Nepal: first digit should be 9 or 8
+          if (numberWithoutCode.length > 0 && (numberWithoutCode[0] === '9' || numberWithoutCode[0] === '8')) {
+            if (numberWithoutCode.length <= 10) {
+              phoneValue = `+977 ${numberWithoutCode}`;
+            } else {
+              phoneValue = `+977 ${numberWithoutCode.substring(0, 10)}`;
+            }
+          } else if (numberWithoutCode.length === 0) {
+            phoneValue = '+977 ';
+          } else {
+            // Invalid first digit, don't update
+            return prev;
+          }
+        } else if (cleanedPhone.length === 3) {
+          phoneValue = '+977 ';
+        }
+      } else if (phoneValue.startsWith('+')) {
+        // If starts with + but not +91 or +977, keep as is
+        // But if country is selected, format accordingly
+        if (country === "India" && !phoneValue.startsWith('+91')) {
+          // Remove + and format with +91
+          const numberWithoutPlus = cleanedPhone;
+          if (numberWithoutPlus.length > 0 && numberWithoutPlus[0] >= '6' && numberWithoutPlus[0] <= '9') {
+            if (numberWithoutPlus.length <= 10) {
+              phoneValue = `+91 ${numberWithoutPlus}`;
+            } else {
+              phoneValue = `+91 ${numberWithoutPlus.substring(0, 10)}`;
+            }
+          } else {
+            return prev;
+          }
+        } else if (country === "Nepal" && !phoneValue.startsWith('+977')) {
+          // Remove + and format with +977
+          const numberWithoutPlus = cleanedPhone;
+          if (numberWithoutPlus.length > 0 && (numberWithoutPlus[0] === '9' || numberWithoutPlus[0] === '8')) {
+            if (numberWithoutPlus.length <= 10) {
+              phoneValue = `+977 ${numberWithoutPlus}`;
+            } else {
+              phoneValue = `+977 ${numberWithoutPlus.substring(0, 10)}`;
+            }
+          } else {
+            return prev;
+          }
+        }
+      } else if (cleanedPhone.length > 0) {
+        // If no country code, add based on selected country
+        if (country === "India") {
+          // India: first digit must be 6, 7, 8, or 9
+          if (cleanedPhone[0] >= '6' && cleanedPhone[0] <= '9') {
+            if (cleanedPhone.length <= 10) {
+              phoneValue = `+91 ${cleanedPhone}`;
+            } else {
+              phoneValue = `+91 ${cleanedPhone.substring(0, 10)}`;
+            }
+          } else {
+            // Invalid first digit, don't update
+            return prev;
+          }
+        } else if (country === "Nepal") {
+          // Nepal: first digit should be 9 or 8
+          if (cleanedPhone[0] === '9' || cleanedPhone[0] === '8') {
+            if (cleanedPhone.length <= 10) {
+              phoneValue = `+977 ${cleanedPhone}`;
+            } else {
+              phoneValue = `+977 ${cleanedPhone.substring(0, 10)}`;
+            }
+          } else {
+            // Invalid first digit, don't update
+            return prev;
+          }
+        }
+      }
+      
+      return {
+        ...prev,
+        phone: phoneValue,
+        country,
+      };
+    });
+    setError("");
+  };
+
+  // Handle country change - update phone number with new country code
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCountry = e.target.value;
+    setFormData((prev) => {
+      const cleanedPhone = prev.phone.replace(/\D/g, ''); // Remove all non-digits
+      let formattedPhone = prev.phone;
+      let numberWithoutCode = '';
+      
+      // Remove existing country code
+      if (cleanedPhone.startsWith('91')) {
+        numberWithoutCode = cleanedPhone.substring(2);
+      } else if (cleanedPhone.startsWith('977')) {
+        numberWithoutCode = cleanedPhone.substring(3);
+      } else if (cleanedPhone.length > 0) {
+        numberWithoutCode = cleanedPhone;
+      }
+      
+      // Validate and format based on new country
+      if (numberWithoutCode.length > 0) {
+        if (newCountry === "India") {
+          // India: first digit must be 6, 7, 8, or 9
+          if (numberWithoutCode[0] >= '6' && numberWithoutCode[0] <= '9') {
+            const validNumber = numberWithoutCode.substring(0, 10);
+            formattedPhone = `+91 ${validNumber}`;
+          } else {
+            // Invalid first digit for India, reset to country code only
+            formattedPhone = '+91 ';
+            setError("Please enter a valid phone number");
+          }
+        } else {
+          // Nepal: first digit must be 9 or 8
+          if (numberWithoutCode[0] === '9' || numberWithoutCode[0] === '8') {
+            const validNumber = numberWithoutCode.substring(0, 10);
+            formattedPhone = `+977 ${validNumber}`;
+          } else {
+            // Invalid first digit for Nepal, reset to country code only
+            formattedPhone = '+977 ';
+            setError("Please enter a valid phone number");
+          }
+        }
+      } else {
+        // Empty phone, just add country code
+        formattedPhone = newCountry === "India" ? '+91 ' : '+977 ';
+      }
+      
+      return {
+        ...prev,
+        country: newCountry,
+        phone: formattedPhone,
+      };
+    });
+  };
+
+  // Check if phone number is valid using google-libphonenumber
+  const isPhoneValid = () => {
+    if (!formData.phone || !formData.phone.trim()) {
+      return false;
+    }
+    
+    // Must start with + and country code
+    if (!formData.phone.startsWith('+')) {
+      return false;
+    }
+    
+    const cleanedPhone = formData.phone.replace(/\D/g, '');
+    
+    // Extract the actual phone number (without country code)
+    let numberWithoutCode = '';
+    if (formData.country === "India") {
+      // Must start with +91
+      if (!formData.phone.startsWith('+91')) {
+        return false;
+      }
+      if (cleanedPhone.length !== 12) return false; // Exactly 12 digits (+91 + 10 digits)
+      numberWithoutCode = cleanedPhone.substring(2); // Remove 91
+      // Indian mobile numbers must start with 6, 7, 8, or 9
+      if (numberWithoutCode.length !== 10 || (numberWithoutCode[0] < '6' || numberWithoutCode[0] > '9')) {
+        return false;
+      }
+    } else if (formData.country === "Nepal") {
+      // Must start with +977
+      if (!formData.phone.startsWith('+977')) {
+        return false;
+      }
+      if (cleanedPhone.length !== 13) return false; // Exactly 13 digits (+977 + 10 digits)
+      numberWithoutCode = cleanedPhone.substring(3); // Remove 977
+      // Nepali mobile numbers must start with 9 or 8
+      if (numberWithoutCode.length !== 10 || (numberWithoutCode[0] !== '9' && numberWithoutCode[0] !== '8')) {
+        return false;
+      }
+    }
+    
+    // Reject numbers that are all the same digit (e.g., 9999999999, 1111111111)
+    if (numberWithoutCode.length > 0) {
+      const firstDigit = numberWithoutCode[0];
+      if (numberWithoutCode.split('').every(digit => digit === firstDigit)) {
+        return false;
+      }
+    }
+    
+    try {
+      const phoneUtil = PhoneNumberUtil.getInstance();
+      // Map country names to ISO country codes
+      const countryCode = formData.country === "India" ? "IN" : "NP";
+      const number = phoneUtil.parseAndKeepRawInput(formData.phone, countryCode);
+      
+      // Check if number is valid
+      if (!phoneUtil.isValidNumber(number)) {
+        return false;
+      }
+      
+      // Ensure it's a mobile number, not a fixed line or other type
+      const numberType = phoneUtil.getNumberType(number);
+      if (numberType !== PhoneNumberType.MOBILE && numberType !== PhoneNumberType.FIXED_LINE_OR_MOBILE) {
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      return false;
+    }
   };
 
   const validateForm = () => {
@@ -56,8 +302,9 @@ export default function RegisterPage() {
       setError("Passwords do not match");
       return false;
     }
-    if (!formData.phone || formData.phone.length < 10) {
-      setError("Phone number must be at least 10 digits");
+    // Validate phone number with country code
+    if (!isPhoneValid()) {
+      setError("Please enter a valid phone number");
       return false;
     }
     return true;
@@ -65,6 +312,12 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    setPhoneTouched(true);
+    if (!isPhoneValid()) {
+      setError("Please enter a valid phone number");
+      return;
+    }
 
     if (!validateForm()) {
       return;
@@ -76,33 +329,19 @@ export default function RegisterPage() {
     try {
       const supabase = createSupabaseClient();
 
-      // Check if email already exists
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("email")
-        .eq("email", formData.email)
-        .single();
-
-      if (existingProfile) {
-        setError(
-          "Email already exists. Please use a different email or try logging in."
-        );
-        setIsLoading(false);
-        return;
-      }
-
       // Create user account
       const {
         data: { user },
         error: signUpError,
-      } = await supabase.auth.signUp({
+      } =       await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
-            phone: formData.phone,
+            mobile_number: formData.phone,
+            country: formData.country.toLowerCase(),
           },
         },
       });
@@ -113,22 +352,6 @@ export default function RegisterPage() {
       }
 
       if (user) {
-        // Create profile record
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: user.id,
-          email: formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          phone: formData.phone,
-          profile_completed: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-        }
-
         // Redirect to login page with success message
         router.push(
           "/login?message=Account created successfully! Please check your email to verify your account."
@@ -282,37 +505,73 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Phone Field */}
+                {/* Phone Field with Country Picker */}
                 <div>
                   <label className="block text-sm font-semibold text-secondary-700 mb-3">
                     Phone Number
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-secondary-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                  <div className="flex gap-2">
+                    {/* Country Picker */}
+                    <div className="relative flex-shrink-0">
+                      <select
+                        name="country"
+                        value={formData.country}
+                        onChange={handleCountryChange}
+                        className="w-32 pl-4 pr-8 py-4 border border-secondary-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none cursor-pointer"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                        />
-                      </svg>
+                        <option value="Nepal">🇳🇵 +977</option>
+                        <option value="India">🇮🇳 +91</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg
+                          className="w-4 h-4 text-secondary-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </div>
                     </div>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full pl-12 pr-4 py-4 border border-secondary-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                      placeholder="Enter phone number"
-                    />
+                    {/* Phone Input */}
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg
+                          className="w-5 h-5 text-secondary-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
+                        </svg>
+                      </div>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handlePhoneChange}
+                        onBlur={() => setPhoneTouched(true)}
+                        required
+                        className={`w-full pl-12 pr-4 py-4 border rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm ${
+                          phoneTouched && !isPhoneValid() ? 'border-red-300' : 'border-secondary-200'
+                        }`}
+                        placeholder={formData.country === "India" ? "+91 9876543210" : "+977 9876543210"}
+                      />
+                    </div>
                   </div>
+                  {phoneTouched && !isPhoneValid() && (
+                    <p className="mt-2 text-sm text-red-600 font-medium">Please enter a valid phone number</p>
+                  )}
                 </div>
 
                 {/* Password Field */}
