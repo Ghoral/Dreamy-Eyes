@@ -1,7 +1,6 @@
 "use client";
 
 import { InstagramEmbed } from "react-social-media-embed";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { get_app_details } from "@/app/api/product";
 

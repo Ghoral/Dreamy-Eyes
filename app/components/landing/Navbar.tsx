@@ -91,7 +91,6 @@ const Navbar = () => {
 
   const navLinks = [
     { label: "Home", href: "/" },
-    { label: "Shop", href: "/shop" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ];
@@ -115,51 +114,45 @@ const Navbar = () => {
             {/* Logo */}
             <Link
               href="/"
-              className="flex items-center space-x-3 group transition-transform duration-300 hover:scale-105"
+              className="flex items-center space-x-2 group"
             >
-              <div className="relative w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-2 shadow-glow group-hover:shadow-glow-lg transition-all duration-300">
-                <Image
-                  src="/images/logo.png"
-                  alt="Dreamy Eyes Logo"
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-contain"
-                  priority
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent font-serif">
-                  Dreamy Eyes
-                </span>
-                <span className="text-xs text-secondary-500 font-medium -mt-1 font-sans">
-                  Contact Lenses
-                </span>
-              </div>
+              <Image
+                src="/images/logo.png"
+                alt="Dreamy Eyes Logo"
+                width={24}
+                height={24}
+                className="object-contain"
+                priority
+              />
+              <span className="text-xl font-normal tracking-wide text-black" style={{ fontFamily: 'Georgia, serif' }}>
+                Dreamy Eyes
+              </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center space-x-10">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="relative text-secondary-700 font-medium hover:text-primary-500 transition-colors duration-300 group font-sans"
+                  className="relative text-black font-normal hover:text-gray-600 transition-colors duration-300 group tracking-wide uppercase text-sm"
+                  style={{ fontFamily: 'Georgia, serif', letterSpacing: '0.15em' }}
                 >
                   {link.label}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-300 group-hover:w-full"></span>
+                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-black transition-all duration-300 group-hover:w-full"></span>
                 </Link>
               ))}
             </div>
 
             {/* Right Side - Cart, Profile & Mobile Menu Button */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               {/* Cart Icon */}
               <button
                 onClick={openCartModal}
-                className="relative p-3 rounded-full bg-gradient-to-r from-primary-50 to-primary-100 hover:from-primary-100 hover:to-primary-200 transition-all duration-300 group"
+                className="relative p-2 hover:opacity-70 transition-opacity duration-300"
               >
                 <svg
-                  className="w-6 h-6 text-primary-600 group-hover:text-primary-700 transition-colors duration-300"
+                  className="w-5 h-5 text-black"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -167,12 +160,12 @@ const Navbar = () => {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
                   />
                 </svg>
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-primary-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-black text-white text-[10px] font-normal rounded-full flex items-center justify-center">
                     {cartItemCount}
                   </span>
                 )}
@@ -182,10 +175,10 @@ const Navbar = () => {
               <div className="relative">
                 <button
                   onClick={toggleProfileMenu}
-                  className="p-3 rounded-full bg-gradient-to-r from-secondary-50 to-secondary-100 hover:from-secondary-100 hover:to-secondary-200 transition-all duration-300 group"
+                  className="p-2 hover:opacity-70 transition-opacity duration-300"
                 >
                   <svg
-                    className="w-6 h-6 text-secondary-600 group-hover:text-secondary-700 transition-colors duration-300"
+                    className="w-5 h-5 text-black"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -193,7 +186,7 @@ const Navbar = () => {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                     />
                   </svg>
@@ -201,20 +194,20 @@ const Navbar = () => {
 
                 {/* Profile Dropdown Menu */}
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-secondary-100 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 py-2 z-50">
                     {isLoading ? (
                       <div className="flex justify-center items-center py-4">
-                        <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     ) : isAuthenticated ? (
                       <>
                         <Link
                           href="/profile"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
+                          className="flex items-center px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 text-sm"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
-                            className="w-5 h-5 mr-3"
+                            className="w-4 h-4 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -222,7 +215,7 @@ const Navbar = () => {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             />
                           </svg>
@@ -230,11 +223,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           href="/shipping-address"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
+                          className="flex items-center px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 text-sm"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
-                            className="w-5 h-5 mr-3"
+                            className="w-4 h-4 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -242,13 +235,13 @@ const Navbar = () => {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                             />
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                             />
                           </svg>
@@ -256,11 +249,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           href="/orders"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
+                          className="flex items-center px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 text-sm"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
-                            className="w-5 h-5 mr-3"
+                            className="w-4 h-4 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -268,19 +261,19 @@ const Navbar = () => {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
                             />
                           </svg>
                           Orders
                         </Link>
-                        <div className="border-t border-secondary-100 my-2"></div>
+                        <div className="border-t border-gray-200 my-2"></div>
                         <button
-                          className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 font-sans"
+                          className="w-full flex items-center px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 text-sm"
                           onClick={handleLogout}
                         >
                           <svg
-                            className="w-5 h-5 mr-3"
+                            className="w-4 h-4 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -288,7 +281,7 @@ const Navbar = () => {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                             />
                           </svg>
@@ -299,11 +292,11 @@ const Navbar = () => {
                       <>
                         <Link
                           href="/login"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
+                          className="flex items-center px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 text-sm"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
-                            className="w-5 h-5 mr-3"
+                            className="w-4 h-4 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -311,7 +304,7 @@ const Navbar = () => {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
                             />
                           </svg>
@@ -319,11 +312,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           href="/register"
-                          className="flex items-center px-4 py-3 text-secondary-700 hover:bg-primary-50 hover:text-primary-600 transition-colors duration-200 font-sans"
+                          className="flex items-center px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 text-sm"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           <svg
-                            className="w-5 h-5 mr-3"
+                            className="w-4 h-4 mr-3"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -331,7 +324,7 @@ const Navbar = () => {
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
+                              strokeWidth={1.5}
                               d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
                             />
                           </svg>
@@ -346,11 +339,11 @@ const Navbar = () => {
               {/* Mobile Menu Button */}
               <button
                 onClick={toggleMobileMenu}
-                className="lg:hidden p-2 rounded-lg bg-secondary-50 hover:bg-secondary-100 transition-colors duration-300"
+                className="lg:hidden p-2 hover:opacity-70 transition-opacity duration-300"
                 aria-label="Toggle mobile menu"
               >
                 <svg
-                  className={`w-6 h-6 text-secondary-600 transition-transform duration-300 ${
+                  className={`w-5 h-5 text-black transition-transform duration-300 ${
                     isMobileMenuOpen ? "rotate-90" : ""
                   }`}
                   fill="none"
@@ -361,14 +354,14 @@ const Navbar = () => {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       d="M6 18L18 6M6 6l12 12"
                     />
                   ) : (
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       d="M4 6h16M4 12h16M4 18h16"
                     />
                   )}

@@ -1,9 +1,10 @@
 "use server";
 
-import { supabaseBrowserClient } from "../services/supabase/client/supabaseBrowserClient";
+import { createSupabaseServerClient } from "../services/supabase/server/supabaseServerClient";
 
 export async function get_all_products() {
-  const { data, error } = await supabaseBrowserClient.rpc(
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc(
     "get_available_products"
   );
 
@@ -27,7 +28,8 @@ export async function get_all_products() {
 }
 
 export async function get_all_products_with_types() {
-  const { data, error } = await supabaseBrowserClient.rpc(
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc(
     "get_all_products_with_types"
   );
 
@@ -51,9 +53,10 @@ export async function get_all_products_with_types() {
 }
 
 export async function get_app_details() {
-  const { data, error } = await supabaseBrowserClient
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
     .from("app_detail")
-    .select("tiktok_link, follow_us_tiktok")
+    .select("instagram_link, instagram")
     .limit(1);
 
   if (error) {
@@ -81,7 +84,8 @@ export async function get_products_by_type(
   p_limit: number = 10,
   p_filter: any = {}
 ) {
-  const { data, error } = await supabaseBrowserClient.rpc(
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.rpc(
     "get_products_by_type",
     {
       p_type,

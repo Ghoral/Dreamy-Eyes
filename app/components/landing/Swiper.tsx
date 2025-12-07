@@ -48,23 +48,10 @@ const BillboardCarousel = () => {
   };
 
   return (
-    <section className="relative pt-20 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
-      {/* Background Animated Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-        <div
-          className="absolute bottom-20 right-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
-
+    <section className="relative pt-20 bg-white overflow-hidden">
       <div className="relative">
         {/* Carousel Container */}
-        <div className="relative h-[320px] sm:h-[380px] md:h-[440px] lg:h-[500px] overflow-hidden">
+        <div className="relative h-[400px] sm:h-[450px] md:h-[500px] lg:h-[600px] overflow-hidden">
           {images.map((src, index) => (
             <div
               key={index}
@@ -88,10 +75,10 @@ const BillboardCarousel = () => {
         {/* Navigation Arrows */}
         <button
           onClick={goToPrevious}
-          className="absolute left-8 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-secondary-600 hover:text-primary-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 z-10"
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all duration-300 z-10"
         >
           <svg
-            className="w-6 h-6"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -107,10 +94,10 @@ const BillboardCarousel = () => {
 
         <button
           onClick={goToNext}
-          className="absolute right-8 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-secondary-600 hover:text-primary-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 z-10"
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all duration-300 z-10"
         >
           <svg
-            className="w-6 h-6"
+            className="w-5 h-5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -125,15 +112,15 @@ const BillboardCarousel = () => {
         </button>
 
         {/* Pagination Dots */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
           {images.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 index === currentSlide
-                  ? "bg-white scale-125 shadow-lg"
-                  : "bg-white/50 hover:bg-white/75"
+                  ? "bg-black"
+                  : "bg-black/30 hover:bg-black/50"
               }`}
             />
           ))}

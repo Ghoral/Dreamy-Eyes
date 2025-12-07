@@ -1,77 +1,178 @@
 "use client";
 
-import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
+import {
+  getThumbnailUrl,
+  formatPriceWithCurrency,
+  formatPrice,
+} from "@/app/util";
 import Image from "next/image";
-import React, { useState } from "react";
-import { useCart } from "../../context/CartContext";
-import Toast from "../ui/Toast";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "../../hooks/useUserCountry";
 
 const ProductItems = ({ data }: { data: any }) => {
   const { country } = useUserCountry();
-  const [hoveredItem, setHoveredItem] = useState<any>(null);
-  const [toastConfig, setToastConfig] = useState<{
-    message: string;
-    isVisible: boolean;
-  }>({ message: "", isVisible: false });
-  const { addItem } = useCart();
   const router = useRouter();
+  const [sortBy, setSortBy] = useState<string>("popularity");
+  const [selectedColor, setSelectedColor] = useState<string>("all");
+  const [selectedSize, setSelectedSize] = useState<string>("all");
+  const [powerMin, setPowerMin] = useState<string>("");
+  const [powerMax, setPowerMax] = useState<string>("");
+  const [showMobileFilters, setShowMobileFilters] = useState<boolean>(false);
 
   const handleProductClick = (product: any) => {
     const productId = product.id || product.title;
     router.push(`/${encodeURIComponent(productId)}`);
   };
 
-  const handleAddToCart = (e: React.MouseEvent, product: any) => {
-    e.stopPropagation();
-
-    let maxQuantity = 1;
-    if (product.colors) {
-      try {
-        const colorData = JSON.parse(product.colors);
-        if (colorData.length > 0) {
-          maxQuantity = parseInt(colorData[0].quantity) || 1;
-        }
-      } catch (error) {
-        console.error("Error parsing color data:", error);
+  // Extract unique colors from products
+  const availableColors = useMemo(() => {
+    const colorSet = new Set<string>();
+    (data || []).forEach((product: any) => {
+      if (product.color_quantity && Array.isArray(product.color_quantity)) {
+        product.color_quantity.forEach((cq: any) => {
+          if (cq.label) {
+            colorSet.add(cq.label);
+          }
+        });
       }
+    });
+    return Array.from(colorSet).sort();
+  }, [data]);
+
+  // Extract unique sizes from products
+  const availableSizes = useMemo(() => {
+    const sizeSet = new Set<string>();
+    (data || []).forEach((product: any) => {
+      if (product.specifications) {
+        try {
+          const specs =
+            typeof product.specifications === "string"
+              ? JSON.parse(product.specifications)
+              : product.specifications;
+
+          if (Array.isArray(specs)) {
+            specs.forEach((spec: any) => {
+              if (spec && typeof spec === "object") {
+                const label = (spec.label || "").toLowerCase();
+                if (label.includes("size") && spec.value) {
+                  sizeSet.add(spec.value);
+                }
+              }
+            });
+          } else if (typeof specs === "object" && specs !== null) {
+            Object.entries(specs).forEach(([key, value]) => {
+              const keyLower = key.toLowerCase();
+              if (keyLower.includes("size") && value) {
+                sizeSet.add(String(value));
+              }
+            });
+          }
+        } catch (error) {
+          // Ignore parsing errors
+        }
+      }
+    });
+    return Array.from(sizeSet).sort();
+  }, [data]);
+
+  // Filter and sort products
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = [...(data || [])];
+
+    // Apply color filter
+    if (selectedColor !== "all") {
+      filtered = filtered.filter((product: any) => {
+        if (!product.color_quantity || !Array.isArray(product.color_quantity)) {
+          return false;
+        }
+        return product.color_quantity.some(
+          (cq: any) => cq.label === selectedColor
+        );
+      });
     }
 
-    addItem({
-      id: product.id || product.title,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      quantity: 1,
-      image: getThumbnailUrl(product) || undefined,
-      primary_thumbnail: product.primary_thumbnail || undefined,
-      maxQuantity: maxQuantity,
-    });
+    // Apply power range filter
+    if (powerMin || powerMax) {
+      filtered = filtered.filter((product: any) => {
+        const power = product.power
+          ? parseFloat(product.power.toString())
+          : null;
+        if (power === null) return false;
 
-    setToastConfig({
-      message: `${product.title} added to cart!`,
-      isVisible: true,
-    });
+        const min = powerMin ? parseFloat(powerMin) : -Infinity;
+        const max = powerMax ? parseFloat(powerMax) : Infinity;
+        return power >= min && power <= max;
+      });
+    }
+
+    // Apply sorting
+    const sorted = [...filtered];
+    if (sortBy === "price-low") {
+      sorted.sort((a: any, b: any) => {
+        const priceA =
+          typeof a.price === "number" ? a.price : parseFloat(a.price);
+        const priceB =
+          typeof b.price === "number" ? b.price : parseFloat(b.price);
+        return priceA - priceB;
+      });
+    } else if (sortBy === "price-high") {
+      sorted.sort((a: any, b: any) => {
+        const priceA =
+          typeof a.price === "number" ? a.price : parseFloat(a.price);
+        const priceB =
+          typeof b.price === "number" ? b.price : parseFloat(b.price);
+        return priceB - priceA;
+      });
+    } else if (sortBy === "newest") {
+      sorted.sort((a: any, b: any) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    } else if (sortBy === "oldest") {
+      sorted.sort((a: any, b: any) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateA - dateB;
+      });
+    } else if (sortBy === "popularity") {
+      sorted.sort(
+        (a: any, b: any) => (b.order_count || 0) - (a.order_count || 0)
+      );
+    } else if (sortBy === "rating") {
+      sorted.sort(
+        (a: any, b: any) => (b.review_count || 0) - (a.review_count || 0)
+      );
+    }
+
+    return sorted;
+  }, [data, selectedColor, selectedSize, powerMin, powerMax, sortBy]);
+
+  const handleClearFilters = () => {
+    setSelectedColor("all");
+    setSelectedSize("all");
+    setPowerMin("");
+    setPowerMax("");
   };
 
-  return (
-    <section className="w-full py-20 bg-gradient-to-b from-white to-secondary-50 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
-        <div
-          className="absolute bottom-20 left-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
-          style={{ animationDelay: "1s" }}
-        ></div>
-      </div>
+  const hasActiveFilters =
+    selectedColor !== "all" ||
+    selectedSize !== "all" ||
+    powerMin !== "" ||
+    powerMax !== "";
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16 animate-slide-up">
-          <div className="inline-flex items-center px-4 py-2 bg-primary-100 text-primary-700 text-sm font-semibold rounded-full mb-4">
+  return (
+    <section className="w-full py-8 md:py-12 bg-white pt-0">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Mobile Filter Button */}
+        <div className="mb-4 lg:hidden">
+          <button
+            onClick={() => setShowMobileFilters(!showMobileFilters)}
+            className="flex items-center justify-center px-4 py-2 bg-white border border-gray-200 text-black rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
+          >
             <svg
-              className="w-4 h-4 mr-2"
+              className="w-5 h-5 mr-2"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -80,183 +181,121 @@ const ProductItems = ({ data }: { data: any }) => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
               />
             </svg>
-            Premium Collection
-          </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6 font-serif">
-            Our Products
-          </h2>
-          <p className="text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed">
-            Discover our premium selection of contact lenses designed for
-            comfort, clarity, and style
-          </p>
+            Filters
+            {hasActiveFilters && (
+              <span className="ml-2 bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                !
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
-          {data?.map((product: any, index: number) => {
-            const isHovered = hoveredItem === index;
-            const imageUrl = getThumbnailUrl(product);
-
-            return (
-              <div
-                key={index}
-                className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2"
-                onMouseEnter={() => setHoveredItem(index)}
-                onMouseLeave={() => setHoveredItem(null)}
-                onClick={() => handleProductClick(product)}
-              >
-                {/* Discount Badge */}
-                {product.discount && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="inline-flex items-center px-2 py-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-bold rounded-full shadow-lg">
-                      {product.discount}
-                    </span>
-                  </div>
+        {/* Main Content with Sidebar */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar Filters - Desktop */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-base font-normal text-black">Filters</h3>
+                {hasActiveFilters && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="text-xs text-black hover:underline font-normal"
+                  >
+                    Clear All
+                  </button>
                 )}
+              </div>
 
-                {/* HOT Badge for popular products */}
-                {product.order_count && product.order_count > 10 && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
-                      HOT
-                    </span>
-                  </div>
-                )}
-
-                {/* Product Image */}
-                <div className="relative h-64 bg-gradient-to-br from-secondary-50 to-primary-50 overflow-hidden">
-                  {imageUrl ? (
-                    <Image
-                      src={imageUrl}
-                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                      alt={product.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg
-                        className="w-16 h-16 text-secondary-300"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Hover Overlay */}
-                  {isHovered && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent flex items-center justify-center">
-                      <button
-                        className="bg-white text-primary-600 font-medium py-2 px-4 rounded-full shadow-xl transform scale-100 animate-fade-in hover:bg-primary-50 transition-all duration-300"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleProductClick(product);
-                        }}
-                      >
-                        <span className="flex items-center">
-                          <svg
-                            className="w-5 h-5 mr-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                          Quick View
-                        </span>
-                      </button>
-                    </div>
-                  )}
+              <div className="space-y-6">
+                {/* Color Filter */}
+                <div>
+                  <label className="block text-xs font-normal text-black mb-2">
+                    Color
+                  </label>
+                  <select
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="w-full bg-white border border-gray-200 text-black py-2 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  >
+                    <option value="all">All Colors</option>
+                    {availableColors.map((color) => (
+                      <option key={color} value={color}>
+                        {color}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Product Info */}
-                <div className="p-5">
-                  {/* Category/Subtitle */}
-                  {product.sub_title && (
-                    <div className="text-xs text-primary-600 font-medium uppercase tracking-wider mb-1">
-                      {product.sub_title}
-                    </div>
+                {/* Size Filter */}
+                <div>
+                  <label className="block text-xs font-normal text-black mb-2">
+                    Size
+                  </label>
+                  <select
+                    value={selectedSize}
+                    onChange={(e) => setSelectedSize(e.target.value)}
+                    className="w-full bg-white border border-gray-200 text-black py-2 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  >
+                    <option value="all">All Sizes</option>
+                    {availableSizes.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Power Range Filter */}
+                <div>
+                  <label className="block text-xs font-normal text-black mb-2">
+                    Power Range (W)
+                  </label>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={powerMin}
+                      onChange={(e) => setPowerMin(e.target.value)}
+                      className="w-full sm:flex-1 bg-white border border-gray-200 text-black py-2 px-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                    />
+                    <span className="text-gray-500 text-xs sm:mx-2">to</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={powerMax}
+                      onChange={(e) => setPowerMax(e.target.value)}
+                      className="w-full sm:flex-1 bg-white border border-gray-200 text-black py-2 px-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Mobile Filters Panel */}
+          {showMobileFilters && (
+            <div className="lg:hidden bg-white border border-gray-200 rounded-lg p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-normal text-black">Filters</h3>
+                <div className="flex items-center gap-2">
+                  {hasActiveFilters && (
+                    <button
+                      onClick={handleClearFilters}
+                      className="text-xs text-black hover:underline font-normal"
+                    >
+                      Clear All
+                    </button>
                   )}
-
-                  {/* Title */}
-                  <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
-                    {product.title}
-                  </h3>
-
-                  {/* Description */}
-                  <div
-                    className="text-secondary-600 text-sm mb-3 line-clamp-2 leading-relaxed h-10 overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: product.description }}
-                  />
-
-                  {/* Rating */}
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className="w-4 h-4 text-yellow-400 fill-current"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-xs text-secondary-500 ml-2">
-                      {product.review_count
-                        ? `4.9 (${product.review_count})`
-                        : "4.9 (120)"}
-                    </span>
-
-                    {/* Order Count Badge */}
-                    {product.order_count && product.order_count > 0 && (
-                      <span className="ml-auto text-xs bg-secondary-100 text-secondary-700 px-2 py-1 rounded-full">
-                        {product.order_count}+ sold
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Price */}
-                  <div className="mb-2">
-                    <span className="text-xl font-bold text-primary-600">
-                      {formatPriceWithCurrency(
-                        typeof product.price === "number"
-                          ? product.price
-                          : parseFloat(product.price),
-                        country
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Action Button - Moved to bottom */}
                   <button
-                    onClick={(e) => handleAddToCart(e, product)}
-                    className="w-full flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                    onClick={() => setShowMobileFilters(false)}
+                    className="text-gray-500 hover:text-black"
                   >
                     <svg
-                      className="w-5 h-5 mr-1"
+                      className="w-5 h-5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -265,29 +304,277 @@ const ProductItems = ({ data }: { data: any }) => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                        d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                    Add
                   </button>
                 </div>
-
-                {/* Hover Border Effect */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary-200 transition-all duration-500"></div>
               </div>
-            );
-          })}
+
+              <div className="space-y-6">
+                {/* Color Filter */}
+                <div>
+                  <label className="block text-xs font-normal text-black mb-2">
+                    Color
+                  </label>
+                  <select
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="w-full bg-white border border-gray-200 text-black py-2 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  >
+                    <option value="all">All Colors</option>
+                    {availableColors.map((color) => (
+                      <option key={color} value={color}>
+                        {color}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Size Filter */}
+                <div>
+                  <label className="block text-xs font-normal text-black mb-2">
+                    Size
+                  </label>
+                  <select
+                    value={selectedSize}
+                    onChange={(e) => setSelectedSize(e.target.value)}
+                    className="w-full bg-white border border-gray-200 text-black py-2 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                  >
+                    <option value="all">All Sizes</option>
+                    {availableSizes.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Power Range Filter */}
+                <div>
+                  <label className="block text-xs font-normal text-black mb-2">
+                    Power Range (W)
+                  </label>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={powerMin}
+                      onChange={(e) => setPowerMin(e.target.value)}
+                      className="w-full sm:flex-1 bg-white border border-gray-200 text-black py-2 px-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                    />
+                    <span className="text-gray-500 text-xs sm:mx-2">to</span>
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={powerMax}
+                      onChange={(e) => setPowerMax(e.target.value)}
+                      className="w-full sm:flex-1 bg-white border border-gray-200 text-black py-2 px-2 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Products Grid */}
+          <div className="flex-1 min-w-0">
+            {/* Sort Dropdown - Top Left */}
+            <div className="mb-6 flex items-center gap-2">
+              <label
+                htmlFor="sort"
+                className="text-black text-sm font-normal whitespace-nowrap"
+              >
+                Sort by:
+              </label>
+              <select
+                id="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-white border border-gray-200 text-black py-2 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-black text-sm min-w-[150px]"
+              >
+                <option value="popularity">Popularity</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="newest">Newest to Oldest</option>
+                <option value="oldest">Oldest to Newest</option>
+                <option value="rating">Customer Rating</option>
+              </select>
+            </div>
+
+            {filteredAndSortedProducts.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-500 text-sm">No products found</p>
+                <p className="text-gray-400 text-xs mt-2">
+                  Try changing your filter criteria
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {filteredAndSortedProducts.map(
+                  (product: any, index: number) => {
+                    const imageUrl = getThumbnailUrl(product);
+
+                    // Check if product is on sale
+                    const originalPrice =
+                      product.original_price || product.price;
+                    const salePrice = product.sale_price || product.price;
+                    const isOnSale =
+                      product.original_price &&
+                      product.original_price > salePrice;
+                    const hasDiscount =
+                      product.discount || product.discount_percentage;
+
+                    // Calculate sale price if discount exists
+                    let finalSalePrice = salePrice;
+                    let finalOriginalPrice = originalPrice;
+
+                    if (hasDiscount && !isOnSale) {
+                      const discountValue =
+                        product.discount_percentage || product.discount || 0;
+                      if (discountValue > 0) {
+                        finalOriginalPrice =
+                          typeof originalPrice === "number"
+                            ? originalPrice
+                            : parseFloat(originalPrice);
+                        finalSalePrice =
+                          finalOriginalPrice -
+                          (finalOriginalPrice * discountValue) / 100;
+                        if (finalSalePrice < finalOriginalPrice) {
+                          // Only show sale if there's actually a discount
+                        } else {
+                          finalSalePrice = finalOriginalPrice;
+                        }
+                      }
+                    }
+
+                    const showSale =
+                      isOnSale ||
+                      (hasDiscount && finalSalePrice < finalOriginalPrice);
+
+                    // Determine product tags
+                    const tags: string[] = [];
+
+                    // Check for On Sale (priority tag - show first)
+                    if (showSale) {
+                      tags.push("On Sale");
+                    }
+
+                    // Check for Newest (created within last 30 days)
+                    if (product.created_at) {
+                      const createdDate = new Date(product.created_at);
+                      const daysSinceCreation =
+                        (Date.now() - createdDate.getTime()) /
+                        (1000 * 60 * 60 * 24);
+                      if (daysSinceCreation <= 30) {
+                        tags.push("Newest");
+                      }
+                    }
+
+                    // Check for Best Seller (high order_count)
+                    if (product.order_count && product.order_count > 50) {
+                      tags.push("Best Seller");
+                    }
+
+                    return (
+                      <div
+                        key={index}
+                        className="group cursor-pointer"
+                        onClick={() => handleProductClick(product)}
+                      >
+                        {/* Product Image Container - Premium Luxury Design */}
+                        <div className="relative w-full aspect-square bg-white mb-3 overflow-hidden rounded-xl border border-gray-200 shadow-sm group-hover:shadow-lg transition-shadow duration-200">
+                          {imageUrl ? (
+                            <>
+                              <Image
+                                src={imageUrl}
+                                className="w-full h-full object-cover"
+                                alt={product.title}
+                                fill
+                                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
+                              />
+                              {/* Product Tags - Bottom Left */}
+                              {tags.length > 0 && (
+                                <div className="absolute bottom-2 left-2 flex flex-col gap-1.5 z-10">
+                                  {tags.map((tag, tagIndex) => (
+                                    <div
+                                      key={tagIndex}
+                                      className="bg-black text-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide"
+                                    >
+                                      {tag}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                              <svg
+                                className="w-12 h-12 text-gray-300"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Product Info - Left Aligned */}
+                        <div className="text-left">
+                          {/* Title */}
+                          <h3 className="text-[13px] font-normal text-black mb-1.5 line-clamp-2 leading-tight">
+                            {product.title}
+                          </h3>
+
+                          {/* Price */}
+                          <div className="flex flex-col">
+                            {showSale ? (
+                              <>
+                                <span className="text-[13px] font-normal text-black line-through mb-0.5 opacity-60">
+                                  {formatPrice(
+                                    typeof finalOriginalPrice === "number"
+                                      ? finalOriginalPrice
+                                      : parseFloat(finalOriginalPrice),
+                                    country
+                                  )}
+                                </span>
+                                <span className="text-[13px] font-normal text-black">
+                                  {formatPrice(
+                                    typeof finalSalePrice === "number"
+                                      ? finalSalePrice
+                                      : parseFloat(finalSalePrice),
+                                    country
+                                  )}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-[13px] font-normal text-black">
+                                {formatPrice(
+                                  typeof originalPrice === "number"
+                                    ? originalPrice
+                                    : parseFloat(originalPrice),
+                                  country
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Toast Notification */}
-      <Toast
-        message={toastConfig.message}
-        type="success"
-        isVisible={toastConfig.isVisible}
-        onClose={() => setToastConfig({ message: "", isVisible: false })}
-        duration={2000}
-      />
     </section>
   );
 };

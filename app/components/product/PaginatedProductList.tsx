@@ -2,10 +2,8 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { get_products_by_type } from "@/app/api/product";
-import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
+import { getThumbnailUrl, formatPriceWithCurrency, formatPrice } from "@/app/util";
 import Image from "next/image";
-import { useCart } from "../../context/CartContext";
-import Toast from "../ui/Toast";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
 
 type Product = {
@@ -175,76 +173,95 @@ const Pagination = ({
 
 const ProductCard = ({ product }: { product: Product }) => {
   const { country } = useUserCountry();
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [toastConfig, setToastConfig] = useState<{
-    message: string;
-    isVisible: boolean;
-  }>({ message: "", isVisible: false });
-  const { addItem } = useCart();
   const router = require("next/navigation").useRouter();
 
   const handleProductClick = () => {
     router.push(`/${encodeURIComponent(product.id)}`);
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-
-    let maxQuantity = 1;
-    if (product.color_quantity && product.color_quantity.length > 0) {
-      maxQuantity =
-        parseInt(product.color_quantity[0].quantity.toString()) || 1;
-    }
-
-    addItem({
-      id: product.id,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      quantity: 1,
-      image: getThumbnailUrl(product) || undefined,
-      maxQuantity: maxQuantity,
-    });
-
-    setToastConfig({
-      message: `${product.title} added to cart!`,
-      isVisible: true,
-    });
-  };
-
-  // Check if product is "hot" (high order count)
-  const isHot = product.order_count && product.order_count > 10;
-
   const imageUrl = getThumbnailUrl(product);
+  
+  // Check if product is on sale
+  const originalPrice = (product as any).original_price || product.price;
+  const salePrice = (product as any).sale_price || product.price;
+  const isOnSale = (product as any).original_price && (product as any).original_price > salePrice;
+  const hasDiscount = (product as any).discount || (product as any).discount_percentage;
+  
+  // Calculate sale price if discount exists
+  let finalSalePrice = salePrice;
+  let finalOriginalPrice = originalPrice;
+  
+  if (hasDiscount && !isOnSale) {
+    const discountValue = (product as any).discount_percentage || (product as any).discount || 0;
+    if (discountValue > 0) {
+      finalOriginalPrice = typeof originalPrice === "number" ? originalPrice : parseFloat(originalPrice.toString());
+      finalSalePrice = finalOriginalPrice - (finalOriginalPrice * discountValue / 100);
+      if (finalSalePrice < finalOriginalPrice) {
+        // Only show sale if there's actually a discount
+      } else {
+        finalSalePrice = finalOriginalPrice;
+      }
+    }
+  }
+
+  const showSale = isOnSale || (hasDiscount && finalSalePrice < finalOriginalPrice);
+
+  // Determine product tags
+  const tags: string[] = [];
+  
+  // Check for On Sale (priority tag - show first)
+  if (showSale) {
+    tags.push("On Sale");
+  }
+  
+  // Check for Newest (created within last 30 days)
+  if (product.created_at) {
+    const createdDate = new Date(product.created_at);
+    const daysSinceCreation = (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceCreation <= 30) {
+      tags.push("Newest");
+    }
+  }
+  
+  // Check for Best Seller (high order_count)
+  if (product.order_count && product.order_count > 50) {
+    tags.push("Best Seller");
+  }
 
   return (
     <div
-      className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2"
-      onMouseEnter={() => setHoveredItem(product.id)}
-      onMouseLeave={() => setHoveredItem(null)}
+      className="group cursor-pointer"
       onClick={handleProductClick}
     >
-      {/* Sale Badge - Show if product has order_count > 10 */}
-      {isHot && (
-        <div className="absolute top-4 left-4 z-10 bg-primary-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg transform -rotate-12 animate-pulse">
-          HOT
-        </div>
-      )}
-
-      {/* Product Image */}
-      <div className="relative h-56 bg-gradient-to-br from-secondary-50 to-primary-50 overflow-hidden">
+      {/* Product Image Container - Premium Luxury Design */}
+      <div className="relative w-full aspect-square bg-white mb-3 overflow-hidden rounded-lg">
         {imageUrl ? (
-          <Image
-            src={imageUrl}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-            alt={product.title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          />
+          <>
+            <Image
+              src={imageUrl}
+              className="w-full h-full object-cover"
+              alt={product.title}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+            />
+            {/* Product Tags - Top Left */}
+            {tags.length > 0 && (
+              <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                {tags.map((tag, tagIndex) => (
+                  <div
+                    key={tagIndex}
+                    className="bg-black text-white px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide"
+                  >
+                    {tag}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-gray-50">
             <svg
-              className="w-16 h-16 text-secondary-300"
+              className="w-12 h-12 text-gray-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -258,122 +275,48 @@ const ProductCard = ({ product }: { product: Product }) => {
             </svg>
           </div>
         )}
-
-        {/* Quick View Button */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-t from-primary-500/40 via-transparent to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-        >
-          <div className="bg-white rounded-full p-3 shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-            <svg
-              className="w-6 h-6 text-primary-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              />
-            </svg>
-          </div>
-        </div>
       </div>
 
-      {/* Product Info */}
-      <div className="p-5">
-        {/* Category/Subtitle */}
-        {product.sub_title && (
-          <div className="text-xs text-primary-600 font-medium uppercase tracking-wider mb-1">
-            {product.sub_title}
-          </div>
-        )}
-
+      {/* Product Info - Left Aligned */}
+      <div className="text-left">
         {/* Title */}
-        <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
+        <h3 className="text-[13px] font-normal text-black mb-1.5 line-clamp-2 leading-tight">
           {product.title}
         </h3>
 
-        {/* Description */}
-        <div
-          className="text-secondary-600 text-sm mb-3 line-clamp-2 leading-relaxed h-10 overflow-hidden"
-          dangerouslySetInnerHTML={{ __html: product.description }}
-        />
-
-        {/* Rating */}
-        <div className="flex items-center mb-4">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <svg
-                key={i}
-                className="w-4 h-4 text-yellow-400 fill-current"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            ))}
-          </div>
-          <span className="text-xs text-secondary-500 ml-2">
-            {product.review_count
-              ? `4.9 (${product.review_count})`
-              : "4.9 (120)"}
-          </span>
-
-          {/* Order Count Badge */}
-          {product.order_count && product.order_count > 0 && (
-            <span className="ml-auto text-xs bg-secondary-100 text-secondary-700 px-2 py-1 rounded-full">
-              {product.order_count}+ sold
+        {/* Price */}
+        <div className="flex flex-col">
+          {showSale ? (
+            <>
+              <span className="text-[13px] font-normal text-black line-through mb-0.5 opacity-60">
+                {formatPrice(
+                  typeof finalOriginalPrice === "number"
+                    ? finalOriginalPrice
+                    : parseFloat(finalOriginalPrice.toString()),
+                  country
+                )}
+              </span>
+              <span className="text-[13px] font-normal text-black">
+                {formatPrice(
+                  typeof finalSalePrice === "number"
+                    ? finalSalePrice
+                    : parseFloat(finalSalePrice.toString()),
+                  country
+                )}
+              </span>
+            </>
+          ) : (
+            <span className="text-[13px] font-normal text-black">
+              {formatPrice(
+                typeof originalPrice === "number"
+                  ? originalPrice
+                  : parseFloat(originalPrice.toString()),
+                country
+              )}
             </span>
           )}
         </div>
-
-        {/* Price */}
-        <div className="mb-2">
-          <span className="text-xl font-bold text-primary-600">
-            {formatPriceWithCurrency(product.price, country)}
-          </span>
-        </div>
-
-        {/* Action Button - Moved to bottom */}
-        <button
-          onClick={(e) => handleAddToCart(e)}
-          className="w-full flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
-        >
-          <svg
-            className="w-5 h-5 mr-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-            />
-          </svg>
-          Add
-        </button>
       </div>
-
-      {/* Hover Border Effect */}
-      <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary-200 transition-all duration-500"></div>
-
-      {/* Toast Notification */}
-      <Toast
-        message={toastConfig.message}
-        type="success"
-        isVisible={toastConfig.isVisible}
-        onClose={() => setToastConfig({ message: "", isVisible: false })}
-        duration={2000}
-      />
     </div>
   );
 };
@@ -926,8 +869,8 @@ const PaginatedProductList = ({ type }: { type: string }) => {
                   </div>
                 ) : (
                   <>
-                    {/* Products Grid with Animation */}
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-12 w-full">
+                    {/* Products Grid - Minimal Design */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-8 mb-12 w-full">
                       {products.map((product, index) => (
                         <div
                           key={product.id}

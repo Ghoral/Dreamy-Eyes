@@ -379,23 +379,23 @@ const ProductDetail = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <div className="min-h-screen bg-white pt-28 pb-16">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Left Column - Product Images */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Main Image */}
             <div className="relative">
-              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+              <div className="bg-white overflow-hidden rounded-2xl shadow-2xl">
                 {hasValidImages() ? (
                   <img
                     src={mainImage}
                     alt={product.title}
-                    className="w-full h-[500px] object-contain p-8 transition-transform duration-500 hover:scale-105"
+                    className="w-full h-[600px] object-contain"
                   />
                 ) : (
-                  <div className="w-full h-[500px] bg-white flex items-center justify-center">
-                    <div className="text-center text-secondary-400">
+                  <div className="w-full h-[600px] bg-gray-50 flex items-center justify-center">
+                    <div className="text-center text-gray-400">
                       <svg
                         className="w-24 h-24 mx-auto mb-4"
                         fill="none"
@@ -409,7 +409,7 @@ const ProductDetail = ({
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      <p className="text-lg font-medium">No image available</p>
+                      <p className="text-sm">No image available</p>
                     </div>
                   </div>
                 )}
@@ -418,7 +418,7 @@ const ProductDetail = ({
 
             {/* Thumbnail Images */}
             {hasValidImages() && (
-              <div className="flex justify-center space-x-4">
+              <div className="flex justify-start space-x-3">
                 {selectedColor
                   ? // Show images for the selected color
                     getImagesForColor(selectedColor.color).length > 0
@@ -427,10 +427,10 @@ const ProductDetail = ({
                         return (
                           <div
                             key={i}
-                            className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
+                            className={`w-16 h-16 overflow-hidden cursor-pointer border ${
                               mainImage === imageUrl
-                                ? "ring-4 ring-primary-500 ring-offset-2"
-                                : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                                ? "border-black"
+                                : "border-gray-200"
                             }`}
                             onClick={() => setMainImage(imageUrl)}
                           >
@@ -446,10 +446,10 @@ const ProductDetail = ({
                       availableImages.map((img, i) => (
                         <div
                           key={i}
-                          className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
+                          className={`w-16 h-16 overflow-hidden cursor-pointer border ${
                             mainImage === img
-                              ? "ring-4 ring-primary-500 ring-offset-2"
-                              : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                              ? "border-black"
+                              : "border-gray-200"
                           }`}
                           onClick={() => setMainImage(img)}
                         >
@@ -464,10 +464,10 @@ const ProductDetail = ({
                     availableImages.map((img, i) => (
                       <div
                         key={i}
-                        className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
+                        className={`w-16 h-16 overflow-hidden cursor-pointer border ${
                           mainImage === img
-                            ? "ring-4 ring-primary-500 ring-offset-2"
-                            : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                            ? "border-black"
+                            : "border-gray-200"
                         }`}
                         onClick={() => setMainImage(img)}
                       >
@@ -486,71 +486,35 @@ const ProductDetail = ({
           <div className="space-y-8">
             {/* Product Title */}
             <div>
-              <h1 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-4 leading-tight">
+              <h1 className="text-3xl font-normal text-black mb-2 leading-tight" style={{ fontFamily: 'Georgia, serif' }}>
                 {product.title}
               </h1>
               {product.sub_title && (
-                <p className="text-primary-600 font-semibold text-xl mb-4">
+                <p className="text-gray-600 text-sm mb-4">
                   {product.sub_title}
                 </p>
               )}
             </div>
 
-            {/* Rating */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <svg
-                    key={i}
-                    className="w-6 h-6 text-yellow-400 fill-current"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-                <span className="text-secondary-600 font-medium">4.9</span>
-                <span className="text-secondary-500">(120 reviews)</span>
-              </div>
-              <div className="flex items-center space-x-2 text-green-600 font-semibold">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span>In Stock</span>
-              </div>
-            </div>
-
             {/* Price */}
-            <div className="bg-gradient-to-r from-primary-50 to-secondary-50 p-6 rounded-2xl border border-primary-100">
-              <span className="text-5xl font-bold text-primary-600">
+            <div>
+              <span className="text-2xl font-normal text-black">
                 {formatPriceWithCurrency(product.price, country)}
               </span>
             </div>
 
             {/* Description */}
             <div>
-              <h3 className="text-xl font-semibold text-secondary-800 mb-3">
-                Description
-              </h3>
               <div
-                className="text-secondary-600 leading-relaxed prose prose-secondary max-w-none"
+                className="text-black text-sm leading-relaxed"
                 dangerouslySetInnerHTML={{ __html: product.description }}
               />
             </div>
 
             {/* Color Selection */}
             <div>
-              <h3 className="text-xl font-semibold text-secondary-800 mb-4">
-                Choose Color
+              <h3 className="text-sm font-normal text-black mb-4 uppercase tracking-wide">
+                Color
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {product?.color_quantity.map(
@@ -573,12 +537,12 @@ const ProductDetail = ({
                         />
                         <label
                           htmlFor={colorOption.label}
-                          className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                          className={`block p-3 border cursor-pointer transition-all duration-300 ${
                             isSelected
-                              ? "border-primary-500 bg-primary-50 shadow-glow"
+                              ? "border-black"
                               : isDisabled
-                              ? "border-secondary-200 bg-secondary-100 cursor-not-allowed opacity-60"
-                              : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                              ? "border-gray-200 bg-gray-50 cursor-not-allowed opacity-50"
+                              : "border-gray-200 bg-white hover:border-gray-400"
                           }`}
                           onClick={() => {
                             if (!isDisabled) {
@@ -586,27 +550,14 @@ const ProductDetail = ({
                             }
                           }}
                         >
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-2">
                             <div
-                              className="w-6 h-6 rounded-full border-2 border-white shadow-md"
+                              className="w-5 h-5 border border-gray-300"
                               style={{ backgroundColor: colorOption.color }}
                             />
-                            <div className="flex-1 text-left">
-                              <span
-                                className={`font-medium ${
-                                  isSelected
-                                    ? "text-primary-700"
-                                    : "text-secondary-700"
-                                }`}
-                              >
-                                {colorOption.label}
-                              </span>
-                              <div className="text-sm text-secondary-500">
-                                {isAvailable
-                                  ? `${colorOption.quantity} available`
-                                  : "Out of stock"}
-                              </div>
-                            </div>
+                            <span className="text-sm text-black">
+                              {colorOption.label}
+                            </span>
                           </div>
                         </label>
                       </div>
@@ -618,118 +569,20 @@ const ProductDetail = ({
 
             {/* Quantity */}
             <div>
-              <h3 className="text-xl font-semibold text-secondary-800 mb-4">
+              <h3 className="text-sm font-normal text-black mb-4 uppercase tracking-wide">
                 Quantity
               </h3>
 
-              {/* Cart Summary */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div className="bg-primary-50 border border-primary-200 rounded-xl p-3">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="w-5 h-5 text-primary-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                      />
-                    </svg>
-                    <span className="text-sm text-secondary-600">
-                      In Cart:{" "}
-                      <strong className="text-primary-700">
-                        {getCurrentCartQuantity()}
-                      </strong>
-                    </span>
-                  </div>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="w-5 h-5 text-green-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                      />
-                    </svg>
-                    <span className="text-sm text-secondary-600">
-                      Can Add:{" "}
-                      <strong className="text-green-700">
-                        {getMaxQuantityForThisSession()}
-                      </strong>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Cart Quantity Display */}
-              {getCurrentCartQuantity() > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-                  <div className="flex items-center space-x-2 text-blue-700">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="font-medium">
-                      You currently have{" "}
-                      <strong>{getCurrentCartQuantity()}</strong> of this item
-                      in your cart
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Quantity Error Display */}
-              {quantityError && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-                  <div className="flex items-center space-x-2 text-red-700">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium">{quantityError}</span>
-                  </div>
-                </div>
-              )}
-
               {/* Quantity Selector */}
-              <div className="flex items-center space-x-4">
-                <div className="relative flex items-center border border-secondary-200 rounded-xl overflow-hidden bg-white">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="relative flex items-center border border-gray-200 overflow-hidden bg-white">
                   <button
-                    className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleQuantityChange(quantity - 1)}
                     disabled={quantity <= 1 || isCheckingQuantity}
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -744,7 +597,7 @@ const ProductDetail = ({
                   </button>
                   <input
                     type="number"
-                    className="w-20 text-center border-0 focus:ring-0 text-lg font-semibold text-secondary-800"
+                    className="w-16 text-center border-0 focus:ring-0 text-sm font-normal text-black"
                     value={quantity}
                     min={1}
                     max={getMaxQuantityForThisSession()}
@@ -755,11 +608,11 @@ const ProductDetail = ({
                   />
                   {isCheckingQuantity && (
                     <div className="absolute inset-0 flex items-center justify-center bg-white/80">
-                      <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                   <button
-                    className="px-4 py-3 text-secondary-600 hover:text-primary-600 hover:bg-primary-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 text-black hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => handleQuantityChange(quantity + 1)}
                     disabled={
                       quantity >= getMaxQuantityForThisSession() ||
@@ -768,7 +621,7 @@ const ProductDetail = ({
                     }
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -782,74 +635,46 @@ const ProductDetail = ({
                     </svg>
                   </button>
                 </div>
-                <div className="text-sm text-secondary-500">
-                  <div>Total available: {getMaxQuantity()}</div>
-                </div>
               </div>
-            </div>
+
+              {/* Quantity Error Display */}
+              {quantityError && (
+                <div className="mb-4">
+                  <span className="text-xs text-red-600">{quantityError}</span>
+                </div>
+              )}
 
             {/* Action Buttons */}
-            <div className="space-y-4">
+            <div>
               <button
-                className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
+                className={`w-full py-3 px-6 border border-black text-black font-normal text-sm uppercase tracking-wide transition-all duration-300 ${
                   !selectedColor || getMaxQuantityForThisSession() === 0
-                    ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-300"
+                    : "bg-white hover:bg-black hover:text-white"
                 }`}
                 onClick={handleAddToCart}
                 disabled={
                   !selectedColor || getMaxQuantityForThisSession() === 0
                 }
               >
-                <div className="flex items-center justify-center space-x-2">
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                    />
-                  </svg>
-                  <span>
-                    {!selectedColor
-                      ? "Select Color First"
-                      : getCurrentCartQuantity() > 0
-                      ? `Add ${quantity} More to Cart`
-                      : "Add to Cart"}
-                  </span>
-                </div>
+                {!selectedColor
+                  ? "Select Color First"
+                  : getCurrentCartQuantity() > 0
+                  ? `Add ${quantity} More to Cart`
+                  : "Add to Cart"}
               </button>
 
               {/* Show Remove from Cart button if item is already in cart */}
               {getCurrentCartQuantity() > 0 && (
                 <button
-                  className="w-full py-4 px-6 bg-white border-2 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105"
+                  className="w-full py-3 px-6 mt-3 border border-gray-300 text-black bg-white hover:bg-gray-50 font-normal text-sm uppercase tracking-wide transition-all duration-300"
                   onClick={handleRemoveFromCart}
                   disabled={!selectedColor}
                 >
-                  <div className="flex items-center justify-center space-x-2">
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                      />
-                    </svg>
-                    <span>Remove from Cart ({getCurrentCartQuantity()})</span>
-                  </div>
+                  Remove from Cart ({getCurrentCartQuantity()})
                 </button>
               )}
+            </div>
             </div>
           </div>
         </div>
@@ -857,24 +682,9 @@ const ProductDetail = ({
         {/* Specifications Section */}
         {hasSpecs && (
           <div className="mt-20">
-            <div className="bg-gradient-to-br from-white via-primary-50/30 to-secondary-50/30 rounded-3xl shadow-soft p-8 border-2 border-primary-100">
+            <div className="bg-white border border-gray-200 p-8">
               <div className="flex items-center justify-center mb-8">
-                <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-3 rounded-2xl shadow-lg">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-3xl font-bold text-secondary-800 ml-4">
+                <h3 className="text-xl font-normal text-black">
                   Specifications
                 </h3>
               </div>
@@ -891,13 +701,13 @@ const ProductDetail = ({
                       .map((item: any, index: number) => (
                         <div
                           key={index}
-                          className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200 hover:border-primary-400 hover:shadow-md transition-all"
+                          className="bg-white border border-gray-200 p-4"
                         >
                           <div className="flex justify-between items-center">
-                            <span className="font-semibold text-secondary-700 capitalize text-sm">
+                            <span className="font-normal text-black capitalize text-sm">
                               {item.label}
                             </span>
-                            <span className="font-medium text-secondary-800">
+                            <span className="font-normal text-black">
                               {item.value}
                             </span>
                           </div>
@@ -952,10 +762,10 @@ const ProductDetail = ({
                           if (obj.label && obj.value) {
                             displayValue = (
                               <span className="flex flex-col items-end">
-                                <span className="font-semibold text-primary-600">
+                                <span className="font-normal text-black">
                                   {obj.label}
                                 </span>
-                                <span className="text-sm text-secondary-600">
+                                <span className="text-sm text-gray-600">
                                   {obj.value}
                                 </span>
                               </span>
@@ -991,16 +801,16 @@ const ProductDetail = ({
                         return (
                           <div
                             key={key}
-                            className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200 hover:border-primary-400 hover:shadow-md transition-all"
+                            className="bg-white border border-gray-200 p-4"
                           >
                             <div className="flex justify-between items-center">
-                              <span className="font-semibold text-secondary-700 capitalize text-sm">
+                              <span className="font-normal text-black capitalize text-sm">
                                 {key.charAt(0).toUpperCase() +
                                   key.slice(1).replace(/([A-Z])/g, " $1")}
                               </span>
                               <div className="text-right">
                                 {typeof displayValue === "string" ? (
-                                  <span className="font-medium text-secondary-800">
+                                  <span className="font-normal text-black">
                                     {displayValue}
                                   </span>
                                 ) : (
@@ -1012,12 +822,12 @@ const ProductDetail = ({
                         );
                       })}
                 {product.power && (
-                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200 hover:border-primary-400 hover:shadow-md transition-all">
+                  <div className="bg-white border border-gray-200 p-4">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-secondary-700 text-sm">
+                      <span className="font-normal text-black text-sm">
                         Power Rating
                       </span>
-                      <span className="font-medium text-secondary-800">
+                      <span className="font-normal text-black">
                         {product.power}W
                       </span>
                     </div>
