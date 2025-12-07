@@ -38,7 +38,7 @@ export default function ModalOffers({
   const router = useRouter();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
-  const { state: cartState } = useCart();
+  const { state: cartState, clearCart } = useCart();
   const {
     selectedOffer: zustandOffer,
     offerSelectedProducts: zustandOfferProducts,
@@ -608,10 +608,24 @@ export default function ModalOffers({
                     <button
                       onClick={() => {
                         if (pendingOffer) {
-                          applyOffer(pendingOffer);
+                          // Clear cart and offer first
+                          clearCart();
+                          clearOffer();
+                          // Then apply the new offer (with empty selectedProducts since cart is cleared)
+                          setOfferStore(pendingOffer, []);
+                          onSelectOffer(pendingOffer, []);
+                          setHasAppliedOffer(true);
+                          justAppliedRef.current = true;
+                          // Show warning toast
+                          setShowWarningToast(true);
+                          // Close dialogs and navigate
+                          setShowConfirmDialog(false);
+                          setPendingOffer(null);
+                          onClose();
+                          setTimeout(() => {
+                            router.push("/");
+                          }, 100);
                         }
-                        setShowConfirmDialog(false);
-                        setPendingOffer(null);
                       }}
                       className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors"
                     >

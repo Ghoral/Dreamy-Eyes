@@ -265,7 +265,8 @@ export default function CheckoutPage() {
       // User confirmed, clear the cart and apply new offer
       clearCart();
       clearOffer();
-      setOffer(pendingOffer, pendingSelectedProducts);
+      // Set offer with empty array since cart is cleared
+      setOffer(pendingOffer, []);
       setShowConfirmDialog(false);
       setPendingOffer(null);
       setPendingSelectedProducts([]);
