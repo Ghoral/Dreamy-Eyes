@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useCart } from "../../context/CartContext";
 import { useRouter } from "next/navigation";
 import { update_product_quantity } from "../../api/quantity";
@@ -10,6 +10,7 @@ import {
   calculateTotalPrice,
   formatPrice,
 } from "../../util";
+import Toast from "../ui/Toast";
 
 // Helper function to get Supabase public bucket URL for product images
 const getProductImageUrl = (filename: string): string => {
@@ -56,6 +57,27 @@ const ModalCart = ({
   const [quantityErrors, setQuantityErrors] = useState<Record<string, string>>(
     {}
   );
+  const [showOfferClearedToast, setShowOfferClearedToast] = useState(false);
+  const prevCartLengthRef = useRef(cartItems.items.length);
+  const prevOfferRef = useRef(selectedOffer);
+
+  // Detect when cart is cleared due to offer
+  useEffect(() => {
+    // Check if cart was cleared and offer was active
+    if (
+      prevOfferRef.current &&
+      cartItems.items.length === 0 &&
+      prevCartLengthRef.current > 0
+    ) {
+      // Cart was cleared and there was an offer active
+      clearOffer(); // Clear offer from Zustand
+      setShowOfferClearedToast(true);
+    }
+    
+    // Update refs
+    prevCartLengthRef.current = cartItems.items.length;
+    prevOfferRef.current = selectedOffer;
+  }, [cartItems.items.length, selectedOffer, clearOffer]);
 
   const handleBackdropClick = useCallback(
     (e: any) => {
@@ -565,6 +587,15 @@ const ModalCart = ({
           )}
         </div>
       </div>
+
+      {/* Toast Notification for Offer Cart Cleared */}
+      <Toast
+        message="Cart has been cleared because you modified items while an offer was active. Please add items again to continue."
+        type="info"
+        isVisible={showOfferClearedToast}
+        onClose={() => setShowOfferClearedToast(false)}
+        duration={5000}
+      />
     </>
   );
 };

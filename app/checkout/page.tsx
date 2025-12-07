@@ -830,31 +830,12 @@ export default function CheckoutPage() {
               {/* Offer Items Section */}
               {(() => {
                 const offer = cartState.selectedOffer || zustandOffer;
-                if (
-                  !offer ||
-                  !cartState.offerSelectedProducts ||
-                  cartState.offerSelectedProducts.length === 0
-                ) {
+                // Use offerItems directly from cartState (new format)
+                const offerItems = cartState.offerItems || [];
+
+                if (!offer || offerItems.length === 0) {
                   return null;
                 }
-
-                // Create offer items array with full item details
-                const offerItems = cartState.offerSelectedProducts
-                  .map((offerItem) => {
-                    const fullItem = cartState.items.find(
-                      (item) =>
-                        item.id === offerItem.id &&
-                        item.color === offerItem.color
-                    );
-                    if (!fullItem) return null;
-                    return {
-                      ...fullItem,
-                      quantity: offerItem.quantity, // Only the offer quantity
-                    };
-                  })
-                  .filter(Boolean);
-
-                if (offerItems.length === 0) return null;
 
                 return (
                   <div className="space-y-4 mb-6">
@@ -983,30 +964,8 @@ export default function CheckoutPage() {
               {/* Regular Cart Items */}
               <div className="space-y-4 mb-6">
                 {(() => {
-                  // Create a map of offer quantities
-                  const offerProductMap = new Map<string, number>();
-                  cartState.offerSelectedProducts?.forEach((offerProduct) => {
-                    const key = `${offerProduct.id}-${
-                      offerProduct.color || ""
-                    }`;
-                    offerProductMap.set(key, offerProduct.quantity);
-                  });
-
-                  // Filter and map regular items (excluding offer quantities)
-                  const regularItems = cartState.items
-                    .map((item) => {
-                      const key = `${item.id}-${item.color || ""}`;
-                      const offerQuantity = offerProductMap.get(key) || 0;
-                      const regularQuantity = item.quantity - offerQuantity;
-
-                      if (regularQuantity <= 0) return null;
-
-                      return {
-                        ...item,
-                        quantity: regularQuantity,
-                      };
-                    })
-                    .filter(Boolean);
+                  // Use normalItems directly (new format)
+                  const regularItems = cartState.normalItems || [];
 
                   if (regularItems.length === 0) return null;
 
@@ -1151,7 +1110,7 @@ export default function CheckoutPage() {
                   let offerSavings = 0;
                   let totalOfferPriceToSubtract = 0;
 
-                  if (hasOffer && offer) {
+                  if (hasOffer && offer && cartState.offerSelectedProducts) {
                     cartState.offerSelectedProducts.forEach((offerItem) => {
                       const originalItem = cartState.items.find(
                         (item) =>

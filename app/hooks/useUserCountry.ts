@@ -3,6 +3,59 @@
 import { useState, useEffect } from "react";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
 
+const IP_COUNTRY_COOKIE_NAME = "dreamy-eyes-ip-country";
+
+// Helper function to get cookie value by name
+const getCookie = (name: string): string | null => {
+  if (typeof document === "undefined") return null;
+  
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  
+  if (parts.length === 2) {
+    return parts.pop()?.split(";").shift() || null;
+  }
+  return null;
+};
+
+const fetchCountryFromIP = async (): Promise<string | null> => {
+  try {
+    // Check if we're on the client side
+    if (typeof window === "undefined") {
+      return "nepal"; // Default for SSR
+    }
+
+    // Check cookie first
+    const cookieCountry = getCookie(IP_COUNTRY_COOKIE_NAME);
+    if (cookieCountry) {
+      console.log("Using cookie IP country:", cookieCountry);
+      return cookieCountry.toLowerCase();
+    }
+
+    // Fetch from API (which will set the cookie)
+    const response = await fetch("/api/detect-country");
+    if (!response.ok) {
+      throw new Error("Failed to fetch country");
+    }
+
+    const data = await response.json();
+    const countryName = data.countryName || "nepal"; // Default to Nepal
+
+    // Cookie is automatically set by the API response
+    console.log("Fetched IP country:", countryName);
+    return countryName.toLowerCase();
+  } catch (error) {
+    console.error("Error fetching country from IP:", error);
+    
+    // Fallback to cookie if available, or default to Nepal
+    if (typeof window !== "undefined") {
+      const cookieCountry = getCookie(IP_COUNTRY_COOKIE_NAME);
+      return cookieCountry ? cookieCountry.toLowerCase() : "nepal";
+    }
+    return "nepal";
+  }
+};
+
 export const useUserCountry = () => {
   const [country, setCountry] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,13 +68,26 @@ export const useUserCountry = () => {
           data: { user },
         } = await supabase.auth.getUser();
 
+        // Priority 1: Use user metadata country if logged in
         if (user?.user_metadata?.country) {
-          setCountry(user.user_metadata.country.toLowerCase());
-        } else {
-          setCountry(null); // Default to Nepal if no country
+          const userCountry = user.user_metadata.country.toLowerCase();
+          setCountry(userCountry);
+          setIsLoading(false);
+          return;
         }
+
+        // Priority 2: Fetch country from IP (for non-logged-in users or users without country in metadata)
+        const ipCountry = await fetchCountryFromIP();
+        setCountry(ipCountry);
       } catch (error) {
-        setCountry(null);
+        console.error("Error in fetchUserCountry:", error);
+        // Fallback to cookie or Nepal
+        if (typeof window !== "undefined") {
+          const cookieCountry = getCookie(IP_COUNTRY_COOKIE_NAME);
+          setCountry(cookieCountry ? cookieCountry.toLowerCase() : "nepal");
+        } else {
+          setCountry("nepal");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -33,11 +99,18 @@ export const useUserCountry = () => {
     const supabase = createSupabaseClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user?.user_metadata?.country) {
+        // User logged in with country in metadata
         setCountry(session.user.user_metadata.country.toLowerCase());
+      } else if (session?.user) {
+        // User logged in but no country in metadata, use IP country
+        const ipCountry = await fetchCountryFromIP();
+        setCountry(ipCountry);
       } else {
-        setCountry(null);
+        // User logged out, use IP country
+        const ipCountry = await fetchCountryFromIP();
+        setCountry(ipCountry);
       }
       setIsLoading(false);
     });
@@ -49,4 +122,3 @@ export const useUserCountry = () => {
 
   return { country, isLoading };
 };
-

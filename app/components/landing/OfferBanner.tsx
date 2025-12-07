@@ -29,7 +29,7 @@ const OfferBanner = () => {
     clearOffer,
     _hasHydrated,
   } = useOfferStore();
-  const { state: cartState } = useCart();
+  const { state: cartState, setOffer, removeItem, updateQuantity } = useCart();
   const [isMounted, setIsMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -149,7 +149,38 @@ const OfferBanner = () => {
 
           {/* Close Button */}
           <button
-            onClick={clearOffer}
+            onClick={() => {
+              // Remove only offer items from cart
+              if (offerSelectedProducts && offerSelectedProducts.length > 0) {
+                offerSelectedProducts.forEach((offerItem) => {
+                  const cartItem = cartState.items.find(
+                    (item) =>
+                      item.id === offerItem.id && item.color === offerItem.color
+                  );
+
+                  if (cartItem) {
+                    const offerQuantity = offerItem.quantity || 0;
+                    const newQuantity = cartItem.quantity - offerQuantity;
+
+                    if (newQuantity <= 0) {
+                      // Remove entire item if quantity becomes 0 or less
+                      removeItem(offerItem.id, offerItem.color);
+                    } else {
+                      // Reduce quantity by offer quantity
+                      updateQuantity(
+                        offerItem.id,
+                        newQuantity,
+                        offerItem.color
+                      );
+                    }
+                  }
+                });
+              }
+
+              // Clear offer from both stores
+              clearOffer();
+              setOffer(null, []); // Also clear from CartContext
+            }}
             className="ml-4 p-1.5 rounded-full hover:bg-white/20 transition-colors"
             aria-label="Remove offer"
           >

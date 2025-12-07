@@ -41,12 +41,14 @@ export interface Offer {
 }
 
 interface CartState {
-  items: CartItem[];
+  items: CartItem[]; // Kept for backward compatibility, will be computed from normalItems + offerItems
+  normalItems: CartItem[]; // Regular cart items
+  offerItems: CartItem[]; // Items under active offer
   totalItems: number; // Total quantity across all items
   itemCount: number; // Number of unique items
   totalPrice: number;
   selectedOffer?: Offer | null;
-  offerSelectedProducts?: CartItem[];
+  offerSelectedProducts?: CartItem[]; // Kept for backward compatibility
 }
 
 type CartAction =
@@ -65,6 +67,8 @@ type CartAction =
 
 const initialState: CartState = {
   items: [],
+  normalItems: [],
+  offerItems: [],
   totalItems: 0,
   itemCount: 0,
   totalPrice: 0,
@@ -165,140 +169,304 @@ const calculateOfferPrice = (
   }
 };
 
-// Helper function to calculate total price with offer discounts applied
-const calculateTotalPriceWithOffer = (
-  items: CartItem[],
-  offer: Offer | null,
-  offerProducts: CartItem[]
+// Helper function to get total cart items count (normalItems + offerItems)
+const getTotalCartItems = (
+  normalItems: CartItem[],
+  offerItems: CartItem[]
 ): number => {
-  if (!offer || !offerProducts || offerProducts.length === 0) {
-    // No offer, calculate regular total
-    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }
+  const normalTotal = normalItems.reduce((sum, item) => sum + item.quantity, 0);
+  const offerTotal = offerItems.reduce((sum, item) => sum + item.quantity, 0);
+  return normalTotal + offerTotal;
+};
 
-  // Create a map of offer product keys and quantities for quick lookup
-  const offerProductMap = new Map<string, number>();
-  offerProducts.forEach((offerProduct) => {
-    const key = `${offerProduct.id}-${offerProduct.color || ""}`;
-    const existing = offerProductMap.get(key) || 0;
-    offerProductMap.set(key, existing + offerProduct.quantity);
+// Helper function to check if offer is active
+const isOfferActive = (
+  normalItems: CartItem[],
+  offerItems: CartItem[],
+  offer: Offer | null
+): boolean => {
+  if (!offer) return false;
+  const offerValue =
+    offer.value !== undefined && offer.value !== null ? Number(offer.value) : 0;
+  if (offerValue === 0) return false;
+
+  const totalItems = getTotalCartItems(normalItems, offerItems);
+  return totalItems > offerValue;
+};
+
+// Helper function to get total offer items quantity
+const getTotalOfferItemsQuantity = (offerItems: CartItem[]): number => {
+  return offerItems.reduce((sum, item) => sum + item.quantity, 0);
+};
+
+// Helper function to merge items arrays (for backward compatibility)
+const mergeItems = (
+  normalItems: CartItem[],
+  offerItems: CartItem[]
+): CartItem[] => {
+  const itemMap = new Map<string, CartItem>();
+
+  // Add normal items
+  normalItems.forEach((item) => {
+    const key = `${item.id}-${item.color || ""}`;
+    itemMap.set(key, { ...item });
   });
 
-  // Calculate total price with offer discounts
-  const total = items.reduce((sum, item) => {
+  // Merge offer items (combine quantities if same item exists in both)
+  offerItems.forEach((item) => {
     const key = `${item.id}-${item.color || ""}`;
-    const offerQuantity = offerProductMap.get(key) || 0;
-    const regularQuantity = item.quantity - offerQuantity;
-
-    // Regular price items (not in offer)
-    let itemTotal = 0;
-    if (regularQuantity > 0) {
-      itemTotal += item.price * regularQuantity;
+    const existing = itemMap.get(key);
+    if (existing) {
+      existing.quantity += item.quantity;
+    } else {
+      itemMap.set(key, { ...item });
     }
+  });
 
-    // Offer price items (in offer) - use calculateOfferPrice to get the actual offer price
-    if (offerQuantity > 0 && offer) {
-      const offerPrice = calculateOfferPrice(item.price, offer);
-      itemTotal += offerPrice * offerQuantity;
-    }
+  return Array.from(itemMap.values());
+};
 
-    return sum + itemTotal;
+// Helper function to calculate total price with offer discounts applied
+const calculateTotalPriceWithOffer = (
+  normalItems: CartItem[],
+  offerItems: CartItem[],
+  offer: Offer | null
+): number => {
+  // Calculate normal items total (regular price)
+  const normalTotal = normalItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  // Calculate offer items total (with offer discount)
+  const offerTotal = offerItems.reduce((sum, item) => {
+    const offerPrice = offer
+      ? calculateOfferPrice(item.price, offer)
+      : item.price;
+    return sum + offerPrice * item.quantity;
   }, 0);
 
-  return total;
+  return normalTotal + offerTotal;
 };
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
-      const existingItemIndex = state.items.findIndex(
+      let newNormalItems = [...state.normalItems];
+      let newOfferItems = [...state.offerItems];
+      const offer = state.selectedOffer;
+
+      // Check if offer is active
+      const totalCartItems = getTotalCartItems(newNormalItems, newOfferItems);
+      const offerValue =
+        offer && offer.value !== undefined && offer.value !== null
+          ? Number(offer.value)
+          : 0;
+      const offerQuantity =
+        offer && offer.quantity !== undefined && offer.quantity !== null
+          ? Number(offer.quantity)
+          : 0;
+
+      const isActive = offerValue > 0 && totalCartItems > offerValue;
+      const totalNormalItemsQty = newNormalItems.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      );
+      const totalOfferItemsQty = getTotalOfferItemsQuantity(newOfferItems);
+
+      // Find if item exists in normalItems or offerItems
+      const normalItemIndex = newNormalItems.findIndex(
+        (item) =>
+          item.id === action.payload.id && item.color === action.payload.color
+      );
+      const offerItemIndex = newOfferItems.findIndex(
         (item) =>
           item.id === action.payload.id && item.color === action.payload.color
       );
 
-      if (existingItemIndex >= 0) {
-        // Update existing item quantity
-        const updatedItems = [...state.items];
-        updatedItems[existingItemIndex] = {
-          ...updatedItems[existingItemIndex],
-          quantity:
-            updatedItems[existingItemIndex].quantity + action.payload.quantity,
-        };
+      if (offer && offerQuantity > 0) {
+        // Check if offer is applied and conditions are met
+        // Condition 1: total quantity in cart >= value (offer is active)
+        // Condition 2: quantity in offer cart < offer quantity (still space in offerItems)
+        const quantityToAdd = action.payload.quantity;
 
-        const totalItems = updatedItems.reduce(
-          (sum, item) => sum + item.quantity,
-          0
-        );
-        // Calculate total price with offer discounts
-        const totalPrice = calculateTotalPriceWithOffer(
-          updatedItems,
-          state.selectedOffer || null,
-          state.offerSelectedProducts || []
-        );
+        // Check if we should add to offerItems
+        // Must have:
+        // 1. total quantity in cart >= value (offer is active)
+        // 2. normalItems has at least 'value' items (buy X first)
+        // 3. quantity in offer cart < offer quantity (still space in offerItems)
+        const shouldAddToOffer =
+          totalCartItems >= offerValue &&
+          totalNormalItemsQty >= offerValue &&
+          totalOfferItemsQty < offerQuantity;
 
-        return {
-          ...state,
-          items: updatedItems,
-          totalItems,
-          itemCount: updatedItems.length,
-          totalPrice,
-        };
+        if (shouldAddToOffer) {
+          // Add to offerItems (up to offer quantity limit)
+          const remainingOfferSpace = offerQuantity - totalOfferItemsQty;
+          const quantityForOffer = Math.min(quantityToAdd, remainingOfferSpace);
+          const quantityForNormal = quantityToAdd - quantityForOffer;
+
+          // Add to offerItems
+          if (quantityForOffer > 0) {
+            if (offerItemIndex >= 0) {
+              newOfferItems[offerItemIndex] = {
+                ...newOfferItems[offerItemIndex],
+                quantity:
+                  newOfferItems[offerItemIndex].quantity + quantityForOffer,
+              };
+            } else {
+              newOfferItems = [
+                ...newOfferItems,
+                { ...action.payload, quantity: quantityForOffer },
+              ];
+            }
+          }
+
+          // Add remaining to normalItems
+          if (quantityForNormal > 0) {
+            if (normalItemIndex >= 0) {
+              newNormalItems[normalItemIndex] = {
+                ...newNormalItems[normalItemIndex],
+                quantity:
+                  newNormalItems[normalItemIndex].quantity + quantityForNormal,
+              };
+            } else {
+              newNormalItems = [
+                ...newNormalItems,
+                { ...action.payload, quantity: quantityForNormal },
+              ];
+            }
+          }
+        } else {
+          // Add to normalItems (offer not active or offerItems is full)
+          if (normalItemIndex >= 0) {
+            newNormalItems[normalItemIndex] = {
+              ...newNormalItems[normalItemIndex],
+              quantity:
+                newNormalItems[normalItemIndex].quantity + quantityToAdd,
+            };
+          } else {
+            newNormalItems = [...newNormalItems, { ...action.payload }];
+          }
+        }
       } else {
-        // Add new item
-        const newItems = [...state.items, action.payload];
-        const totalItems = newItems.reduce(
-          (sum, item) => sum + item.quantity,
-          0
-        );
-        // Calculate total price with offer discounts
-        const totalPrice = calculateTotalPriceWithOffer(
-          newItems,
-          state.selectedOffer || null,
-          state.offerSelectedProducts || []
-        );
-
-        return {
-          ...state,
-          items: newItems,
-          totalItems,
-          itemCount: newItems.length,
-          totalPrice,
-        };
+        // Offer is not active, add to normalItems
+        if (normalItemIndex >= 0) {
+          // Update existing normal item
+          newNormalItems[normalItemIndex] = {
+            ...newNormalItems[normalItemIndex],
+            quantity:
+              newNormalItems[normalItemIndex].quantity +
+              action.payload.quantity,
+          };
+        } else {
+          // Add new item to normalItems
+          newNormalItems = [...newNormalItems, { ...action.payload }];
+        }
       }
-    }
 
-    case "REMOVE_ITEM": {
-      const filteredItems = state.items.filter(
-        (item) =>
-          !(
-            item.id === action.payload.id && item.color === action.payload.color
-          )
-      );
-      const totalItems = filteredItems.reduce(
-        (sum, item) => sum + item.quantity,
-        0
-      );
-      // Calculate total price with offer discounts
+      // Merge items for backward compatibility
+      const mergedItems = mergeItems(newNormalItems, newOfferItems);
+      const totalItems = getTotalCartItems(newNormalItems, newOfferItems);
       const totalPrice = calculateTotalPriceWithOffer(
-        filteredItems,
-        state.selectedOffer || null,
-        state.offerSelectedProducts || []
+        newNormalItems,
+        newOfferItems,
+        offer || null
       );
 
       return {
         ...state,
-        items: filteredItems,
+        items: mergedItems,
+        normalItems: newNormalItems,
+        offerItems: newOfferItems,
         totalItems,
-        itemCount: filteredItems.length,
+        itemCount: mergedItems.length,
+        totalPrice,
+      };
+    }
+
+    case "REMOVE_ITEM": {
+      const offer = state.selectedOffer;
+
+      // If offer is active and user tries to remove item, clear the cart
+      if (offer) {
+        // Return cleared state - the callback will be handled in the component
+        return {
+          ...state,
+          items: [],
+          normalItems: [],
+          offerItems: [],
+          totalItems: 0,
+          itemCount: 0,
+          totalPrice: 0,
+          selectedOffer: null,
+          offerSelectedProducts: [],
+        };
+      }
+
+      // Normal removal logic when no offer is active
+      let newNormalItems = [...state.normalItems];
+      let newOfferItems = [...state.offerItems];
+
+      // Try to remove from normalItems first
+      const normalItemIndex = newNormalItems.findIndex(
+        (item) =>
+          item.id === action.payload.id && item.color === action.payload.color
+      );
+
+      if (normalItemIndex >= 0) {
+        newNormalItems = newNormalItems.filter(
+          (item, index) => index !== normalItemIndex
+        );
+      } else {
+        const offerItemIndex = newOfferItems.findIndex(
+          (item) =>
+            item.id === action.payload.id && item.color === action.payload.color
+        );
+        if (offerItemIndex >= 0) {
+          newOfferItems = newOfferItems.filter(
+            (item, index) => index !== offerItemIndex
+          );
+        }
+      }
+
+      const mergedItems = mergeItems(newNormalItems, newOfferItems);
+      const totalItems = getTotalCartItems(newNormalItems, newOfferItems);
+      const totalPrice = calculateTotalPriceWithOffer(
+        newNormalItems,
+        newOfferItems,
+        offer || null
+      );
+
+      return {
+        ...state,
+        items: mergedItems,
+        normalItems: newNormalItems,
+        offerItems: newOfferItems,
+        totalItems,
+        itemCount: mergedItems.length,
         totalPrice,
       };
     }
 
     case "UPDATE_QUANTITY": {
-      const item = state.items.find(
+      const offer = state.selectedOffer;
+
+      // Find item in normalItems or offerItems
+      let item = state.normalItems.find(
         (item) =>
           item.id === action.payload.id && item.color === action.payload.color
       );
+      let isInOfferItems = false;
+
+      if (!item) {
+        item = state.offerItems.find(
+          (item) =>
+            item.id === action.payload.id && item.color === action.payload.color
+        );
+        isInOfferItems = true;
+      }
+
       if (!item) return state;
 
       let newQuantity = Math.max(1, action.payload.quantity); // Ensure minimum quantity is 1
@@ -306,59 +474,68 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       // If there's a maxQuantity limit, respect it strictly
       if (item.maxQuantity !== undefined) {
         newQuantity = Math.min(newQuantity, item.maxQuantity);
-        // If the requested quantity exceeds max, adjust to max
-        if (action.payload.quantity > item.maxQuantity) {
-          // Quantity will be adjusted to maxQuantity
-        }
       }
 
-      if (newQuantity <= 0) {
-        // Remove item if quantity is 0 or less
-        const filteredItems = state.items.filter(
-          (item) =>
-            !(
-              item.id === action.payload.id &&
-              item.color === action.payload.color
-            )
-        );
-        const totalItems = filteredItems.reduce(
-          (sum, item) => sum + item.quantity,
-          0
-        );
-        // Calculate total price with offer discounts
-        const totalPrice = calculateTotalPriceWithOffer(
-          filteredItems,
-          state.selectedOffer || null,
-          state.offerSelectedProducts || []
-        );
-
+      // If offer is active and quantity is being decreased, clear the cart
+      if (offer && newQuantity < item.quantity) {
         return {
           ...state,
-          items: filteredItems,
-          totalItems,
-          itemCount: filteredItems.length,
-          totalPrice,
+          items: [],
+          normalItems: [],
+          offerItems: [],
+          totalItems: 0,
+          itemCount: 0,
+          totalPrice: 0,
+          selectedOffer: null,
+          offerSelectedProducts: [],
         };
       }
 
-      const updatedItems = state.items.map((item) =>
-        item.id === action.payload.id && item.color === action.payload.color
-          ? { ...item, quantity: newQuantity }
-          : item
-      );
+      if (newQuantity <= 0) {
+        // Remove item if quantity is 0 or less - use REMOVE_ITEM logic
+        return cartReducer(state, {
+          type: "REMOVE_ITEM",
+          payload: { id: action.payload.id, color: action.payload.color },
+        });
+      }
 
-      // Calculate total price with offer discounts
+      // Update quantity in the appropriate array
+      let updatedNormalItems = [...state.normalItems];
+      let updatedOfferItems = [...state.offerItems];
+
+      if (isInOfferItems) {
+        updatedOfferItems = updatedOfferItems.map((item) =>
+          item.id === action.payload.id && item.color === action.payload.color
+            ? { ...item, quantity: newQuantity }
+            : item
+        );
+      } else {
+        updatedNormalItems = updatedNormalItems.map((item) =>
+          item.id === action.payload.id && item.color === action.payload.color
+            ? { ...item, quantity: newQuantity }
+            : item
+        );
+      }
+
+      // Merge items for backward compatibility
+      const mergedItems = mergeItems(updatedNormalItems, updatedOfferItems);
+      const totalItems = getTotalCartItems(
+        updatedNormalItems,
+        updatedOfferItems
+      );
       const totalPrice = calculateTotalPriceWithOffer(
-        updatedItems,
-        state.selectedOffer || null,
-        state.offerSelectedProducts || []
+        updatedNormalItems,
+        updatedOfferItems,
+        state.selectedOffer || null
       );
 
       return {
         ...state,
-        items: updatedItems,
-        totalItems: updatedItems.length,
-        itemCount: updatedItems.length,
+        items: mergedItems,
+        normalItems: updatedNormalItems,
+        offerItems: updatedOfferItems,
+        totalItems,
+        itemCount: mergedItems.length,
         totalPrice,
       };
     }
@@ -367,6 +544,8 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       return {
         ...state,
         items: [],
+        normalItems: [],
+        offerItems: [],
         totalItems: 0,
         itemCount: 0,
         totalPrice: 0,
@@ -374,48 +553,205 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         offerSelectedProducts: [],
       };
 
-    case "LOAD_CART":
-      return action.payload;
+    case "LOAD_CART": {
+      // Ensure backward compatibility - if payload doesn't have normalItems/offerItems, migrate from items
+      const payload = action.payload;
+      let normalItems = payload.normalItems || [];
+      let offerItems = payload.offerItems || [];
+
+      // If old format (only has items), split them based on offerSelectedProducts
+      if (
+        payload.items &&
+        payload.items.length > 0 &&
+        normalItems.length === 0 &&
+        offerItems.length === 0
+      ) {
+        const offerProducts = payload.offerSelectedProducts || [];
+        const offerProductMap = new Map<string, number>();
+        offerProducts.forEach((offerProduct: CartItem) => {
+          const key = `${offerProduct.id}-${offerProduct.color || ""}`;
+          offerProductMap.set(key, offerProduct.quantity);
+        });
+
+        payload.items.forEach((item: CartItem) => {
+          const key = `${item.id}-${item.color || ""}`;
+          const offerQuantity = offerProductMap.get(key) || 0;
+
+          if (offerQuantity > 0) {
+            // Split item between normal and offer
+            const normalQty = item.quantity - offerQuantity;
+            if (normalQty > 0) {
+              normalItems.push({ ...item, quantity: normalQty });
+            }
+            if (offerQuantity > 0) {
+              offerItems.push({ ...item, quantity: offerQuantity });
+            }
+          } else {
+            normalItems.push(item);
+          }
+        });
+      }
+
+      const mergedItems = mergeItems(normalItems, offerItems);
+      const totalItems = getTotalCartItems(normalItems, offerItems);
+      const totalPrice = calculateTotalPriceWithOffer(
+        normalItems,
+        offerItems,
+        payload.selectedOffer || null
+      );
+
+      return {
+        ...payload,
+        items: mergedItems,
+        normalItems,
+        offerItems,
+        totalItems,
+        itemCount: mergedItems.length,
+        totalPrice,
+      };
+    }
 
     case "SET_OFFER": {
-      // Recalculate total price with offer discounts applied
       const offer = action.payload.offer;
       const offerProducts = action.payload.selectedProducts || [];
 
-      // Create a map of offer product keys for quick lookup
-      const offerProductMap = new Map<string, number>();
-      offerProducts.forEach((offerProduct) => {
-        const key = `${offerProduct.id}-${offerProduct.color || ""}`;
-        offerProductMap.set(key, offerProduct.quantity);
-      });
+      // When setting an offer, reorganize items based on offer rules
+      let newNormalItems = [...state.normalItems];
+      let newOfferItems = [...state.offerItems];
 
-      // Calculate total price with offer discounts
-      const totalPrice = state.items.reduce((sum, item) => {
-        const key = `${item.id}-${item.color || ""}`;
-        const offerQuantity = offerProductMap.get(key) || 0;
-        const regularQuantity = item.quantity - offerQuantity;
+      // If clearing offer, move all offerItems back to normalItems
+      if (!offer) {
+        newOfferItems.forEach((offerItem) => {
+          const existingNormalIndex = newNormalItems.findIndex(
+            (item) => item.id === offerItem.id && item.color === offerItem.color
+          );
 
-        // Calculate price for this item
-        let itemTotal = 0;
+          if (existingNormalIndex >= 0) {
+            newNormalItems[existingNormalIndex] = {
+              ...newNormalItems[existingNormalIndex],
+              quantity:
+                newNormalItems[existingNormalIndex].quantity +
+                offerItem.quantity,
+            };
+          } else {
+            newNormalItems = [...newNormalItems, { ...offerItem }];
+          }
+        });
+        newOfferItems = [];
+      } else {
+        // If setting an offer, check if it should be active and reorganize items
+        const totalCartItems = getTotalCartItems(newNormalItems, newOfferItems);
+        const offerValue =
+          offer.value !== undefined && offer.value !== null
+            ? Number(offer.value)
+            : 0;
+        const offerQuantity =
+          offer.quantity !== undefined && offer.quantity !== null
+            ? Number(offer.quantity)
+            : 0;
 
-        // Regular price items (not in offer)
-        if (regularQuantity > 0) {
-          itemTotal += item.price * regularQuantity;
+        // If offer is active, reorganize items correctly
+        // First 'value' items go to normalItems (buy X)
+        // Next 'quantity' items go to offerItems (get Y free)
+        // Rest go to normalItems
+        if (
+          offerValue > 0 &&
+          totalCartItems > offerValue &&
+          offerQuantity > 0
+        ) {
+          // First, merge all items back to normalItems to start fresh
+          const allItems = mergeItems(newNormalItems, newOfferItems);
+          newNormalItems = [];
+          newOfferItems = [];
+
+          let normalItemsQuantity = 0;
+          let offerItemsQuantity = 0;
+
+          // Distribute items: first 'value' to normalItems, then 'quantity' to offerItems, rest to normalItems
+          allItems.forEach((item) => {
+            let remainingQuantity = item.quantity;
+
+            // First, fill normalItems up to 'value'
+            if (normalItemsQuantity < offerValue) {
+              const quantityForNormal = Math.min(
+                remainingQuantity,
+                offerValue - normalItemsQuantity
+              );
+              if (quantityForNormal > 0) {
+                const existingNormalIndex = newNormalItems.findIndex(
+                  (nItem) => nItem.id === item.id && nItem.color === item.color
+                );
+                if (existingNormalIndex >= 0) {
+                  newNormalItems[existingNormalIndex].quantity +=
+                    quantityForNormal;
+                } else {
+                  newNormalItems.push({ ...item, quantity: quantityForNormal });
+                }
+                normalItemsQuantity += quantityForNormal;
+                remainingQuantity -= quantityForNormal;
+              }
+            }
+
+            // Then, fill offerItems up to 'quantity' - ONLY after we have 'value' items in normalItems
+            if (
+              remainingQuantity > 0 &&
+              offerItemsQuantity < offerQuantity &&
+              normalItemsQuantity >= offerValue
+            ) {
+              const quantityForOffer = Math.min(
+                remainingQuantity,
+                offerQuantity - offerItemsQuantity
+              );
+              if (quantityForOffer > 0) {
+                const existingOfferIndex = newOfferItems.findIndex(
+                  (oItem) => oItem.id === item.id && oItem.color === item.color
+                );
+                if (existingOfferIndex >= 0) {
+                  newOfferItems[existingOfferIndex].quantity +=
+                    quantityForOffer;
+                } else {
+                  newOfferItems.push({ ...item, quantity: quantityForOffer });
+                }
+                offerItemsQuantity += quantityForOffer;
+                remainingQuantity -= quantityForOffer;
+              }
+            }
+
+            // Rest goes to normalItems
+            if (remainingQuantity > 0) {
+              const existingNormalIndex = newNormalItems.findIndex(
+                (nItem) => nItem.id === item.id && nItem.color === item.color
+              );
+              if (existingNormalIndex >= 0) {
+                newNormalItems[existingNormalIndex].quantity +=
+                  remainingQuantity;
+              } else {
+                newNormalItems.push({ ...item, quantity: remainingQuantity });
+              }
+              normalItemsQuantity += remainingQuantity;
+            }
+          });
         }
+      }
 
-        // Offer price items (in offer)
-        if (offerQuantity > 0 && offer) {
-          const offerPrice = calculateOfferPrice(item.price, offer);
-          itemTotal += offerPrice * offerQuantity;
-        }
-
-        return sum + itemTotal;
-      }, 0);
+      // Merge items for backward compatibility
+      const mergedItems = mergeItems(newNormalItems, newOfferItems);
+      const totalItems = getTotalCartItems(newNormalItems, newOfferItems);
+      const totalPrice = calculateTotalPriceWithOffer(
+        newNormalItems,
+        newOfferItems,
+        offer || null
+      );
 
       return {
         ...state,
+        items: mergedItems,
+        normalItems: newNormalItems,
+        offerItems: newOfferItems,
         selectedOffer: offer,
         offerSelectedProducts: offerProducts,
+        totalItems,
+        itemCount: mergedItems.length,
         totalPrice,
       };
     }
@@ -437,6 +773,7 @@ interface CartContextType {
   clearCart: () => void;
   validateCart: () => void;
   setOffer: (offer: Offer | null, selectedProducts: CartItem[]) => void;
+  onOfferCartCleared?: () => void; // Callback when cart is cleared due to offer
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -473,36 +810,61 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart);
 
-        // Only load if the parsed cart has items
-        if (parsedCart.items && parsedCart.items.length > 0) {
-          // Validate quantities against maxQuantity limits
-          const validatedItems = parsedCart.items.map((item: CartItem) => {
-            if (
-              item.maxQuantity !== undefined &&
-              item.quantity > item.maxQuantity
-            ) {
-              return { ...item, quantity: item.maxQuantity };
-            }
-            return item;
-          });
+        // Load cart - check for items, normalItems, or offerItems
+        const hasItems = parsedCart.items && parsedCart.items.length > 0;
+        const hasNormalItems =
+          parsedCart.normalItems && parsedCart.normalItems.length > 0;
+        const hasOfferItems =
+          parsedCart.offerItems && parsedCart.offerItems.length > 0;
 
-          // Recalculate totals with validated quantities
-          const totalItems = validatedItems.reduce(
-            (sum: number, item: CartItem) => sum + item.quantity,
-            0
-          );
-          // Calculate total price with offer discounts if offer exists
+        if (hasItems || hasNormalItems || hasOfferItems) {
+          // Validate quantities against maxQuantity limits
+          const validateItems = (items: CartItem[]) => {
+            return items.map((item: CartItem) => {
+              if (
+                item.maxQuantity !== undefined &&
+                item.quantity > item.maxQuantity
+              ) {
+                return { ...item, quantity: item.maxQuantity };
+              }
+              return item;
+            });
+          };
+
+          // If we have normalItems/offerItems, use them; otherwise migrate from items
+          let normalItems = parsedCart.normalItems
+            ? validateItems(parsedCart.normalItems)
+            : [];
+          let offerItems = parsedCart.offerItems
+            ? validateItems(parsedCart.offerItems)
+            : [];
+
+          // If old format (only has items), migrate to new format
+          if (hasItems && normalItems.length === 0 && offerItems.length === 0) {
+            const validatedItems = validateItems(parsedCart.items);
+            // For old format, put all items in normalItems
+            normalItems = validatedItems;
+            offerItems = [];
+          }
+
+          // Merge items for backward compatibility
+          const mergedItems = mergeItems(normalItems, offerItems);
+
+          // Recalculate totals
+          const totalItems = getTotalCartItems(normalItems, offerItems);
           const totalPrice = calculateTotalPriceWithOffer(
-            validatedItems,
-            parsedCart.selectedOffer || null,
-            parsedCart.offerSelectedProducts || []
+            normalItems,
+            offerItems,
+            parsedCart.selectedOffer || null
           );
 
           const validatedCart = {
             ...parsedCart,
-            items: validatedItems,
+            items: mergedItems,
+            normalItems,
+            offerItems,
             totalItems,
-            itemCount: validatedItems.length,
+            itemCount: mergedItems.length,
             totalPrice,
           };
 
@@ -539,23 +901,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }
 
         // Sync offer from Zustand to CartContext if offer is applied
-        if (
-          isOfferApplied &&
-          selectedOffer &&
-          offerSelectedProducts &&
-          offerSelectedProducts.length > 0
-        ) {
-          // Only sync if CartContext doesn't already have this offer or if items changed
-          if (
-            state.selectedOffer?.id !== selectedOffer.id ||
-            JSON.stringify(state.offerSelectedProducts || []) !==
-              JSON.stringify(offerSelectedProducts)
-          ) {
-            setOffer(selectedOffer as any, offerSelectedProducts);
-          }
+        if (isOfferApplied && selectedOffer) {
+          // Always sync offer from Zustand to ensure it's applied
+          // The offerSelectedProducts might be empty initially, but we still need to set the offer
+          setOffer(selectedOffer as any, offerSelectedProducts || []);
         } else if (!isOfferApplied && state.selectedOffer) {
-          // Clear offer in CartContext if it's cleared in Zustand
-          setOffer(null, []);
+          // Only clear offer in CartContext if it's cleared in Zustand AND cart is empty
+          // Don't clear if cart has items - let the user keep their cart
+          if (state.items.length === 0) {
+            setOffer(null, []);
+          }
         }
 
         // Subscribe to Zustand store changes to sync immediately
@@ -613,14 +968,33 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     if (!isInitialized || !isClient) return; // Don't save until after initial load and on client
 
     try {
-      // Only save if cart has items, otherwise remove from localStorage
-      if (state.items && state.items.length > 0) {
-        localStorage.setItem("dreamy-eyes-cart", JSON.stringify(state));
+      // Save if cart has items (either in items, normalItems, or offerItems)
+      const hasItems = state.items && state.items.length > 0;
+      const hasNormalItems = state.normalItems && state.normalItems.length > 0;
+      const hasOfferItems = state.offerItems && state.offerItems.length > 0;
+
+      if (hasItems || hasNormalItems || hasOfferItems) {
+        // Save complete state including normalItems and offerItems
+        localStorage.setItem(
+          "dreamy-eyes-cart",
+          JSON.stringify({
+            ...state,
+            items: state.items, // Keep for backward compatibility
+            normalItems: state.normalItems,
+            offerItems: state.offerItems,
+            selectedOffer: state.selectedOffer,
+            offerSelectedProducts: state.offerSelectedProducts,
+            totalItems: state.totalItems,
+            itemCount: state.itemCount,
+            totalPrice: state.totalPrice,
+          })
+        );
       } else {
         localStorage.removeItem("dreamy-eyes-cart");
       }
     } catch (error) {
       // Error saving cart
+      console.error("Error saving cart to localStorage:", error);
     }
   }, [state, isInitialized, isClient]);
 
