@@ -1069,63 +1069,30 @@ export default function CheckoutPage() {
 
                   // Check if offer criteria is still met
                   const offer = cartState.selectedOffer || zustandOffer;
+                  // Only show offer if there are items in offerItems
+                  const offerItems = cartState.offerItems || [];
                   let hasOffer = false;
 
-                  if (
-                    offer &&
-                    cartState.offerSelectedProducts &&
-                    cartState.offerSelectedProducts.length > 0
-                  ) {
-                    // Check if offer criteria is met
-                    const offerValue =
-                      offer.value !== undefined && offer.value !== null
-                        ? Number(offer.value)
-                        : offer.minimum_quantity || 0;
-                    const minimumValue = offer.minimum_value
-                      ? Number(offer.minimum_value)
-                      : 0;
-
-                    const totalQuantity = cartState.items.reduce(
-                      (sum, item) => sum + item.quantity,
-                      0
-                    );
-                    const totalPrice = cartState.items.reduce(
-                      (sum, item) => sum + item.price * item.quantity,
-                      0
-                    );
-
-                    // Check if criteria is met: quantity >= value OR price >= minimum_value
-                    const meetsQuantityRequirement =
-                      offerValue > 0 ? totalQuantity >= offerValue : true;
-                    const meetsPriceRequirement =
-                      minimumValue > 0 ? totalPrice >= minimumValue : true;
-                    const criteriaMet =
-                      meetsQuantityRequirement && meetsPriceRequirement;
-
-                    hasOffer = criteriaMet;
+                  if (offer && offerItems.length > 0) {
+                    hasOffer = true;
                   }
 
-                  // Calculate offer savings: items in offerSelectedProducts are FREE (price = 0)
+                  // Calculate offer savings: only if there are items in offerItems
                   // So we subtract the full original price of those items
                   let offerSavings = 0;
                   let totalOfferPriceToSubtract = 0;
 
-                  if (hasOffer && offer && cartState.offerSelectedProducts) {
-                    cartState.offerSelectedProducts.forEach((offerItem) => {
-                      const originalItem = cartState.items.find(
-                        (item) =>
-                          item.id === offerItem.id &&
-                          item.color === offerItem.color
+                  if (hasOffer && offer && offerItems.length > 0) {
+                    offerItems.forEach((offerItem) => {
+                      const offerPrice = calculateOfferPrice(
+                        offerItem.price,
+                        offer
                       );
-                      if (originalItem) {
-                        // Items selected for offer should be FREE (price = 0)
-                        const offerPrice = 0;
-                        const savingsPerItem = originalItem.price - offerPrice;
-                        offerSavings += savingsPerItem * offerItem.quantity;
-                        // Total to subtract = original price of offer items (since they're free)
-                        totalOfferPriceToSubtract +=
-                          originalItem.price * offerItem.quantity;
-                      }
+                      const savingsPerItem = offerItem.price - offerPrice;
+                      offerSavings += savingsPerItem * offerItem.quantity;
+                      // Total to subtract = difference between original and offer price
+                      totalOfferPriceToSubtract +=
+                        (offerItem.price - offerPrice) * offerItem.quantity;
                     });
                   }
 
@@ -1134,9 +1101,12 @@ export default function CheckoutPage() {
                   const finalTotal =
                     originalTotal - totalOfferPriceToSubtract + deliveryCharge;
 
+                  // Only show offer details if there are items in offerItems
+                  const hasOfferItems = offerItems.length > 0;
+
                   return (
                     <>
-                      {hasOffer && offerSavings > 0 && (
+                      {hasOffer && hasOfferItems && offerSavings > 0 && (
                         <div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-3">
                           <div className="flex justify-between items-center">
                             <span className="text-green-700 font-semibold">
@@ -1164,7 +1134,7 @@ export default function CheckoutPage() {
                           )}
                         </span>
                       </div>
-                      {hasOffer && offerSavings > 0 && (
+                      {hasOffer && hasOfferItems && offerSavings > 0 && (
                         <div className="flex justify-between items-center">
                           <span className="text-secondary-600">
                             Offer Discount:
@@ -1201,7 +1171,7 @@ export default function CheckoutPage() {
                             )}
                           </span>
                         </div>
-                        {hasOffer && offerSavings > 0 && (
+                        {hasOffer && hasOfferItems && offerSavings > 0 && (
                           <div className="mt-2 text-right">
                             <span className="text-sm text-green-600 font-semibold">
                               You saved{" "}
@@ -1243,28 +1213,25 @@ export default function CheckoutPage() {
                       );
 
                       // Calculate total offer price to subtract: (offer price * quantity) for offer items
+                      // Only calculate if there are items in offerItems
                       let totalOfferPrice = 0;
-                      if (
-                        cartState.selectedOffer &&
-                        cartState.offerSelectedProducts &&
-                        cartState.offerSelectedProducts.length > 0
-                      ) {
-                        cartState.offerSelectedProducts.forEach((offerItem) => {
-                          const originalItem = cartState.items.find(
-                            (item) =>
-                              item.id === offerItem.id &&
-                              item.color === offerItem.color
+                      const offerItems = cartState.offerItems || [];
+                      const offer = cartState.selectedOffer;
+
+                      if (offer && offerItems.length > 0) {
+                        offerItems.forEach((offerItem) => {
+                          const offerPrice = calculateOfferPrice(
+                            offerItem.price,
+                            offer
                           );
-                          if (originalItem) {
-                            // Items selected for offer should be FREE (price = 0)
-                            const offerPrice = 0;
-                            // Total offer price = offer price * quantity (this is what we subtract from total)
-                            totalOfferPrice += offerPrice * offerItem.quantity;
-                          }
+                          const savingsPerItem = offerItem.price - offerPrice;
+                          // Total offer savings = difference between original and offer price
+                          totalOfferPrice +=
+                            savingsPerItem * offerItem.quantity;
                         });
                       }
 
-                      // Final total = Original total - (offer price * quantity) + delivery
+                      // Final total = Original total - (offer savings) + delivery
                       const finalTotal =
                         originalTotal - totalOfferPrice + deliveryCharge;
                       return `Complete Order - ${formatPrice(

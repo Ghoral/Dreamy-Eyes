@@ -73,7 +73,7 @@ const ModalCart = ({
       clearOffer(); // Clear offer from Zustand
       setShowOfferClearedToast(true);
     }
-    
+
     // Update refs
     prevCartLengthRef.current = cartItems.items.length;
     prevOfferRef.current = selectedOffer;
@@ -123,9 +123,9 @@ const ModalCart = ({
         onKeyDown={handleKeyDown}
         tabIndex={-1}
       >
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white">
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -174,8 +174,36 @@ const ModalCart = ({
             </div>
           </div>
 
+          {/* Offer Warning Banner */}
+          {isOfferApplied && selectedOffer && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-6 mt-4 rounded-lg flex-shrink-0">
+              <div className="flex items-start">
+                <svg
+                  className="h-5 w-5 text-yellow-400 mt-0.5 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM10 11a1 1 0 100-2 1 1 0 000 2zm-1 4a1 1 0 102 0 1 1 0 00-2 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p className="ml-3 text-sm text-yellow-800">
+                  <span className="font-bold">Offer Applied:</span> You have
+                  selected an offer.{" "}
+                  <strong>
+                    Any changes to your cart (removing items or decreasing
+                    quantities) will clear the entire cart.
+                  </strong>{" "}
+                  Please proceed to checkout or continue shopping.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Body */}
-          <div className="p-6 max-h-[60vh] overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-6">
             {cartItems.items.length === 0 ? (
               <div className="text-center py-12">
                 <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -554,7 +582,7 @@ const ModalCart = ({
 
           {/* Footer */}
           {cartItems.items.length > 0 && (
-            <div className="border-t border-secondary-200 p-6 bg-secondary-50">
+            <div className="border-t border-secondary-200 p-6 bg-secondary-50 flex-shrink-0">
               {/* Total */}
               <div className="flex items-center justify-between mb-6">
                 <span className="text-xl font-semibold text-secondary-800">
