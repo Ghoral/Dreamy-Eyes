@@ -90,9 +90,13 @@ const OfferBanner = () => {
       : selectedOffer.minimum_quantity || 0;
 
   return (
-    <div className="fixed top-20 left-0 right-0 z-[45] bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 text-white shadow-lg border-b-2 border-primary-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex items-center justify-between">
+    <>
+      {/* Spacer to prevent content from being hidden behind the banner */}
+      <div className="h-[72px] sm:h-[68px]" />
+      
+      <div className="fixed top-20 left-0 right-0 z-[45] bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 text-white shadow-lg border-b-2 border-primary-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 flex-1">
             {/* Offer Badge */}
             <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/30">
@@ -187,8 +191,9 @@ const OfferBanner = () => {
             <CloseIcon />
           </button>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
