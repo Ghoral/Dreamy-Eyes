@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Raleway, Cinzel } from "next/font/google";
+import { Quattrocento_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "./components/landing/Header";
 import OfferBanner from "./components/landing/OfferBanner";
@@ -9,18 +9,11 @@ import { CartProvider } from "./context/CartContext";
 import { UserMetadataLogger } from "./components/UserMetadataLogger";
 import ExchangeRateLoader from "./components/ExchangeRateLoader";
 
-const raleway = Raleway({
+const quattrocentoSans = Quattrocento_Sans({
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "700"],
   style: ["normal", "italic"],
-  variable: "--font-raleway",
-});
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  style: ["normal"],
-  variable: "--font-cinzel",
+  variable: "--font-quattrocento-sans",
 });
 export const metadata: Metadata = {
   title: "Dreamy Eyes",
@@ -35,7 +28,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${raleway.variable} ${cinzel.variable} font-sans antialiased`}
+        className={`${quattrocentoSans.variable} font-sans antialiased`}
+        style={{ fontFamily: 'var(--font-quattrocento-sans), sans-serif' }}
       >
         <CartProvider>
           <GlobalSupabaseListenerWrapper />

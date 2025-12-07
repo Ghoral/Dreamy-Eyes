@@ -47,7 +47,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["Raleway", "sans-serif"],
+        sans: ["var(--font-quattrocento-sans)", "Quattrocento Sans", "sans-serif"],
         serif: ["Cinzel", "serif"],
         script: ["Dancing Script", "cursive"],
       },
