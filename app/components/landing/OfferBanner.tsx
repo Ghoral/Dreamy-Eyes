@@ -92,67 +92,68 @@ const OfferBanner = () => {
   return (
     <>
       {/* Spacer to prevent content from being hidden behind the banner */}
-      <div className="h-[72px] sm:h-[68px]" />
+      <div className="h-[68px] sm:h-[72px]" />
       
       <div className="fixed top-20 left-0 right-0 z-[45] bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 text-white shadow-lg border-b-2 border-primary-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 flex-1">
-            {/* Offer Badge */}
-            <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/30">
-              <span className="text-xs font-bold tracking-wide">
-                OFFER APPLIED
-              </span>
-            </div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
+          <div className="flex items-start sm:items-center justify-between gap-2">
+            <div className="flex items-start sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
+              {/* Offer Badge */}
+              <div className="bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full border border-white/30 flex-shrink-0">
+                <span className="text-[10px] sm:text-xs font-bold tracking-wide whitespace-nowrap">
+                  OFFER APPLIED
+                </span>
+              </div>
 
-            {/* Offer Name */}
-            <div className="flex-1">
-              <h3 className="font-bold text-lg">
-                {selectedOffer.name ||
-                  selectedOffer.title ||
-                  `Offer #${selectedOffer.id}`}
-              </h3>
-              <div className="flex items-center space-x-4 text-sm mt-1">
-                {offerValue > 0 && (
-                  <span className="flex items-center space-x-1">
-                    <span>💰</span>
-                    <span>Buy {offerValue} items</span>
-                  </span>
-                )}
-                {offerQuantity > 0 && (
-                  <span className="flex items-center space-x-1">
-                    <span>🎁</span>
-                    <span>Get {offerQuantity} with offer</span>
-                  </span>
-                )}
-                {offerSelectedProducts.length > 0 && (
-                  <span className="text-white/90">
-                    •{" "}
-                    {offerSelectedProducts.reduce(
-                      (sum, p) => sum + p.quantity,
-                      0
-                    )}{" "}
-                    item
-                    {offerSelectedProducts.reduce(
-                      (sum, p) => sum + p.quantity,
-                      0
-                    ) > 1
-                      ? "s"
-                      : ""}{" "}
-                    selected
-                  </span>
-                )}
-                {cartState.totalItems > offerQuantity && (
-                  <span className="text-white/90">
-                    • {cartState.totalItems - offerQuantity} at normal price
-                  </span>
-                )}
+              {/* Offer Name */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-sm sm:text-lg truncate">
+                  {selectedOffer.name ||
+                    selectedOffer.title ||
+                    `Offer #${selectedOffer.id}`}
+                </h3>
+                <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm mt-0.5 sm:mt-1">
+                  {offerValue > 0 && (
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <span>💰</span>
+                      <span className="hidden sm:inline">Buy {offerValue} items</span>
+                      <span className="sm:hidden">Buy {offerValue}</span>
+                    </span>
+                  )}
+                  {offerQuantity > 0 && (
+                    <span className="flex items-center gap-1 whitespace-nowrap">
+                      <span>🎁</span>
+                      <span className="hidden sm:inline">Get {offerQuantity} with offer</span>
+                      <span className="sm:hidden">Get {offerQuantity}</span>
+                    </span>
+                  )}
+                  {offerSelectedProducts.length > 0 && (
+                    <span className="text-white/90 whitespace-nowrap">
+                      •{" "}
+                      {offerSelectedProducts.reduce(
+                        (sum, p) => sum + p.quantity,
+                        0
+                      )}{" "}
+                      item
+                      {offerSelectedProducts.reduce(
+                        (sum, p) => sum + p.quantity,
+                        0
+                      ) > 1
+                        ? "s"
+                        : ""}
+                    </span>
+                  )}
+                  {cartState.totalItems > offerQuantity && (
+                    <span className="text-white/90 whitespace-nowrap hidden sm:inline">
+                      • {cartState.totalItems - offerQuantity} at normal price
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Close Button */}
-          <button
+            {/* Close Button */}
+            <button
             onClick={() => {
               // Remove only offer items from cart
               if (offerSelectedProducts && offerSelectedProducts.length > 0) {
@@ -185,7 +186,7 @@ const OfferBanner = () => {
               clearOffer();
               setOffer(null, []); // Also clear from CartContext
             }}
-            className="ml-4 p-1.5 rounded-full hover:bg-white/20 transition-colors"
+            className="flex-shrink-0 p-1 sm:p-1.5 rounded-full hover:bg-white/20 transition-colors"
             aria-label="Remove offer"
           >
             <CloseIcon />
