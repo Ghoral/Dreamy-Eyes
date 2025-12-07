@@ -163,6 +163,11 @@ export default function CheckoutPage() {
   );
   const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingOffer, setPendingOffer] = useState<Offer | null>(null);
+  const [pendingSelectedProducts, setPendingSelectedProducts] = useState<any[]>(
+    []
+  );
 
   useEffect(() => {
     loadUserAddresses();
@@ -238,16 +243,35 @@ export default function CheckoutPage() {
   };
 
   const handleOfferSelect = (offer: Offer, selectedProducts: any[]) => {
-    // If there's already an offer applied and user is changing it, clear the cart
+    // If there's already an offer applied and user is changing it, show confirmation
     const currentOffer = cartState.selectedOffer || zustandOffer;
     if (currentOffer && currentOffer.id !== offer.id) {
-      // User is changing the offer, clear the cart
-      clearCart();
-      clearOffer();
+      // User is changing the offer, show confirmation dialog
+      setPendingOffer(offer);
+      setPendingSelectedProducts(selectedProducts);
+      setShowConfirmDialog(true);
+      setIsOffersModalOpen(false);
+      return;
     }
+
+    // No existing offer or same offer, proceed directly
     setOffer(offer, selectedProducts);
     // Navigate to home after selecting/changing offer
     router.push("/");
+  };
+
+  const confirmOfferChange = () => {
+    if (pendingOffer) {
+      // User confirmed, clear the cart and apply new offer
+      clearCart();
+      clearOffer();
+      setOffer(pendingOffer, pendingSelectedProducts);
+      setShowConfirmDialog(false);
+      setPendingOffer(null);
+      setPendingSelectedProducts([]);
+      // Navigate to home after changing offer
+      router.push("/");
+    }
   };
 
   const loadUserAddresses = async () => {
@@ -1300,6 +1324,71 @@ export default function CheckoutPage() {
         onClose={() => setIsOffersModalOpen(false)}
         onSelectOffer={handleOfferSelect}
       />
+
+      {/* Confirmation Dialog for changing offer */}
+      {showConfirmDialog && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+            onClick={() => {
+              setShowConfirmDialog(false);
+              setPendingOffer(null);
+              setPendingSelectedProducts([]);
+            }}
+          />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-yellow-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-secondary-800 mb-2">
+                    Change Offer?
+                  </h3>
+                  <p className="text-secondary-600 mb-4">
+                    You already have an offer applied. Changing to a new offer
+                    will <strong>clear your entire cart</strong>. Are you sure
+                    you want to continue?
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        setShowConfirmDialog(false);
+                        setPendingOffer(null);
+                        setPendingSelectedProducts([]);
+                      }}
+                      className="flex-1 px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded-lg font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmOfferChange}
+                      className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors"
+                    >
+                      Yes, Clear Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

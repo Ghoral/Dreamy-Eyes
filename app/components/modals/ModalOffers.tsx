@@ -53,6 +53,8 @@ export default function ModalOffers({
   const hasClearedRef = useRef(false);
   const justAppliedRef = useRef(false);
   const [showWarningToast, setShowWarningToast] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingOffer, setPendingOffer] = useState<Offer | null>(null);
 
   // Sync local state with Zustand store
   useEffect(() => {
@@ -112,14 +114,30 @@ export default function ModalOffers({
   const handleApplyOffer = () => {
     if (!localSelectedOffer) return;
 
+    // Check if there's already an offer applied and user is changing it
+    const currentOffer = zustandOffer;
+    if (currentOffer && currentOffer.id !== localSelectedOffer.id) {
+      // User is changing the offer, show confirmation dialog
+      setPendingOffer(localSelectedOffer);
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // No existing offer or same offer, proceed directly
+    applyOffer(localSelectedOffer);
+  };
+
+  const applyOffer = (offer: Offer) => {
+    if (!offer) return;
+
     // Select products based on offer quantity
     // value = buy X items (normal price) to qualify
     // quantity = get Y items with offer benefit
     // Example: value=2, quantity=1 means "buy 2 get 1" - buy 2 items normally, then 1 gets offer
     let selectedProducts: any[] = [];
-    const offerBenefitQuantity = localSelectedOffer.quantity
-      ? Number(localSelectedOffer.quantity)
-      : localSelectedOffer.minimum_quantity || 0;
+    const offerBenefitQuantity = offer.quantity
+      ? Number(offer.quantity)
+      : offer.minimum_quantity || 0;
     let remainingBenefitQuantity = offerBenefitQuantity;
 
     // Select items up to the offer benefit quantity limit
@@ -139,14 +157,14 @@ export default function ModalOffers({
     }
 
     // Save to Zustand store (persists across sessions)
-    setOfferStore(localSelectedOffer, selectedProducts);
+    setOfferStore(offer, selectedProducts);
 
     // Mark that offer was explicitly applied
     setHasAppliedOffer(true);
     justAppliedRef.current = true; // Mark that we just applied an offer
 
     // Also call the callback for CartContext compatibility
-    onSelectOffer(localSelectedOffer, selectedProducts);
+    onSelectOffer(offer, selectedProducts);
 
     // Show warning toast
     setShowWarningToast(true);
@@ -540,6 +558,72 @@ export default function ModalOffers({
         onClose={() => setShowWarningToast(false)}
         duration={6000}
       />
+
+      {/* Confirmation Dialog for changing offer */}
+      {showConfirmDialog && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+            onClick={() => setShowConfirmDialog(false)}
+          />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-6 h-6 text-yellow-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-secondary-800 mb-2">
+                    Change Offer?
+                  </h3>
+                  <p className="text-secondary-600 mb-4">
+                    You already have an offer applied. Changing to a new offer
+                    will <strong>clear your entire cart</strong>. Are you sure
+                    you want to continue?
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        setShowConfirmDialog(false);
+                        setPendingOffer(null);
+                      }}
+                      className="flex-1 px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded-lg font-semibold transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (pendingOffer) {
+                          applyOffer(pendingOffer);
+                        }
+                        setShowConfirmDialog(false);
+                        setPendingOffer(null);
+                      }}
+                      className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors"
+                    >
+                      Yes, Clear Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
