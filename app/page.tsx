@@ -3,6 +3,7 @@ import ProductWrapper from "./components/product/ProductWrapper";
 import Footer from "./components/landing/Footer";
 import BillboardCarousel from "./components/landing/Swiper";
 import InstagramCarousel from "./components/landing/InstagramCarousel";
+import OffersDisplayWrapper from "./components/landing/OffersCarouselWrapper";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 import HomeClient from "./HomeClient";
 
@@ -17,6 +18,9 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <GlobalSupabaseListenerWrapper />
       <BillboardCarousel />
+      <Suspense fallback={null}>
+        <OffersDisplayWrapper />
+      </Suspense>
       <HomeClient>
         <Suspense fallback={<LoadingFallback />}>
           <ProductWrapper />

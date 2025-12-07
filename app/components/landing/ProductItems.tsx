@@ -163,7 +163,7 @@ const ProductItems = ({ data }: { data: any }) => {
     powerMax !== "";
 
   return (
-    <section className="w-full py-8 md:py-12 bg-white pt-0">
+    <section className="w-full pt-0 pb-4 md:pb-6 bg-white">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Mobile Filter Button */}
         <div className="mb-4 lg:hidden">
@@ -455,13 +455,22 @@ const ProductItems = ({ data }: { data: any }) => {
                     // Determine product tags
                     const tags: string[] = [];
 
-                    // Check for On Sale (priority tag - show first)
-                    if (showSale) {
+                    // Check for SALE tag (from sales API - highest priority)
+                    if (product.isSale) {
+                      tags.push("SALE");
+                    }
+                    // Check for On Sale (price discount)
+                    else if (showSale) {
                       tags.push("On Sale");
                     }
 
-                    // Check for Newest (created within last 30 days)
-                    if (product.created_at) {
+                    // Check for Best Seller (high order_count)
+                    if (product.order_count && product.order_count > 50) {
+                      tags.push("Best Seller");
+                    }
+
+                    // Check for Newest (created within last 30 days) - only if not a sale item
+                    if (!product.isSale && product.created_at) {
                       const createdDate = new Date(product.created_at);
                       const daysSinceCreation =
                         (Date.now() - createdDate.getTime()) /
@@ -469,11 +478,6 @@ const ProductItems = ({ data }: { data: any }) => {
                       if (daysSinceCreation <= 30) {
                         tags.push("Newest");
                       }
-                    }
-
-                    // Check for Best Seller (high order_count)
-                    if (product.order_count && product.order_count > 50) {
-                      tags.push("Best Seller");
                     }
 
                     return (
@@ -529,7 +533,7 @@ const ProductItems = ({ data }: { data: any }) => {
                         {/* Product Info - Left Aligned */}
                         <div className="text-left">
                           {/* Title */}
-                          <h3 className="text-[13px] font-normal text-black mb-1.5 line-clamp-2 leading-tight">
+                          <h3 className="text-[15px] font-bold text-black mb-1.5 line-clamp-2 leading-tight">
                             {product.title}
                           </h3>
 
