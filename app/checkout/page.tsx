@@ -238,7 +238,16 @@ export default function CheckoutPage() {
   };
 
   const handleOfferSelect = (offer: Offer, selectedProducts: any[]) => {
+    // If there's already an offer applied and user is changing it, clear the cart
+    const currentOffer = cartState.selectedOffer || zustandOffer;
+    if (currentOffer && currentOffer.id !== offer.id) {
+      // User is changing the offer, clear the cart
+      clearCart();
+      clearOffer();
+    }
     setOffer(offer, selectedProducts);
+    // Navigate to home after selecting/changing offer
+    router.push("/");
   };
 
   const loadUserAddresses = async () => {

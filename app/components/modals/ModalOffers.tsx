@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { get_enabled_offers } from "@/app/api/offers";
 import { useCart } from "@/app/context/CartContext";
 import { useOfferStore } from "@/app/store/offerStore";
@@ -34,6 +35,7 @@ export default function ModalOffers({
   onClose,
   onSelectOffer,
 }: ModalOffersProps) {
+  const router = useRouter();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const { state: cartState } = useCart();
@@ -149,9 +151,10 @@ export default function ModalOffers({
     // Show warning toast
     setShowWarningToast(true);
 
-    // Close modal after a short delay to show the toast
+    // Close modal after a short delay to show the toast, then navigate to home
     setTimeout(() => {
       onClose();
+      router.push("/");
     }, 100);
   };
 
@@ -169,21 +172,13 @@ export default function ModalOffers({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-6 text-white flex-shrink-0">
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-4 text-white flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold">Available Offers</h2>
-                <p className="text-primary-100 text-sm mt-1">
+                <h2 className="text-xl font-bold">Available Offers</h2>
+                <p className="text-primary-100 text-xs mt-1">
                   Select an offer to apply to your order
                 </p>
-                <div className="bg-white/10 rounded-lg p-2 mt-2">
-                  <p className="text-primary-50 text-xs">
-                    💡 <strong>How it works:</strong> Add items to your cart. If
-                    you qualify, select an offer. Only the first items (up to
-                    offer limit) receive the offer benefit. Remaining items are
-                    charged at normal price.
-                  </p>
-                </div>
               </div>
               <button
                 onClick={onClose}
@@ -513,18 +508,18 @@ export default function ModalOffers({
           </div>
 
           {/* Footer with buttons */}
-          <div className="border-t border-secondary-200 p-6 bg-secondary-50 flex-shrink-0">
+          <div className="border-t border-secondary-200 p-4 bg-secondary-50 flex-shrink-0">
             <div className="flex items-center justify-between">
               <button
                 onClick={onClose}
-                className="px-6 py-3 bg-white border-2 border-secondary-200 text-secondary-700 rounded-xl font-semibold hover:bg-secondary-50 transition-colors"
+                className="px-4 py-2 bg-white border-2 border-secondary-200 text-secondary-700 rounded-lg text-sm font-semibold hover:bg-secondary-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleApplyOffer}
                 disabled={!localSelectedOffer}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   localSelectedOffer
                     ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow"
                     : "bg-gray-200 text-gray-500 cursor-not-allowed"
