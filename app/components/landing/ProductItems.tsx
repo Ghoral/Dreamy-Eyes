@@ -2,7 +2,7 @@
 
 import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
@@ -10,13 +10,20 @@ import { useUserCountry } from "../../hooks/useUserCountry";
 
 const ProductItems = ({ data }: { data: any }) => {
   const { country } = useUserCountry();
-  const [hoveredItem, setHoveredItem] = useState<any>(null);
   const [toastConfig, setToastConfig] = useState<{
     message: string;
     isVisible: boolean;
   }>({ message: "", isVisible: false });
   const { addItem } = useCart();
   const router = useRouter();
+  
+  const [selectedColor, setSelectedColor] = useState<string>("all");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [powerMin, setPowerMin] = useState<string>("");
+  const [powerMax, setPowerMax] = useState<string>("");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   const handleProductClick = (product: any) => {
     const productId = product.id || product.title;
@@ -27,15 +34,8 @@ const ProductItems = ({ data }: { data: any }) => {
     e.stopPropagation();
 
     let maxQuantity = 1;
-    if (product.colors) {
-      try {
-        const colorData = JSON.parse(product.colors);
-        if (colorData.length > 0) {
-          maxQuantity = parseInt(colorData[0].quantity) || 1;
-        }
-      } catch (error) {
-        console.error("Error parsing color data:", error);
-      }
+    if (product.color_quantity && Array.isArray(product.color_quantity) && product.color_quantity.length > 0) {
+      maxQuantity = parseInt(product.color_quantity[0].quantity) || 1;
     }
 
     addItem({
@@ -55,14 +55,101 @@ const ProductItems = ({ data }: { data: any }) => {
     });
   };
 
+  const availableColors = useMemo(() => {
+    const colorSet = new Set<string>();
+    if (!data) return [];
+    data.forEach((product: any) => {
+      if (product.color_quantity && Array.isArray(product.color_quantity)) {
+        product.color_quantity.forEach((cq: any) => {
+          if (cq?.label) {
+            colorSet.add(String(cq.label));
+          }
+        });
+      }
+    });
+    return Array.from(colorSet).sort();
+  }, [data]);
+
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    if (!data) return [];
+    data.forEach((product: any) => {
+      const t = product?.tags;
+      if (!t) return;
+      if (Array.isArray(t)) {
+        t.forEach((x: any) => {
+          if (x) tagSet.add(String(x));
+        });
+      } else {
+        tagSet.add(String(t));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [data]);
+
+  const filteredProducts = useMemo(() => {
+    if (!data) return [];
+    let filtered = [...data];
+
+    if (selectedColor !== "all") {
+      filtered = filtered.filter((product) => {
+        if (!product.color_quantity || !Array.isArray(product.color_quantity)) {
+          return false;
+        }
+        return product.color_quantity.some(
+          (cq: any) => String(cq.label) === selectedColor
+        );
+      });
+    }
+
+    if (priceMin || priceMax) {
+      const min = priceMin ? parseFloat(priceMin) : -Infinity;
+      const max = priceMax ? parseFloat(priceMax) : Infinity;
+      filtered = filtered.filter((product) => {
+        const p = product.price
+          ? parseFloat(product.price.toString())
+          : null;
+        if (p === null || isNaN(p)) return false;
+        return p >= min && p <= max;
+      });
+    }
+
+    if (powerMin || powerMax) {
+      const min = powerMin ? parseFloat(powerMin) : -Infinity;
+      const max = powerMax ? parseFloat(powerMax) : Infinity;
+      filtered = filtered.filter((product) => {
+        const pw = product.power
+          ? parseFloat(product.power.toString())
+          : null;
+        if (pw === null || isNaN(pw)) return false;
+        return pw >= min && pw <= max;
+      });
+    }
+
+    if (selectedTag !== "all") {
+      filtered = filtered.filter((product) => {
+        const t = product?.tags;
+        if (!t) return false;
+        if (Array.isArray(t)) return t.includes(selectedTag);
+        return String(t) === selectedTag;
+      });
+    }
+
+    return filtered;
+  }, [data, selectedColor, priceMin, priceMax, powerMin, powerMax, selectedTag]);
+
   return (
-    <section className="w-full py-20 bg-gradient-to-b from-white to-secondary-50 relative overflow-hidden">
+    <section id="products-section" className="w-full py-20 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+        <div className="absolute top-20 right-10 w-96 h-96 bg-pink-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float"></div>
         <div
-          className="absolute bottom-20 left-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
-          style={{ animationDelay: "1s" }}
+          className="absolute bottom-20 left-10 w-96 h-96 bg-purple-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float"
+          style={{ animationDelay: "2s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-60 animate-float"
+          style={{ animationDelay: "4s" }}
         ></div>
       </div>
 
@@ -94,52 +181,64 @@ const ProductItems = ({ data }: { data: any }) => {
           </p>
         </div>
 
+        {/* Filter Button */}
+        <div className="mb-8">
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="inline-flex items-center px-5 py-2.5 bg-white border-2 border-primary-200 text-primary-600 font-semibold rounded-xl hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+              />
+            </svg>
+            Filters
+            {(selectedColor !== "all" || priceMin || priceMax || powerMin || powerMax || selectedTag !== "all") && (
+              <span className="ml-2 px-2 py-0.5 bg-primary-500 text-white text-xs rounded-full">
+                Active
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* Products Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
-          {data?.map((product: any, index: number) => {
-            const isHovered = hoveredItem === index;
+          {filteredProducts?.map((product: any, index: number) => {
             const imageUrl = getThumbnailUrl(product);
+            const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
 
             return (
-              <div
-                key={index}
-                className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2"
-                onMouseEnter={() => setHoveredItem(index)}
-                onMouseLeave={() => setHoveredItem(null)}
+              <div 
+                key={index} 
+                className="group relative bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-primary-200 hover:shadow-xl transition-all duration-300 cursor-pointer"
                 onClick={() => handleProductClick(product)}
               >
-                {/* Discount Badge */}
-                {product.discount && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="inline-flex items-center px-2 py-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-bold rounded-full shadow-lg">
-                      {product.discount}
-                    </span>
-                  </div>
-                )}
-
-                {/* HOT Badge for popular products */}
-                {product.order_count && product.order_count > 10 && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
-                      HOT
-                    </span>
-                  </div>
-                )}
-
-                {/* Product Image */}
-                <div className="relative h-64 bg-gradient-to-br from-secondary-50 to-primary-50 overflow-hidden">
+                {/* Image Container */}
+                <div className="relative aspect-square overflow-hidden bg-gray-100">
                   {imageUrl ? (
-                    <Image
-                      src={imageUrl}
-                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                      alt={product.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
+                    <>
+                      <Image
+                        src={imageUrl}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        alt={product.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                      />
+                      {/* Subtle gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <svg
-                        className="w-16 h-16 text-secondary-300"
+                        className="w-12 h-12 text-gray-300"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -147,116 +246,54 @@ const ProductItems = ({ data }: { data: any }) => {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2}
+                          strokeWidth={1.5}
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
                     </div>
                   )}
 
-                  {/* Hover Overlay */}
-                  {isHovered && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent flex items-center justify-center">
-                      <button
-                        className="bg-white text-primary-600 font-medium py-2 px-4 rounded-full shadow-xl transform scale-100 animate-fade-in hover:bg-primary-50 transition-all duration-300"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleProductClick(product);
-                        }}
-                      >
-                        <span className="flex items-center">
-                          <svg
-                            className="w-5 h-5 mr-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                          Quick View
-                        </span>
-                      </button>
+                  {/* Tag Badge */}
+                  {product.tags && (
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-gradient-to-r from-primary-500 to-primary-600 shadow-md">
+                        {typeof product.tags === "string" ? product.tags : Array.isArray(product.tags) ? product.tags[0] : ""}
+                      </span>
                     </div>
                   )}
+
+                  {/* Wishlist Icon */}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <button 
+                      className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-md transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <svg className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Product Info */}
-                <div className="p-5">
-                  {/* Category/Subtitle */}
-                  {product.sub_title && (
-                    <div className="text-xs text-primary-600 font-medium uppercase tracking-wider mb-1">
-                      {product.sub_title}
-                    </div>
-                  )}
-
-                  {/* Title */}
-                  <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-secondary-800 mb-3 line-clamp-2 min-h-[2.5rem] group-hover:text-primary-600 transition-colors">
                     {product.title}
                   </h3>
 
-                  {/* Description */}
-                  <div
-                    className="text-secondary-600 text-sm mb-3 line-clamp-2 leading-relaxed h-10 overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: product.description }}
-                  />
-
-                  {/* Rating */}
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className="w-4 h-4 text-yellow-400 fill-current"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-xs text-secondary-500 ml-2">
-                      {product.review_count
-                        ? `4.9 (${product.review_count})`
-                        : "4.9 (120)"}
-                    </span>
-
-                    {/* Order Count Badge */}
-                    {product.order_count && product.order_count > 0 && (
-                      <span className="ml-auto text-xs bg-secondary-100 text-secondary-700 px-2 py-1 rounded-full">
-                        {product.order_count}+ sold
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Price */}
-                  <div className="mb-2">
-                    <span className="text-xl font-bold text-primary-600">
-                      {formatPriceWithCurrency(
-                        typeof product.price === "number"
-                          ? product.price
-                          : parseFloat(product.price),
-                        country
-                      )}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
+                      {formatPriceWithCurrency(currentPrice, country)}
                     </span>
                   </div>
 
-                  {/* Action Button - Moved to bottom */}
+                  {/* Add to Cart Button */}
                   <button
                     onClick={(e) => handleAddToCart(e, product)}
-                    className="w-full flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                    className="w-full flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     <svg
-                      className="w-5 h-5 mr-1"
+                      className="w-4 h-4 mr-1.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -268,17 +305,154 @@ const ProductItems = ({ data }: { data: any }) => {
                         d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
                       />
                     </svg>
-                    Add
+                    Add to Cart
                   </button>
                 </div>
 
-                {/* Hover Border Effect */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary-200 transition-all duration-500"></div>
+                {/* Accent line at bottom */}
+                <div className="h-1 bg-gradient-to-r from-primary-500 to-secondary-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Filter Drawer */}
+      {isFilterDrawerOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={() => setIsFilterDrawerOpen(false)}
+          />
+
+          {/* Drawer */}
+          <div className="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 shadow-2xl transform transition-transform duration-300 overflow-y-auto">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-secondary-800">Filters</h3>
+                <button
+                  onClick={() => setIsFilterDrawerOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Filter Options */}
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Color
+                  </label>
+                  <select
+                    value={selectedColor}
+                    onChange={(e) => setSelectedColor(e.target.value)}
+                    className="w-full bg-white border border-secondary-200 text-secondary-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                  >
+                    <option value="all">All</option>
+                    {availableColors.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Price
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      className="flex-1 min-w-0 w-full bg-white border border-secondary-200 text-secondary-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      className="flex-1 min-w-0 w-full bg-white border border-secondary-200 text-secondary-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Power
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={powerMin}
+                      onChange={(e) => setPowerMin(e.target.value)}
+                      className="flex-1 min-w-0 w-full bg-white border border-secondary-200 text-secondary-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={powerMax}
+                      onChange={(e) => setPowerMax(e.target.value)}
+                      className="flex-1 min-w-0 w-full bg-white border border-secondary-200 text-secondary-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    Tags
+                  </label>
+                  <select
+                    value={selectedTag}
+                    onChange={(e) => setSelectedTag(e.target.value)}
+                    className="w-full bg-white border border-secondary-200 text-secondary-700 py-2 px-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                  >
+                    <option value="all">All</option>
+                    {availableTags.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Clear Filters Button */}
+                <button
+                  onClick={() => {
+                    setSelectedColor("all");
+                    setPriceMin("");
+                    setPriceMax("");
+                    setPowerMin("");
+                    setPowerMax("");
+                    setSelectedTag("all");
+                  }}
+                  className="w-full py-2 px-4 bg-secondary-100 text-secondary-700 font-semibold rounded-lg hover:bg-secondary-200 transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Toast Notification */}
       <Toast

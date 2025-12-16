@@ -109,3 +109,13 @@ export async function get_products_by_type(
     error: null,
   };
 }
+
+export async function get_products(
+  limit: number = 10,
+  offset: number = 0,
+  tags: string[] = []
+) {
+  const type = tags.length > 0 ? tags[0] : "all";
+  const page = Math.floor(offset / limit) + 1;
+  return get_products_by_type(type, page, limit);
+}

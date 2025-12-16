@@ -172,6 +172,7 @@ const Pagination = ({
 };
 
 export default function PaginatedSalesList() {
+  const { country } = useUserCountry();
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -382,6 +383,7 @@ export default function PaginatedSalesList() {
         <Toast
           message={toast.message}
           type={toast.type}
+          isVisible={true}
           onClose={() => setToast(null)}
         />
       )}
