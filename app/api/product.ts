@@ -53,7 +53,7 @@ export async function get_all_products_with_types() {
 export async function get_app_details() {
   const { data, error } = await supabaseBrowserClient
     .from("app_detail")
-    .select("tiktok_link, follow_us_tiktok")
+    .select("instagram_link, instagram")
     .limit(1);
 
   if (error) {
@@ -65,6 +65,7 @@ export async function get_app_details() {
       error: error.details,
     };
   }
+console.log('data insta',data);
 
   return {
     data: data?.[0] || null,

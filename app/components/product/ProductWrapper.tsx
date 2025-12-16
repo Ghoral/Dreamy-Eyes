@@ -11,7 +11,6 @@ const ProductWrapper = async () => {
     "best_reviewed",
   ]);
 
-  console.log("ProductWrapper fetched data:", JSON.stringify(data, null, 2));
 
   return (
     <div id="products-section">

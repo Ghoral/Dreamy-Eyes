@@ -43,6 +43,7 @@ const TikTokCarousel = () => {
       </section>
     );
   }
+console.log(' appDetails', appDetails);
 
   return (
     <section className="relative py-20 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
@@ -168,8 +169,7 @@ const TikTokCarousel = () => {
             <div className="space-y-4">
               <a
                 href={
-                  appDetails?.follow_us_instagram ||
-                  "https://www.instagram.com/yourfashionlens"
+                  appDetails?.instagram
                 }
                 target="_blank"
                 rel="noopener noreferrer"
@@ -214,8 +214,7 @@ const TikTokCarousel = () => {
               <div className="w-full max-w-sm">
                 <InstagramEmbed
                   url={
-                    appDetails?.instagram_link ||
-                    "https://www.instagram.com/reel/C8q_q_qP_qP/"
+                       appDetails?.instagram_link
                   }
                   width={325}
                 />
