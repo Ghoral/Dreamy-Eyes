@@ -29,7 +29,8 @@ const OffersSlider = () => {
     fetchOffers();
   }, []);
 
-  // Auto-scroll animation
+  // Auto-scroll animation removed as per user request to show only DB data without duplication
+  /*
   useEffect(() => {
     // Disable animation if only one offer or paused
     if (!scrollContainerRef.current || offers.length <= 1 || isPaused) return;
@@ -59,6 +60,7 @@ const OffersSlider = () => {
       }
     };
   }, [offers, isPaused]);
+  */
 
   const handleApplyOffer = (offer: Offer) => {
     // Apply offer with current cart items
@@ -81,9 +83,8 @@ const OffersSlider = () => {
     return null;
   }
 
-  // Only duplicate if we have more than 1 offer to enable seamless scrolling
-  // If we have 1 offer, we just center it
-  const duplicatedOffers = offers.length > 1 ? [...offers, ...offers] : offers;
+  // Use offers directly from DB without duplication
+  const displayOffers = offers;
   const isSingleOffer = offers.length === 1;
 
   return (
@@ -122,12 +123,12 @@ const OffersSlider = () => {
         {/* Offers Slider */}
         <div 
           ref={scrollContainerRef}
-          className={`overflow-x-hidden pb-4 pt-4 ${isSingleOffer ? "flex justify-center" : ""}`}
+          className="overflow-x-auto pb-4 pt-4 flex w-full"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          <div className={`flex space-x-4 ${isSingleOffer ? "" : "w-max"}`}>
-            {duplicatedOffers.map((offer, index) => {
+          <div className="flex space-x-4 m-auto">
+            {displayOffers.map((offer, index) => {
               const isApplied =
                 cartState.selectedOffer?.id === offer.id;
 

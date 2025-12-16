@@ -73,26 +73,9 @@ const ProductItems = ({ data }: { data: any }) => {
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
 
-    let maxQuantity = 1;
-    if (product.color_quantity && Array.isArray(product.color_quantity) && product.color_quantity.length > 0) {
-      maxQuantity = parseInt(product.color_quantity[0].quantity) || 1;
-    }
-
-    addItem({
-      id: product.id || product.title,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      quantity: 1,
-      image: getThumbnailUrl(product) || undefined,
-      primary_thumbnail: product.primary_thumbnail || undefined,
-      maxQuantity: maxQuantity,
-    });
-
-    setToastConfig({
-      message: `${product.title} added to cart!`,
-      isVisible: true,
-    });
+    // Navigate to product detail page instead of adding to cart immediately
+    const productId = product.id || product.title;
+    router.push(`/${encodeURIComponent(productId)}`);
   };
 
   const availableColors = useMemo(() => {
@@ -156,7 +139,7 @@ const ProductItems = ({ data }: { data: any }) => {
       });
     }
 
-    if (selectedTag !== "all") {
+    /* if (selectedTag !== "all") {
       // API now handles tag filtering, but we keep this as a safety check
       // or in case the API returns a superset.
       // If API returns exact matches, this is redundant but harmless.
@@ -166,7 +149,7 @@ const ProductItems = ({ data }: { data: any }) => {
         if (Array.isArray(t)) return t.includes(selectedTag);
         return String(t) === selectedTag;
       });
-    }
+    } */
 
     return filtered;
   }, [normalizedData, selectedColor, priceMin, priceMax, powerMin, powerMax, selectedTag]);
