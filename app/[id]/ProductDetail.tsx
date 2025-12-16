@@ -331,7 +331,7 @@ const ProductDetail = ({
 
     // Open offers modal when item is added to cart (only if no offer is already applied)
     // Use setTimeout to ensure cart state is updated before checking
-    setTimeout(async () => {
+    /* setTimeout(async () => {
       // Get fresh state from Zustand store to ensure we have the latest values
       const { useOfferStore } = await import("@/app/store/offerStore");
       const {
@@ -353,7 +353,7 @@ const ProductDetail = ({
       } catch (error) {
         console.error("Error checking offers:", error);
       }
-    }, 100);
+    }, 100); */
   };
 
   const handleOfferSelect = (offer: any, selectedProducts: any[]) => {

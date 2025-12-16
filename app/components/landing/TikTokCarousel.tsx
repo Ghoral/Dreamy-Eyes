@@ -83,8 +83,7 @@ console.log(' appDetails', appDetails);
             Follow Our Fashion Journey
           </h2>
           <p className="text-xl text-secondary-600 max-w-3xl mx-auto leading-relaxed">
-            Get inspired by the latest fashion lens trends, styling tips, and
-            behind-the-scenes content on Instagram
+            Get inspired by the latest fashion lens trends and styling tips on Instagram
           </p>
         </div>
 
@@ -140,26 +139,6 @@ console.log(' appDetails', appDetails);
                   </div>
                   <span className="text-secondary-700">
                     Styling tips and tutorials
-                  </span>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                    <svg
-                      className="w-3 h-3 text-primary-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <span className="text-secondary-700">
-                    Behind-the-scenes content
                   </span>
                 </div>
               </div>

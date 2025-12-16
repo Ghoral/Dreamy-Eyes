@@ -95,9 +95,12 @@ export default function ModalOffers({
       if (response.status && response.data) {
         setOffers(response.data);
 
-        // If offer already applied, use that
+        // If offer already applied, use that. 
+        // If not, pre-select the first available offer if none is selected.
         if (zustandOffer) {
           setLocalSelectedOffer(zustandOffer);
+        } else if (response.data.length > 0 && !localSelectedOffer) {
+           setLocalSelectedOffer(response.data[0]);
         }
       }
     } catch (error) {
