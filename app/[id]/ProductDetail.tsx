@@ -391,7 +391,7 @@ const ProductDetail = ({
                   <img
                     src={mainImage}
                     alt={product.title}
-                    className="w-full h-[500px] object-contain p-8 transition-transform duration-500 hover:scale-105"
+                    className="w-full h-[500px] object-cover transition-transform duration-500 hover:scale-105"
                   />
                 ) : (
                   <div className="w-full h-[500px] bg-white flex items-center justify-center">

@@ -205,7 +205,7 @@ const ProductItems = ({ data }: { data: any }) => {
             </svg>
             Premium Collection
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6 font-serif">
+          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6 font-sans">
             Our Products
           </h2>
           <p className="text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed">

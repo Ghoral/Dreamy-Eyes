@@ -236,7 +236,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         {imageUrl ? (
           <Image
             src={imageUrl}
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             alt={product.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
@@ -297,7 +297,7 @@ const ProductCard = ({ product }: { product: Product }) => {
         )}
 
         {/* Title */}
-        <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
+        <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300">
           {product.title}
         </h3>
 
@@ -647,7 +647,7 @@ const PaginatedProductList = ({ type }: { type: string }) => {
             <div className="mb-8">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 pb-4 border-b border-secondary-200">
                 <div className="mb-4 md:mb-0">
-                  <h2 className="text-3xl font-bold text-secondary-800 mb-2 relative font-serif">
+                  <h2 className="text-3xl font-bold text-secondary-800 mb-2 relative font-sans">
                     {getTitle()}
                     <span className="absolute bottom-0 left-0 w-20 h-1 bg-primary-500 rounded-full"></span>
                   </h2>

@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useOfferStore } from "../../store/offerStore";
 import { useCart } from "../../context/CartContext";
-import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
+
 // Close icon SVG
 const CloseIcon = () => (
   <svg
@@ -22,62 +21,20 @@ const CloseIcon = () => (
 );
 
 const OfferBanner = () => {
-  const {
-    selectedOffer,
-    offerSelectedProducts,
-    isOfferApplied,
-    clearOffer,
-    _hasHydrated,
-  } = useOfferStore();
   const { state: cartState, setOffer, removeItem, updateQuantity } = useCart();
   const [isMounted, setIsMounted] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Ensure component is mounted (client-side only)
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Check authentication status
-  useEffect(() => {
-    if (!isMounted) return;
+  const selectedOffer = cartState.selectedOffer;
+  const isOfferApplied = !!selectedOffer;
+  const offerSelectedProducts = cartState.offerSelectedProducts || [];
 
-    const checkAuthStatus = async () => {
-      try {
-        const supabase = createSupabaseClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        setIsAuthenticated(!!user);
-      } catch (error) {
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkAuthStatus();
-
-    // Set up auth state change listener
-    const supabase = createSupabaseClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session?.user);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [isMounted]);
-
-  // Show banner only if user is authenticated, offer is applied, selected, cart has items, and store has hydrated
-  if (
-    !isMounted ||
-    !isAuthenticated ||
-    !_hasHydrated ||
-    !isOfferApplied ||
-    !selectedOffer ||
-    cartState.items.length === 0
-  ) {
+  // Show banner only if offer is applied, selected, and mounted
+  if (!isMounted || !isOfferApplied || !selectedOffer) {
     return null;
   }
 
@@ -177,9 +134,8 @@ const OfferBanner = () => {
                 });
               }
 
-              // Clear offer from both stores
-              clearOffer();
-              setOffer(null, []); // Also clear from CartContext
+              // Clear offer from CartContext
+              setOffer(null, []);
             }}
             className="ml-4 p-1.5 rounded-full hover:bg-white/20 transition-colors"
             aria-label="Remove offer"

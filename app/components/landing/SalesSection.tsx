@@ -200,7 +200,7 @@ const SalesSection = () => {
 
                   {/* Product Info */}
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
+                    <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300">
                       {product.title}
                     </h3>
 
@@ -216,7 +216,7 @@ const SalesSection = () => {
                         e.preventDefault();
                         handleAddToCart(e, product);
                       }}
-                      className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                      className="w-full inline-flex items-center justify-center px-4 py-2 md:py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                     >
                       <svg
                         className="w-5 h-5 mr-2"

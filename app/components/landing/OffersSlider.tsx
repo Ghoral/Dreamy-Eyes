@@ -31,7 +31,8 @@ const OffersSlider = () => {
 
   // Auto-scroll animation
   useEffect(() => {
-    if (!scrollContainerRef.current || offers.length === 0 || isPaused) return;
+    // Disable animation if only one offer or paused
+    if (!scrollContainerRef.current || offers.length <= 1 || isPaused) return;
 
     const scrollContainer = scrollContainerRef.current;
     let animationId: number;
@@ -80,8 +81,10 @@ const OffersSlider = () => {
     return null;
   }
 
-  // Duplicate offers for seamless loop
-  const duplicatedOffers = [...offers, ...offers];
+  // Only duplicate if we have more than 1 offer to enable seamless scrolling
+  // If we have 1 offer, we just center it
+  const duplicatedOffers = offers.length > 1 ? [...offers, ...offers] : offers;
+  const isSingleOffer = offers.length === 1;
 
   return (
     <section className="bg-gradient-to-r from-primary-50 to-secondary-50 py-8 border-y border-primary-100">
@@ -119,11 +122,11 @@ const OffersSlider = () => {
         {/* Offers Slider */}
         <div 
           ref={scrollContainerRef}
-          className="overflow-x-hidden pb-4"
+          className={`overflow-x-hidden pb-4 pt-4 ${isSingleOffer ? "flex justify-center" : ""}`}
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-          <div className="flex space-x-4 w-max">
+          <div className={`flex space-x-4 ${isSingleOffer ? "" : "w-max"}`}>
             {duplicatedOffers.map((offer, index) => {
               const isApplied =
                 cartState.selectedOffer?.id === offer.id;
@@ -255,9 +258,6 @@ const OffersSlider = () => {
 
         {/* Info Text */}
         <div className="text-center mt-2">
-          <p className="text-sm text-secondary-500">
-            Hover to pause • Auto-scrolling offers
-          </p>
         </div>
       </div>
     </section>
