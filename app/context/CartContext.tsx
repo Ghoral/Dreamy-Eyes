@@ -249,136 +249,135 @@ const calculateTotalPriceWithOffer = (
   return normalTotal + offerTotal;
 };
 
+// Helper function to add item to array handling duplicates
+const addItemToArray = (array: CartItem[], item: CartItem) => {
+  const existingIndex = array.findIndex(
+    (i) => i.id === item.id && i.color === item.color
+  );
+  if (existingIndex >= 0) {
+    array[existingIndex].quantity += item.quantity;
+  } else {
+    array.push({ ...item });
+  }
+};
+
+// Helper function to reorganize cart items based on offer rules
+const reorganizeCart = (
+  normalItems: CartItem[],
+  offerItems: CartItem[],
+  offer: Offer | null
+): { normalItems: CartItem[]; offerItems: CartItem[] } => {
+  // Merge all items first to get a clean state
+  const allItems = mergeItems(normalItems, offerItems);
+
+  if (!offer) {
+    return { normalItems: allItems, offerItems: [] };
+  }
+
+  const offerValue =
+    offer.value !== undefined && offer.value !== null ? Number(offer.value) : 0;
+  const offerQuantity =
+    offer.quantity !== undefined && offer.quantity !== null
+      ? Number(offer.quantity)
+      : 0;
+  
+  const totalCartItems = allItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // If offer is not active (threshold not met) or invalid, everything is normal
+  // Note: condition is total > offerValue because we need to buy X first
+  if (offerValue <= 0 || offerQuantity <= 0 || totalCartItems <= offerValue) {
+    return { normalItems: allItems, offerItems: [] };
+  }
+
+  const newNormalItems: CartItem[] = [];
+  const newOfferItems: CartItem[] = [];
+  let currentNormalQty = 0;
+  let currentOfferQty = 0;
+
+  // Distribute items
+  allItems.forEach((item) => {
+    let remaining = item.quantity;
+
+    // 1. Fill Buy Requirement (Normal)
+    if (currentNormalQty < offerValue) {
+      const needed = offerValue - currentNormalQty;
+      const take = Math.min(remaining, needed);
+      if (take > 0) {
+        addItemToArray(newNormalItems, { ...item, quantity: take });
+        currentNormalQty += take;
+        remaining -= take;
+      }
+    }
+
+    // 2. Fill Benefit (Offer)
+    if (remaining > 0 && currentOfferQty < offerQuantity) {
+      const space = offerQuantity - currentOfferQty;
+      const take = Math.min(remaining, space);
+      if (take > 0) {
+        addItemToArray(newOfferItems, { ...item, quantity: take });
+        currentOfferQty += take;
+        remaining -= take;
+      }
+    }
+
+    // 3. Overflow (Normal)
+    if (remaining > 0) {
+      addItemToArray(newNormalItems, { ...item, quantity: remaining });
+      currentNormalQty += remaining;
+    }
+  });
+
+  return { normalItems: newNormalItems, offerItems: newOfferItems };
+};
+
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
+      // Add item to normal items first, then reorganize
       let newNormalItems = [...state.normalItems];
       let newOfferItems = [...state.offerItems];
-      const offer = state.selectedOffer;
-
-      // Check if offer is active
-      const totalCartItems = getTotalCartItems(newNormalItems, newOfferItems);
-      const offerValue =
-        offer && offer.value !== undefined && offer.value !== null
-          ? Number(offer.value)
-          : 0;
-      const offerQuantity =
-        offer && offer.quantity !== undefined && offer.quantity !== null
-          ? Number(offer.quantity)
-          : 0;
-
-      const isActive = offerValue > 0 && totalCartItems > offerValue;
-      const totalNormalItemsQty = newNormalItems.reduce(
-        (sum, item) => sum + item.quantity,
-        0
+      
+      // Check if it exists in normal items
+      const normalIndex = newNormalItems.findIndex(
+        (item) => item.id === action.payload.id && item.color === action.payload.color
       );
-      const totalOfferItemsQty = getTotalOfferItemsQuantity(newOfferItems);
-
-      // Find if item exists in normalItems or offerItems
-      const normalItemIndex = newNormalItems.findIndex(
-        (item) =>
-          item.id === action.payload.id && item.color === action.payload.color
-      );
-      const offerItemIndex = newOfferItems.findIndex(
-        (item) =>
-          item.id === action.payload.id && item.color === action.payload.color
-      );
-
-      if (offer && offerQuantity > 0) {
-        // Check if offer is applied and conditions are met
-        // Condition 1: total quantity in cart >= value (offer is active)
-        // Condition 2: quantity in offer cart < offer quantity (still space in offerItems)
-        const quantityToAdd = action.payload.quantity;
-
-        // Check if we should add to offerItems
-        // Must have:
-        // 1. total quantity in cart >= value (offer is active)
-        // 2. normalItems has at least 'value' items (buy X first)
-        // 3. quantity in offer cart < offer quantity (still space in offerItems)
-        const shouldAddToOffer =
-          totalCartItems >= offerValue &&
-          totalNormalItemsQty >= offerValue &&
-          totalOfferItemsQty < offerQuantity;
-
-        if (shouldAddToOffer) {
-          // Add to offerItems (up to offer quantity limit)
-          const remainingOfferSpace = offerQuantity - totalOfferItemsQty;
-          const quantityForOffer = Math.min(quantityToAdd, remainingOfferSpace);
-          const quantityForNormal = quantityToAdd - quantityForOffer;
-
-          // Add to offerItems
-          if (quantityForOffer > 0) {
-            if (offerItemIndex >= 0) {
-              newOfferItems[offerItemIndex] = {
-                ...newOfferItems[offerItemIndex],
-                quantity:
-                  newOfferItems[offerItemIndex].quantity + quantityForOffer,
-              };
-            } else {
-              newOfferItems = [
-                ...newOfferItems,
-                { ...action.payload, quantity: quantityForOffer },
-              ];
-            }
-          }
-
-          // Add remaining to normalItems
-          if (quantityForNormal > 0) {
-            if (normalItemIndex >= 0) {
-              newNormalItems[normalItemIndex] = {
-                ...newNormalItems[normalItemIndex],
-                quantity:
-                  newNormalItems[normalItemIndex].quantity + quantityForNormal,
-              };
-            } else {
-              newNormalItems = [
-                ...newNormalItems,
-                { ...action.payload, quantity: quantityForNormal },
-              ];
-            }
-          }
-        } else {
-          // Add to normalItems (offer not active or offerItems is full)
-          if (normalItemIndex >= 0) {
-            newNormalItems[normalItemIndex] = {
-              ...newNormalItems[normalItemIndex],
-              quantity:
-                newNormalItems[normalItemIndex].quantity + quantityToAdd,
-            };
-          } else {
-            newNormalItems = [...newNormalItems, { ...action.payload }];
-          }
-        }
+      
+      if (normalIndex >= 0) {
+        newNormalItems[normalIndex] = {
+          ...newNormalItems[normalIndex],
+          quantity: newNormalItems[normalIndex].quantity + action.payload.quantity
+        };
       } else {
-        // Offer is not active, add to normalItems
-        if (normalItemIndex >= 0) {
-          // Update existing normal item
-          newNormalItems[normalItemIndex] = {
-            ...newNormalItems[normalItemIndex],
-            quantity:
-              newNormalItems[normalItemIndex].quantity +
-              action.payload.quantity,
-          };
+        // Check if it exists in offer items (to merge correctly before reorganize)
+        const offerIndex = newOfferItems.findIndex(
+           (item) => item.id === action.payload.id && item.color === action.payload.color
+        );
+        if (offerIndex >= 0) {
+             newOfferItems[offerIndex] = {
+                 ...newOfferItems[offerIndex],
+                 quantity: newOfferItems[offerIndex].quantity + action.payload.quantity
+             };
         } else {
-          // Add new item to normalItems
-          newNormalItems = [...newNormalItems, { ...action.payload }];
+             newNormalItems.push(action.payload);
         }
       }
 
-      // Merge items for backward compatibility
-      const mergedItems = mergeItems(newNormalItems, newOfferItems);
-      const totalItems = getTotalCartItems(newNormalItems, newOfferItems);
+      // Reorganize based on offer
+      const reorganized = reorganizeCart(newNormalItems, newOfferItems, state.selectedOffer || null);
+      
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
       const totalPrice = calculateTotalPriceWithOffer(
-        newNormalItems,
-        newOfferItems,
-        offer || null
+        reorganized.normalItems,
+        reorganized.offerItems,
+        state.selectedOffer || null
       );
 
       return {
         ...state,
         items: mergedItems,
-        normalItems: newNormalItems,
-        offerItems: newOfferItems,
+        normalItems: reorganized.normalItems,
+        offerItems: reorganized.offerItems,
         totalItems,
         itemCount: mergedItems.length,
         totalPrice,
@@ -386,63 +385,40 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
 
     case "REMOVE_ITEM": {
-      const offer = state.selectedOffer;
-
-      // If offer is active and user tries to remove item, clear the cart
-      if (offer) {
-        // Return cleared state - the callback will be handled in the component
-        return {
-          ...state,
-          items: [],
-          normalItems: [],
-          offerItems: [],
-          totalItems: 0,
-          itemCount: 0,
-          totalPrice: 0,
-          selectedOffer: null,
-          offerSelectedProducts: [],
-        };
-      }
-
-      // Normal removal logic when no offer is active
       let newNormalItems = [...state.normalItems];
       let newOfferItems = [...state.offerItems];
 
-      // Try to remove from normalItems first
-      const normalItemIndex = newNormalItems.findIndex(
-        (item) =>
-          item.id === action.payload.id && item.color === action.payload.color
+      // Remove from wherever it is
+      const normalIndex = newNormalItems.findIndex(
+        (item) => item.id === action.payload.id && item.color === action.payload.color
       );
-
-      if (normalItemIndex >= 0) {
-        newNormalItems = newNormalItems.filter(
-          (item, index) => index !== normalItemIndex
-        );
-      } else {
-        const offerItemIndex = newOfferItems.findIndex(
-          (item) =>
-            item.id === action.payload.id && item.color === action.payload.color
-        );
-        if (offerItemIndex >= 0) {
-          newOfferItems = newOfferItems.filter(
-            (item, index) => index !== offerItemIndex
-          );
-        }
+      if (normalIndex >= 0) {
+        newNormalItems = newNormalItems.filter((_, i) => i !== normalIndex);
+      }
+      
+      const offerIndex = newOfferItems.findIndex(
+        (item) => item.id === action.payload.id && item.color === action.payload.color
+      );
+      if (offerIndex >= 0) {
+        newOfferItems = newOfferItems.filter((_, i) => i !== offerIndex);
       }
 
-      const mergedItems = mergeItems(newNormalItems, newOfferItems);
-      const totalItems = getTotalCartItems(newNormalItems, newOfferItems);
+      // Reorganize
+      const reorganized = reorganizeCart(newNormalItems, newOfferItems, state.selectedOffer || null);
+      
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
       const totalPrice = calculateTotalPriceWithOffer(
-        newNormalItems,
-        newOfferItems,
-        offer || null
+        reorganized.normalItems,
+        reorganized.offerItems,
+        state.selectedOffer || null
       );
 
       return {
         ...state,
         items: mergedItems,
-        normalItems: newNormalItems,
-        offerItems: newOfferItems,
+        normalItems: reorganized.normalItems,
+        offerItems: reorganized.offerItems,
         totalItems,
         itemCount: mergedItems.length,
         totalPrice,
@@ -450,90 +426,47 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
 
     case "UPDATE_QUANTITY": {
-      const offer = state.selectedOffer;
+      let newNormalItems = [...state.normalItems];
+      let newOfferItems = [...state.offerItems];
+      const { id, color, quantity } = action.payload;
+      const newQty = Math.max(1, quantity);
 
-      // Find item in normalItems or offerItems
-      let item = state.normalItems.find(
-        (item) =>
-          item.id === action.payload.id && item.color === action.payload.color
+      // Find and update
+      const normalIndex = newNormalItems.findIndex(
+        (item) => item.id === id && item.color === color
       );
-      let isInOfferItems = false;
-
-      if (!item) {
-        item = state.offerItems.find(
-          (item) =>
-            item.id === action.payload.id && item.color === action.payload.color
-        );
-        isInOfferItems = true;
-      }
-
-      if (!item) return state;
-
-      let newQuantity = Math.max(1, action.payload.quantity); // Ensure minimum quantity is 1
-
-      // If there's a maxQuantity limit, respect it strictly
-      if (item.maxQuantity !== undefined) {
-        newQuantity = Math.min(newQuantity, item.maxQuantity);
-      }
-
-      // If offer is active and quantity is being decreased, clear the cart
-      if (offer && newQuantity < item.quantity) {
-        return {
-          ...state,
-          items: [],
-          normalItems: [],
-          offerItems: [],
-          totalItems: 0,
-          itemCount: 0,
-          totalPrice: 0,
-          selectedOffer: null,
-          offerSelectedProducts: [],
-        };
-      }
-
-      if (newQuantity <= 0) {
-        // Remove item if quantity is 0 or less - use REMOVE_ITEM logic
-        return cartReducer(state, {
-          type: "REMOVE_ITEM",
-          payload: { id: action.payload.id, color: action.payload.color },
-        });
-      }
-
-      // Update quantity in the appropriate array
-      let updatedNormalItems = [...state.normalItems];
-      let updatedOfferItems = [...state.offerItems];
-
-      if (isInOfferItems) {
-        updatedOfferItems = updatedOfferItems.map((item) =>
-          item.id === action.payload.id && item.color === action.payload.color
-            ? { ...item, quantity: newQuantity }
-            : item
-        );
+      
+      if (normalIndex >= 0) {
+          const item = newNormalItems[normalIndex];
+          const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
+          newNormalItems[normalIndex] = { ...item, quantity: finalQty };
       } else {
-        updatedNormalItems = updatedNormalItems.map((item) =>
-          item.id === action.payload.id && item.color === action.payload.color
-            ? { ...item, quantity: newQuantity }
-            : item
-        );
+          const offerIndex = newOfferItems.findIndex(
+            (item) => item.id === id && item.color === color
+          );
+          if (offerIndex >= 0) {
+              const item = newOfferItems[offerIndex];
+              const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
+              newOfferItems[offerIndex] = { ...item, quantity: finalQty };
+          }
       }
 
-      // Merge items for backward compatibility
-      const mergedItems = mergeItems(updatedNormalItems, updatedOfferItems);
-      const totalItems = getTotalCartItems(
-        updatedNormalItems,
-        updatedOfferItems
-      );
+      // Reorganize
+      const reorganized = reorganizeCart(newNormalItems, newOfferItems, state.selectedOffer || null);
+      
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
       const totalPrice = calculateTotalPriceWithOffer(
-        updatedNormalItems,
-        updatedOfferItems,
+        reorganized.normalItems,
+        reorganized.offerItems,
         state.selectedOffer || null
       );
 
       return {
         ...state,
         items: mergedItems,
-        normalItems: updatedNormalItems,
-        offerItems: updatedOfferItems,
+        normalItems: reorganized.normalItems,
+        offerItems: reorganized.offerItems,
         totalItems,
         itemCount: mergedItems.length,
         totalPrice,
@@ -614,140 +547,23 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "SET_OFFER": {
       const offer = action.payload.offer;
       const offerProducts = action.payload.selectedProducts || [];
-
-      // When setting an offer, reorganize items based on offer rules
-      let newNormalItems = [...state.normalItems];
-      let newOfferItems = [...state.offerItems];
-
-      // If clearing offer, move all offerItems back to normalItems
-      if (!offer) {
-        newOfferItems.forEach((offerItem) => {
-          const existingNormalIndex = newNormalItems.findIndex(
-            (item) => item.id === offerItem.id && item.color === offerItem.color
-          );
-
-          if (existingNormalIndex >= 0) {
-            newNormalItems[existingNormalIndex] = {
-              ...newNormalItems[existingNormalIndex],
-              quantity:
-                newNormalItems[existingNormalIndex].quantity +
-                offerItem.quantity,
-            };
-          } else {
-            newNormalItems = [...newNormalItems, { ...offerItem }];
-          }
-        });
-        newOfferItems = [];
-      } else {
-        // If setting an offer, check if it should be active and reorganize items
-        const totalCartItems = getTotalCartItems(newNormalItems, newOfferItems);
-        const offerValue =
-          offer.value !== undefined && offer.value !== null
-            ? Number(offer.value)
-            : 0;
-        const offerQuantity =
-          offer.quantity !== undefined && offer.quantity !== null
-            ? Number(offer.quantity)
-            : 0;
-
-        // If offer is active, reorganize items correctly
-        // First 'value' items go to normalItems (buy X)
-        // Next 'quantity' items go to offerItems (get Y free)
-        // Rest go to normalItems
-        if (
-          offerValue > 0 &&
-          totalCartItems > offerValue &&
-          offerQuantity > 0
-        ) {
-          // First, merge all items back to normalItems to start fresh
-          const allItems = mergeItems(newNormalItems, newOfferItems);
-          newNormalItems = [];
-          newOfferItems = [];
-
-          let normalItemsQuantity = 0;
-          let offerItemsQuantity = 0;
-
-          // Distribute items: first 'value' to normalItems, then 'quantity' to offerItems, rest to normalItems
-          allItems.forEach((item) => {
-            let remainingQuantity = item.quantity;
-
-            // First, fill normalItems up to 'value'
-            if (normalItemsQuantity < offerValue) {
-              const quantityForNormal = Math.min(
-                remainingQuantity,
-                offerValue - normalItemsQuantity
-              );
-              if (quantityForNormal > 0) {
-                const existingNormalIndex = newNormalItems.findIndex(
-                  (nItem) => nItem.id === item.id && nItem.color === item.color
-                );
-                if (existingNormalIndex >= 0) {
-                  newNormalItems[existingNormalIndex].quantity +=
-                    quantityForNormal;
-                } else {
-                  newNormalItems.push({ ...item, quantity: quantityForNormal });
-                }
-                normalItemsQuantity += quantityForNormal;
-                remainingQuantity -= quantityForNormal;
-              }
-            }
-
-            // Then, fill offerItems up to 'quantity' - ONLY after we have 'value' items in normalItems
-            if (
-              remainingQuantity > 0 &&
-              offerItemsQuantity < offerQuantity &&
-              normalItemsQuantity >= offerValue
-            ) {
-              const quantityForOffer = Math.min(
-                remainingQuantity,
-                offerQuantity - offerItemsQuantity
-              );
-              if (quantityForOffer > 0) {
-                const existingOfferIndex = newOfferItems.findIndex(
-                  (oItem) => oItem.id === item.id && oItem.color === item.color
-                );
-                if (existingOfferIndex >= 0) {
-                  newOfferItems[existingOfferIndex].quantity +=
-                    quantityForOffer;
-                } else {
-                  newOfferItems.push({ ...item, quantity: quantityForOffer });
-                }
-                offerItemsQuantity += quantityForOffer;
-                remainingQuantity -= quantityForOffer;
-              }
-            }
-
-            // Rest goes to normalItems
-            if (remainingQuantity > 0) {
-              const existingNormalIndex = newNormalItems.findIndex(
-                (nItem) => nItem.id === item.id && nItem.color === item.color
-              );
-              if (existingNormalIndex >= 0) {
-                newNormalItems[existingNormalIndex].quantity +=
-                  remainingQuantity;
-              } else {
-                newNormalItems.push({ ...item, quantity: remainingQuantity });
-              }
-              normalItemsQuantity += remainingQuantity;
-            }
-          });
-        }
-      }
-
-      // Merge items for backward compatibility
-      const mergedItems = mergeItems(newNormalItems, newOfferItems);
-      const totalItems = getTotalCartItems(newNormalItems, newOfferItems);
+      
+      // Use reorganizeCart to handle everything
+      const reorganized = reorganizeCart(state.normalItems, state.offerItems, offer);
+      
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
       const totalPrice = calculateTotalPriceWithOffer(
-        newNormalItems,
-        newOfferItems,
+        reorganized.normalItems,
+        reorganized.offerItems,
         offer || null
       );
 
       return {
         ...state,
         items: mergedItems,
-        normalItems: newNormalItems,
-        offerItems: newOfferItems,
+        normalItems: reorganized.normalItems,
+        offerItems: reorganized.offerItems,
         selectedOffer: offer,
         offerSelectedProducts: offerProducts,
         totalItems,

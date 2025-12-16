@@ -113,27 +113,7 @@ const OffersSlider = () => {
             </p>
           </div>
           
-          {/* Pause/Play Button */}
-          <button
-            onClick={() => setIsPaused(!isPaused)}
-            className="flex items-center space-x-2 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full border border-secondary-200 hover:border-primary-400 hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md group"
-          >
-            {isPaused ? (
-              <>
-                <svg className="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-                <span className="text-sm font-medium text-secondary-700">Play</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                </svg>
-                <span className="text-sm font-medium text-secondary-700">Pause</span>
-              </>
-            )}
-          </button>
+          {/* Pause/Play Button Removed */}
         </div>
 
         {/* Offers Slider */}

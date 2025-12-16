@@ -2,14 +2,18 @@
 
 import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import Image from "next/image";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "../../hooks/useUserCountry";
+import { get_products } from "@/app/api/product";
 
 const ProductItems = ({ data }: { data: any }) => {
   const { country } = useUserCountry();
+  const [productsData, setProductsData] = useState<any>(data);
+  const [isLoading, setIsLoading] = useState(false);
+  const isFirstRender = useRef(true);
   const [toastConfig, setToastConfig] = useState<{
     message: string;
     isVisible: boolean;
@@ -24,6 +28,42 @@ const ProductItems = ({ data }: { data: any }) => {
   const [powerMax, setPowerMax] = useState<string>("");
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
+  const normalizedData = useMemo(() => {
+    const targetData = productsData;
+    if (!targetData) return [];
+    if (Array.isArray(targetData)) return targetData;
+    if (targetData.products && Array.isArray(targetData.products)) return targetData.products;
+    if (targetData.data && Array.isArray(targetData.data)) return targetData.data;
+    return [];
+  }, [productsData]);
+
+  useEffect(() => {
+    const fetchFilteredProducts = async () => {
+      // Skip initial fetch as data is provided via props
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const tagsToSend =
+          selectedTag === "all"
+            ? ["sale", "latest_arrival", "top_seller", "best_reviewed"]
+            : [selectedTag];
+
+        const { data: newData } = await get_products(1000, 0, tagsToSend);
+        setProductsData(newData);
+      } catch (error) {
+        console.error("Error fetching filtered products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFilteredProducts();
+  }, [selectedTag]);
 
   const handleProductClick = (product: any) => {
     const productId = product.id || product.title;
@@ -57,8 +97,8 @@ const ProductItems = ({ data }: { data: any }) => {
 
   const availableColors = useMemo(() => {
     const colorSet = new Set<string>();
-    if (!data) return [];
-    data.forEach((product: any) => {
+    if (!normalizedData) return [];
+    normalizedData.forEach((product: any) => {
       if (product.color_quantity && Array.isArray(product.color_quantity)) {
         product.color_quantity.forEach((cq: any) => {
           if (cq?.label) {
@@ -68,28 +108,18 @@ const ProductItems = ({ data }: { data: any }) => {
       }
     });
     return Array.from(colorSet).sort();
-  }, [data]);
+  }, [normalizedData]);
 
-  const availableTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    if (!data) return [];
-    data.forEach((product: any) => {
-      const t = product?.tags;
-      if (!t) return;
-      if (Array.isArray(t)) {
-        t.forEach((x: any) => {
-          if (x) tagSet.add(String(x));
-        });
-      } else {
-        tagSet.add(String(t));
-      }
-    });
-    return Array.from(tagSet).sort();
-  }, [data]);
+  const availableTags = [
+    { label: "Sale", value: "sale" },
+    { label: "Latest Arrival", value: "latest_arrival" },
+    { label: "Top Seller", value: "top_seller" },
+    { label: "Best Reviewed", value: "best_reviewed" },
+  ];
 
   const filteredProducts = useMemo(() => {
-    if (!data) return [];
-    let filtered = [...data];
+    if (!normalizedData) return [];
+    let filtered = [...normalizedData];
 
     if (selectedColor !== "all") {
       filtered = filtered.filter((product) => {
@@ -127,6 +157,9 @@ const ProductItems = ({ data }: { data: any }) => {
     }
 
     if (selectedTag !== "all") {
+      // API now handles tag filtering, but we keep this as a safety check
+      // or in case the API returns a superset.
+      // If API returns exact matches, this is redundant but harmless.
       filtered = filtered.filter((product) => {
         const t = product?.tags;
         if (!t) return false;
@@ -136,7 +169,7 @@ const ProductItems = ({ data }: { data: any }) => {
     }
 
     return filtered;
-  }, [data, selectedColor, priceMin, priceMax, powerMin, powerMax, selectedTag]);
+  }, [normalizedData, selectedColor, priceMin, priceMax, powerMin, powerMax, selectedTag]);
 
   return (
     <section id="products-section" className="w-full py-20 bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 relative overflow-hidden">
@@ -210,7 +243,7 @@ const ProductItems = ({ data }: { data: any }) => {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+        <div className={`grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
           {filteredProducts?.map((product: any, index: number) => {
             const imageUrl = getThumbnailUrl(product);
             const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
@@ -255,7 +288,7 @@ const ProductItems = ({ data }: { data: any }) => {
 
                   {/* Tag Badge */}
                   {product.tags && (
-                    <div className="absolute top-3 left-3">
+                    <div className="absolute bottom-3 left-3">
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-gradient-to-r from-primary-500 to-primary-600 shadow-md">
                         {typeof product.tags === "string" ? product.tags : Array.isArray(product.tags) ? product.tags[0] : ""}
                       </span>
@@ -427,8 +460,8 @@ const ProductItems = ({ data }: { data: any }) => {
                   >
                     <option value="all">All</option>
                     {availableTags.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
+                      <option key={t.value} value={t.value}>
+                        {t.label}
                       </option>
                     ))}
                   </select>

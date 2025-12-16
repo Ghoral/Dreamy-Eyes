@@ -1,7 +1,6 @@
 "use client";
 
 import { InstagramEmbed } from "react-social-media-embed";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { get_app_details } from "@/app/api/product";
 
@@ -25,6 +24,13 @@ const TikTokCarousel = () => {
 
     fetchAppDetails();
   }, []);
+
+  const scrollToProducts = () => {
+    const productsSection = document.getElementById("products-section");
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   if (loading) {
     return (
@@ -179,8 +185,8 @@ const TikTokCarousel = () => {
                 Follow Us on Instagram
               </a>
 
-              <Link
-                href="/shop"
+              <button
+                onClick={scrollToProducts}
                 className="w-full flex items-center justify-center px-8 py-4 bg-white border-2 border-primary-300 text-primary-600 hover:bg-primary-50 hover:border-primary-400 font-semibold rounded-2xl transition-all duration-300"
               >
                 <svg
@@ -197,8 +203,9 @@ const TikTokCarousel = () => {
                   />
                 </svg>
                 Shop Fashion Lenses
-              </Link>
+              </button>
             </div>
+
           </div>
 
           {/* Right Column - TikTok Embed */}

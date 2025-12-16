@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { get_products } from "@/app/api/product";
-import { get_sales } from "@/app/api/sales";
 import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
@@ -43,9 +42,17 @@ const SalesSection = () => {
     let mounted = true;
     const fetchData = async () => {
       setLoading(true);
-      const res = await get_sales(6, 0);
+      const res = await get_products(6, 0, ["sale"]);
       if (mounted && res?.status && res?.data) {
-        setSalesData(res.data);
+        let products = [];
+        if (Array.isArray(res.data)) {
+          products = res.data;
+        } else if (res.data.products && Array.isArray(res.data.products)) {
+          products = res.data.products;
+        } else if (res.data.data && Array.isArray(res.data.data)) {
+          products = res.data.data;
+        }
+        setSalesData(products);
       }
       setLoading(false);
     };
@@ -92,7 +99,7 @@ const SalesSection = () => {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-bold rounded-full mb-4 animate-pulse">
+          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white text-sm font-bold rounded-full mb-6 shadow-sm animate-pulse">
             <svg
               className="w-4 h-4 mr-2"
               fill="none"
@@ -103,17 +110,16 @@ const SalesSection = () => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.932-7.132A8 8 0 0117.657 18.657zM15 5.341A7.99 7.99 0 0117.385 7c0-2.435-.818-4.138-1.385-5.341.567 1.203 1.385 2.906 1.385 5.341z"
               />
             </svg>
-            Special Offers
+            HOT SALES
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6">
-            🔥 On Sale Now
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-secondary-900 mb-6 tracking-tight">
+            Unlock <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-600">Exclusive</span> Deals
           </h2>
-          <p className="text-xl text-secondary-600 max-w-3xl mx-auto leading-relaxed">
-            Don&apos;t miss out on these amazing deals! Limited time offers on our
-            best products.
+          <p className="text-lg md:text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed font-medium">
+            Discover unbeatable prices on our top-rated lenses. Limited time offers you don't want to miss!
           </p>
         </div>
 
@@ -181,6 +187,15 @@ const SalesSection = () => {
                         </svg>
                       </button>
                     </div>
+
+                    {/* Tags */}
+                    {product.tags && (Array.isArray(product.tags) ? product.tags.length > 0 : product.tags) && (
+                      <div className="absolute bottom-4 left-4">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-black/50 text-white backdrop-blur-sm border border-white/20">
+                          {Array.isArray(product.tags) ? product.tags[0] : product.tags}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Product Info */}

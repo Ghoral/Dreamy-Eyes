@@ -115,7 +115,27 @@ export async function get_products(
   offset: number = 0,
   tags: string[] = []
 ) {
-  const type = tags.length > 0 ? tags[0] : "all";
-  const page = Math.floor(offset / limit) + 1;
-  return get_products_by_type(type, page, limit);
+  const { data, error } = await supabaseBrowserClient.rpc("get_products", {
+    limit_value: limit,
+    offset_value: offset,
+    tags: tags.length > 0 ? tags : null,
+  });
+
+  if (error) {
+    return {
+      data: null,
+      message: "Failed to fetch products",
+      status: false,
+      statusCode: 400,
+      error: error.details,
+    };
+  }
+
+  return {
+    data: data,
+    message: "Products fetched successfully.",
+    status: true,
+    statusCode: 200,
+    error: null,
+  };
 }
