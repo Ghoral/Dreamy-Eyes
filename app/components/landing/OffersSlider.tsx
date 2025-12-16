@@ -87,11 +87,11 @@ const OffersSlider = () => {
     <section className="bg-gradient-to-r from-primary-50 to-secondary-50 py-8 border-y border-primary-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="bg-primary-500 p-2 rounded-lg">
+        <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6 relative z-10">
+          <div className="flex-1 text-center md:text-left">
+            <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm border border-primary-200 text-primary-700 text-sm font-bold rounded-full mb-6 shadow-sm animate-fade-in-up">
               <svg
-                className="w-6 h-6 text-white"
+                className="w-4 h-4 mr-2 text-primary-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -103,16 +103,20 @@ const OffersSlider = () => {
                   d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
                 />
               </svg>
+              LIMITED TIME OFFERS
             </div>
-            <h2 className="text-2xl font-bold text-secondary-800">
-              Available Offers
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-secondary-900 mb-6 tracking-tight">
+              Unlock <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-primary-700">Exclusive</span> Savings
             </h2>
+            <p className="text-lg md:text-xl text-secondary-600 max-w-2xl leading-relaxed font-medium">
+              Discover unbeatable deals on our premium lenses. Grab your favorites before they're gone!
+            </p>
           </div>
           
           {/* Pause/Play Button */}
           <button
             onClick={() => setIsPaused(!isPaused)}
-            className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg border border-primary-200 hover:border-primary-400 transition-colors"
+            className="flex items-center space-x-2 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full border border-secondary-200 hover:border-primary-400 hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md group"
           >
             {isPaused ? (
               <>

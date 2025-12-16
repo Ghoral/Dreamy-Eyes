@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { get_products } from "@/app/api/product";
 import { get_sales } from "@/app/api/sales";
 import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
 import { useCart } from "@/app/context/CartContext";
+import Link from "next/link";
 import Toast from "../ui/Toast";
 
 type Product = {
@@ -60,32 +62,10 @@ const SalesSection = () => {
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
-
-    let maxQuantity = 1;
-    if (product.color_quantity && Array.isArray(product.color_quantity) && product.color_quantity.length > 0) {
-      maxQuantity = parseInt(product.color_quantity[0].quantity as string) || 1;
-    }
-
-    const currentPrice =
-      typeof product.price === "number"
-        ? product.price
-        : parseFloat(product.price as string);
-
-    addItem({
-      id: product.id || product.title,
-      title: product.title,
-      description: product.description,
-      price: currentPrice,
-      quantity: 1,
-      image: getThumbnailUrl(product) || undefined,
-      primary_thumbnail: product.primary_thumbnail || undefined,
-      maxQuantity: maxQuantity,
-    });
-
-    setToastConfig({
-      message: `${product.title} added to cart!`,
-      isVisible: true,
-    });
+    
+    // Navigate to product detail page instead of adding to cart immediately
+    const productId = product.id || product.title;
+    router.push(`/${encodeURIComponent(productId)}`);
   };
 
   const scrollToProducts = () => {
@@ -138,35 +118,93 @@ const SalesSection = () => {
         </div>
 
         {/* Sales Products Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+        <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8">
           {salesData.map((product, index) => {
             const imageUrl = getThumbnailUrl(product);
             const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
 
             return (
-              <div 
-                key={product.id || index} 
-                className="group relative bg-white rounded-xl overflow-hidden border border-red-100 hover:border-red-300 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                onClick={() => handleProductClick(product)}
+              <div
+                key={product.id || index}
+                className="group relative bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden w-[calc(100%-1rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.67rem)] lg:w-[calc(25%-0.75rem)] max-w-sm"
               >
-                {/* Image Container */}
-                <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-red-50 to-orange-50">
-                  {imageUrl ? (
-                    <>
-                      <Image
-                        src={imageUrl}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        alt={product.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                      />
-                      {/* Subtle gradient overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
+                <Link href={`/${product.id || product.title}`} className="block h-full">
+                  {/* Image Container */}
+                  <div className="relative aspect-square bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
+                    {imageUrl ? (
+                      <>
+                        <Image
+                          src={imageUrl}
+                          alt={product.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        {/* Subtle gradient overlay on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <svg
+                          className="w-12 h-12 text-gray-300"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* SALE Badge */}
+                    <div className="absolute top-4 left-4">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary-500 text-white shadow-md animate-pulse">
+                        SALE
+                      </span>
+                    </div>
+
+                    {/* Wishlist Icon */}
+                    <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <button 
+                        className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-md transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                      >
+                        <svg className="w-4 h-4 text-gray-600 hover:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Product Info */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
+                      {product.title}
+                    </h3>
+
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-2xl font-bold text-primary-600">
+                        {formatPriceWithCurrency(currentPrice, country)}
+                      </span>
+                    </div>
+
+                    {/* Add to Cart Button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleAddToCart(e, product);
+                      }}
+                      className="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                    >
                       <svg
-                        className="w-12 h-12 text-gray-300"
+                        className="w-5 h-5 mr-2"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -174,69 +212,14 @@ const SalesSection = () => {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          strokeWidth={2}
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
                         />
                       </svg>
-                    </div>
-                  )}
-
-                  {/* SALE Badge */}
-                  <div className="absolute top-3 left-3">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-gradient-to-r from-red-500 to-orange-500 shadow-md animate-pulse">
-                      SALE
-                    </span>
-                  </div>
-
-                  {/* Wishlist Icon */}
-                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <button 
-                      className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-md transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <svg className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
+                      Add to Cart
                     </button>
                   </div>
-                </div>
-
-                {/* Product Info */}
-                <div className="p-4">
-                  <h3 className="text-sm font-semibold text-secondary-800 mb-3 line-clamp-2 min-h-[2.5rem] group-hover:text-red-600 transition-colors">
-                    {product.title}
-                  </h3>
-
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-500 bg-clip-text text-transparent">
-                      {formatPriceWithCurrency(currentPrice, country)}
-                    </span>
-                  </div>
-
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={(e) => handleAddToCart(e, product)}
-                    className="w-full flex items-center justify-center bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-1.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                      />
-                    </svg>
-                    Add to Cart
-                  </button>
-                </div>
-
-                {/* Accent line at bottom */}
-                <div className="h-1 bg-gradient-to-r from-red-500 to-orange-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                </Link>
               </div>
             );
           })}
