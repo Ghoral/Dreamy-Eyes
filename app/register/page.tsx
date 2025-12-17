@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
 import { PhoneNumberUtil, PhoneNumberType } from "google-libphonenumber";
+import { useUserCountry } from "../hooks/useUserCountry";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -22,6 +23,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
   const router = useRouter();
+  const { country: ipCountry } = useUserCountry();
+  const [invalidDomains, setInvalidDomains] = useState<string[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -32,124 +35,63 @@ export default function RegisterPage() {
     setError(""); // Clear error when user types
   };
 
+  useEffect(() => {
+    if (!ipCountry) return;
+    const detected =
+      ipCountry.toLowerCase() === "india" ? "India" : "Nepal";
+    setFormData((prev) => ({
+      ...prev,
+      country: detected,
+      phone: detected === "India" ? "+91 " : "+977 ",
+    }));
+  }, [ipCountry]);
+
+  useEffect(() => {
+    const loadInvalidDomains = async () => {
+      try {
+        const res = await fetch("/invalid-domains");
+        if (!res.ok) return;
+        const text = await res.text();
+        const list = text
+          .split("\n")
+          .map((d) => d.trim().toLowerCase())
+          .filter((d) => d.length > 0 && !d.startsWith("#"));
+        setInvalidDomains(list);
+      } catch {}
+    };
+    loadInvalidDomains();
+  }, []);
+
   // Auto-detect country from phone number and format with country code
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhoneTouched(true); // Mark as touched when user starts typing
-    let phoneValue = e.target.value;
-    const cleanedPhone = phoneValue.replace(/\D/g, ''); // Remove non-digits
-    
+    const inputValue = e.target.value;
+    const digitsOnly = inputValue.replace(/\D/g, "");
+
     setFormData((prev) => {
-      let country = prev.country;
-      
-      // Auto-detect country based on phone number
-      // India: starts with +91 or 91
-      // Nepal: starts with +977 or 977
-      if (cleanedPhone.startsWith('91')) {
-        country = "India";
-        // Format: +91 XXXXXXXXXX (remove leading 91 if present and add +91)
-        if (cleanedPhone.length > 2) {
-          const numberWithoutCode = cleanedPhone.substring(2);
-          // India: first digit must be 6, 7, 8, or 9
-          if (numberWithoutCode.length > 0 && numberWithoutCode[0] >= '6' && numberWithoutCode[0] <= '9') {
-            if (numberWithoutCode.length <= 10) {
-              phoneValue = `+91 ${numberWithoutCode}`;
-            } else {
-              phoneValue = `+91 ${numberWithoutCode.substring(0, 10)}`;
-            }
-          } else if (numberWithoutCode.length === 0) {
-            phoneValue = '+91 ';
-          } else {
-            // Invalid first digit, don't update
-            return prev;
-          }
-        } else if (cleanedPhone.length === 2) {
-          phoneValue = '+91 ';
-        }
-      } else if (cleanedPhone.startsWith('977')) {
-        country = "Nepal";
-        // Format: +977 XXXXXXXXX (remove leading 977 if present and add +977)
-        if (cleanedPhone.length > 3) {
-          const numberWithoutCode = cleanedPhone.substring(3);
-          // Nepal: first digit should be 9 or 8
-          if (numberWithoutCode.length > 0 && (numberWithoutCode[0] === '9' || numberWithoutCode[0] === '8')) {
-            if (numberWithoutCode.length <= 10) {
-              phoneValue = `+977 ${numberWithoutCode}`;
-            } else {
-              phoneValue = `+977 ${numberWithoutCode.substring(0, 10)}`;
-            }
-          } else if (numberWithoutCode.length === 0) {
-            phoneValue = '+977 ';
-          } else {
-            // Invalid first digit, don't update
-            return prev;
-          }
-        } else if (cleanedPhone.length === 3) {
-          phoneValue = '+977 ';
-        }
-      } else if (phoneValue.startsWith('+')) {
-        // If starts with + but not +91 or +977, keep as is
-        // But if country is selected, format accordingly
-        if (country === "India" && !phoneValue.startsWith('+91')) {
-          // Remove + and format with +91
-          const numberWithoutPlus = cleanedPhone;
-          if (numberWithoutPlus.length > 0 && numberWithoutPlus[0] >= '6' && numberWithoutPlus[0] <= '9') {
-            if (numberWithoutPlus.length <= 10) {
-              phoneValue = `+91 ${numberWithoutPlus}`;
-            } else {
-              phoneValue = `+91 ${numberWithoutPlus.substring(0, 10)}`;
-            }
-          } else {
-            return prev;
-          }
-        } else if (country === "Nepal" && !phoneValue.startsWith('+977')) {
-          // Remove + and format with +977
-          const numberWithoutPlus = cleanedPhone;
-          if (numberWithoutPlus.length > 0 && (numberWithoutPlus[0] === '9' || numberWithoutPlus[0] === '8')) {
-            if (numberWithoutPlus.length <= 10) {
-              phoneValue = `+977 ${numberWithoutPlus}`;
-            } else {
-              phoneValue = `+977 ${numberWithoutPlus.substring(0, 10)}`;
-            }
-          } else {
-            return prev;
-          }
-        }
-      } else if (cleanedPhone.length > 0) {
-        // If no country code, add based on selected country
-        if (country === "India") {
-          // India: first digit must be 6, 7, 8, or 9
-          if (cleanedPhone[0] >= '6' && cleanedPhone[0] <= '9') {
-            if (cleanedPhone.length <= 10) {
-              phoneValue = `+91 ${cleanedPhone}`;
-            } else {
-              phoneValue = `+91 ${cleanedPhone.substring(0, 10)}`;
-            }
-          } else {
-            // Invalid first digit, don't update
-            return prev;
-          }
-        } else if (country === "Nepal") {
-          // Nepal: first digit should be 9 or 8
-          if (cleanedPhone[0] === '9' || cleanedPhone[0] === '8') {
-            if (cleanedPhone.length <= 10) {
-              phoneValue = `+977 ${cleanedPhone}`;
-            } else {
-              phoneValue = `+977 ${cleanedPhone.substring(0, 10)}`;
-            }
-          } else {
-            // Invalid first digit, don't update
-            return prev;
-          }
-        }
+      const isIndia = prev.country === "India";
+      const prefix = isIndia ? "+91 " : "+977 ";
+      const countryCode = isIndia ? "91" : "977";
+      let numberDigits = digitsOnly;
+      if (numberDigits.startsWith(countryCode)) {
+        numberDigits = numberDigits.slice(countryCode.length);
       }
-      
+      numberDigits = numberDigits.slice(0, 10);
+      const formatted = prefix + numberDigits;
       return {
         ...prev,
-        phone: phoneValue,
-        country,
+        phone: formatted,
       };
     });
     setError("");
+  };
+
+  const isEmailDomainAllowed = (email: string) => {
+    const domain = email.split("@")[1]?.toLowerCase() || "";
+    if (!domain) return false;
+    return !invalidDomains.some(
+      (bad) => domain === bad || domain.endsWith("." + bad)
+    );
   };
 
   // Handle country change - update phone number with new country code
@@ -286,6 +228,10 @@ export default function RegisterPage() {
     }
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       setError("Please enter a valid email address");
+      return false;
+    }
+    if (!isEmailDomainAllowed(formData.email)) {
+      setError("Email domain is not allowed");
       return false;
     }
     if (!formData.password || formData.password.length < 6) {
@@ -517,7 +463,8 @@ export default function RegisterPage() {
                         name="country"
                         value={formData.country}
                         onChange={handleCountryChange}
-                        className="w-32 pl-4 pr-8 py-4 border border-secondary-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none cursor-pointer"
+                        disabled
+                        className="w-32 pl-4 pr-8 py-4 border border-secondary-200 rounded-2xl bg-white/80 backdrop-blur-sm appearance-none cursor-not-allowed opacity-60"
                       >
                         <option value="Nepal">🇳🇵 +977</option>
                         <option value="India">🇮🇳 +91</option>

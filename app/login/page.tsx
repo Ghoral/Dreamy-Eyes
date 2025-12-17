@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const [invalidDomains, setInvalidDomains] = useState<string[]>([]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -24,8 +25,40 @@ export default function LoginPage() {
     setError(""); // Clear error when user types
   };
 
+  useEffect(() => {
+    const loadInvalidDomains = async () => {
+      try {
+        const res = await fetch("/invalid-domains");
+        if (!res.ok) return;
+        const text = await res.text();
+        const list = text
+          .split("\n")
+          .map((d) => d.trim().toLowerCase())
+          .filter((d) => d.length > 0 && !d.startsWith("#"));
+        setInvalidDomains(list);
+      } catch {}
+    };
+    loadInvalidDomains();
+  }, []);
+
+  const isEmailDomainAllowed = (email: string) => {
+    const domain = email.split("@")[1]?.toLowerCase() || "";
+    if (!domain) return false;
+    return !invalidDomains.some(
+      (bad) => domain === bad || domain.endsWith("." + bad)
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (!isEmailDomainAllowed(formData.email)) {
+      setError("Email domain is not allowed");
+      return;
+    }
     setIsLoading(true);
     setError("");
 
