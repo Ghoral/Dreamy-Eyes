@@ -183,8 +183,35 @@ const ProductCard = ({ product }: { product: Product }) => {
   const { addItem } = useCart();
   const router = require("next/navigation").useRouter();
 
+  const getProductLink = () => {
+    const tags = product.tags;
+    const subTitle = product.sub_title;
+    let isSale = false;
+
+    // Check tags
+    if (Array.isArray(tags)) {
+      isSale = tags.some((t) => String(t).toLowerCase().includes("sale"));
+    } else if (typeof tags === "string") {
+      isSale = tags.toLowerCase().includes("sale");
+    }
+
+    // Fallback: Check sub_title for "sale" keyword
+    if (!isSale && typeof subTitle === "string") {
+      isSale = subTitle.toLowerCase().includes("sale");
+    }
+
+    // Additional fallback: Check for sale indicators in price or discount
+    if (!isSale && (product.discount_percentage || product.sale_price || product.original_price)) {
+      isSale = true;
+    }
+
+    return isSale
+      ? `/sale/${encodeURIComponent(product.id)}`
+      : `/${encodeURIComponent(product.id)}`;
+  };
+
   const handleProductClick = () => {
-    router.push(`/${encodeURIComponent(product.id)}`);
+    router.push(getProductLink());
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {

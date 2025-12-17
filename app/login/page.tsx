@@ -31,19 +31,32 @@ export default function LoginPage() {
         const res = await fetch("/invalid-domains");
         if (!res.ok) return;
         const text = await res.text();
+        // Check if response is HTML (e.g. 404 page)
+        if (text.trim().toLowerCase().startsWith("<!doctype html") || text.includes("<html")) {
+          console.warn("Invalid domains file returned HTML, ignoring.");
+          return;
+        }
         const list = text
           .split("\n")
           .map((d) => d.trim().toLowerCase())
-          .filter((d) => d.length > 0 && !d.startsWith("#"));
+          .filter((d) => d.length > 0 && !d.startsWith("#") && !d.includes(" ") && d.includes("."));
+        console.log(`Loaded ${list.length} invalid domains`);
         setInvalidDomains(list);
-      } catch {}
+      } catch (e) {
+        console.error("Failed to load invalid domains:", e);
+      }
     };
     loadInvalidDomains();
   }, []);
 
   const isEmailDomainAllowed = (email: string) => {
-    const domain = email.split("@")[1]?.toLowerCase() || "";
+    const domain = email.trim().split("@")[1]?.toLowerCase() || "";
     if (!domain) return false;
+
+    // Explicitly allow common trusted domains to prevent false positives
+    const whitelist = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com"];
+    if (whitelist.includes(domain)) return true;
+
     return !invalidDomains.some(
       (bad) => domain === bad || domain.endsWith("." + bad)
     );
@@ -51,11 +64,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    const email = formData.email.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address");
       return;
     }
-    if (!isEmailDomainAllowed(formData.email)) {
+    if (!isEmailDomainAllowed(email)) {
       setError("Email domain is not allowed");
       return;
     }
@@ -65,7 +79,7 @@ export default function LoginPage() {
     try {
       const supabase = createSupabaseClient();
       const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+        email: email,
         password: formData.password,
       });
 

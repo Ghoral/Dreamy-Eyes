@@ -52,12 +52,20 @@ export default function RegisterPage() {
         const res = await fetch("/invalid-domains");
         if (!res.ok) return;
         const text = await res.text();
+        // Check if response is HTML (e.g. 404 page)
+        if (text.trim().toLowerCase().startsWith("<!doctype html") || text.includes("<html")) {
+          console.warn("Invalid domains file returned HTML, ignoring.");
+          return;
+        }
         const list = text
           .split("\n")
           .map((d) => d.trim().toLowerCase())
-          .filter((d) => d.length > 0 && !d.startsWith("#"));
+          .filter((d) => d.length > 0 && !d.startsWith("#") && !d.includes(" ") && d.includes("."));
+        console.log(`Loaded ${list.length} invalid domains`);
         setInvalidDomains(list);
-      } catch {}
+      } catch (e) {
+        console.error("Failed to load invalid domains:", e);
+      }
     };
     loadInvalidDomains();
   }, []);
@@ -87,8 +95,13 @@ export default function RegisterPage() {
   };
 
   const isEmailDomainAllowed = (email: string) => {
-    const domain = email.split("@")[1]?.toLowerCase() || "";
+    const domain = email.trim().split("@")[1]?.toLowerCase() || "";
     if (!domain) return false;
+
+    // Explicitly allow common trusted domains to prevent false positives
+    const whitelist = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com"];
+    if (whitelist.includes(domain)) return true;
+
     return !invalidDomains.some(
       (bad) => domain === bad || domain.endsWith("." + bad)
     );

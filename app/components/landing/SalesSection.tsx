@@ -64,7 +64,7 @@ const SalesSection = () => {
 
   const handleProductClick = (product: Product) => {
     const productId = product.id || product.title;
-    router.push(`/${encodeURIComponent(productId)}`);
+    router.push(`/sale/${encodeURIComponent(productId)}`);
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
@@ -72,7 +72,7 @@ const SalesSection = () => {
     
     // Navigate to product detail page instead of adding to cart immediately
     const productId = product.id || product.title;
-    router.push(`/${encodeURIComponent(productId)}`);
+    router.push(`/sale/${encodeURIComponent(productId)}`);
   };
 
   const scrollToProducts = () => {
@@ -134,7 +134,7 @@ const SalesSection = () => {
                 key={product.id || index}
                 className="group relative bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden w-[calc(100%-1rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.67rem)] lg:w-[calc(25%-0.75rem)] max-w-sm"
               >
-                <Link href={`/${product.id || product.title}`} className="block h-full">
+                <Link href={`/sale/${product.id || product.title}`} className="block h-full">
                   {/* Image Container */}
                   <div className="relative aspect-square bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
                     {imageUrl ? (

@@ -65,17 +65,43 @@ const ProductItems = ({ data }: { data: any }) => {
     fetchFilteredProducts();
   }, [selectedTag]);
 
-  const handleProductClick = (product: any) => {
+  const getProductLink = (product: any) => {
     const productId = product.id || product.title;
-    router.push(`/${encodeURIComponent(productId)}`);
+    const tags = product.tags;
+    const subTitle = product.sub_title;
+    let isSale = false;
+
+    // Check tags
+    if (Array.isArray(tags)) {
+      isSale = tags.some((t) => String(t).toLowerCase().includes("sale"));
+    } else if (typeof tags === "string") {
+      isSale = tags.toLowerCase().includes("sale");
+    }
+
+    // Fallback: Check sub_title for "sale" keyword
+    if (!isSale && typeof subTitle === "string") {
+      isSale = subTitle.toLowerCase().includes("sale");
+    }
+    
+    // Additional fallback: Check for sale indicators in price or discount
+    if (!isSale && (product.discount_percentage || product.sale_price || product.original_price)) {
+      isSale = true;
+    }
+
+    return isSale
+      ? `/sale/${encodeURIComponent(productId)}`
+      : `/${encodeURIComponent(productId)}`;
+  };
+
+  const handleProductClick = (product: any) => {
+    router.push(getProductLink(product));
   };
 
   const handleAddToCart = (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
 
     // Navigate to product detail page instead of adding to cart immediately
-    const productId = product.id || product.title;
-    router.push(`/${encodeURIComponent(productId)}`);
+    router.push(getProductLink(product));
   };
 
   const availableColors = useMemo(() => {
