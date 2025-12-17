@@ -14,6 +14,7 @@ import {
   calculatePriceSync,
   formatPrice,
   calculateTotalPrice,
+  fetchExchangeRate,
 } from "../util";
 import { useOfferStore } from "../store/offerStore";
 import ModalOffers from "../components/modals/ModalOffers";
@@ -366,22 +367,31 @@ export default function CheckoutPage() {
 
       // Prepare offer data (ready for backend support)
       const offerId = cartState.selectedOffer?.id || null;
-      const offerProducts = cartState.offerSelectedProducts || [];
+      const offerProducts =
+        cartState.offerItems || cartState.offerSelectedProducts || [];
 
       // Create order
       // TODO: When backend supports offers, uncomment p_offer_id and p_offer_products
+      const countryParam = (country || "nepal").toLowerCase();
+      const conversionRate =
+        countryParam === "india" ? await fetchExchangeRate() : 1;
+      const payload = {
+        p_address_id: selectedAddressId,
+        p_order_number: order_number,
+        p_items: cartState.items,
+        p_payment_method: paymentMethod,
+        p_transaction_id:
+          paymentMethod === "pre_payment" ? transactionId : null,
+        p_payment_url: paymentUrl,
+        p_country: countryParam,
+        p_conversion_rate: conversionRate,
+        p_offer_id: offerId,
+        p_offer_products:
+          offerProducts && offerProducts.length > 0 ? offerProducts : null,
+      };
+      console.log("Order RPC payload:", payload);
       const { data: orderData, error: orderError } =
-        await supabaseBrowserClient.rpc("create_orders_and_update_stock", {
-          p_address_id: selectedAddressId,
-          p_order_number: order_number,
-          p_items: cartState.items,
-          p_payment_method: paymentMethod,
-          p_transaction_id:
-            paymentMethod === "pre_payment" ? transactionId : null,
-          p_payment_url: paymentUrl,
-          // p_offer_id: offerId,
-          // p_offer_products: offerProducts.length > 0 ? offerProducts : null,
-        });
+        await supabaseBrowserClient.rpc("create_orders_and_update_stock", payload);
 
       if (orderError) {
         const errorMessage =
@@ -747,7 +757,7 @@ export default function CheckoutPage() {
                           </span>
                         </div>
                         <p className="text-secondary-600 text-sm mb-4">
-                          Pay in advance. Delivery charge of $
+                          Pay in advance. Delivery charge of 
                           {formatPrice(
                             calculatePriceSync(deliveryCharge, country),
                             country
@@ -1034,7 +1044,8 @@ export default function CheckoutPage() {
                               </div>
                             )}
                             <div className="text-sm text-secondary-500 mb-1">
-                              Qty: {item.quantity} × ${item.price}
+                              Qty: {item.quantity} ×{" "}
+                              {formatPriceWithCurrency(item.price, country)}
                             </div>
                             {item.maxQuantity && (
                               <div className="text-sm text-secondary-500">
