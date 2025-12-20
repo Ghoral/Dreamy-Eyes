@@ -32,6 +32,10 @@ const OfferBanner = () => {
   const selectedOffer = cartState.selectedOffer;
   const isOfferApplied = !!selectedOffer;
   const offerSelectedProducts = cartState.offerSelectedProducts || [];
+  const offerAppliedCount = (cartState.offerItems || []).reduce(
+    (sum, i) => sum + (i?.quantity || 0),
+    0
+  );
 
   // Show banner only if offer is applied, selected, and mounted
   if (!isMounted || !isOfferApplied || !selectedOffer) {
@@ -78,28 +82,14 @@ const OfferBanner = () => {
                     <span>Get {offerQuantity} with offer</span>
                   </span>
                 )}
-                {offerSelectedProducts.length > 0 && (
+                {offerAppliedCount > 0 && (
                   <span className="text-white/90">
-                    •{" "}
-                    {offerSelectedProducts.reduce(
-                      (sum, p) => sum + p.quantity,
-                      0
-                    )}{" "}
-                    item
-                    {offerSelectedProducts.reduce(
-                      (sum, p) => sum + p.quantity,
-                      0
-                    ) > 1
-                      ? "s"
-                      : ""}{" "}
-                    selected
+                    • {offerAppliedCount} item{offerAppliedCount > 1 ? "s" : ""} selected
                   </span>
                 )}
-                {cartState.totalItems > offerQuantity && (
-                  <span className="text-white/90">
-                    • {cartState.totalItems - offerQuantity} at normal price
-                  </span>
-                )}
+                <span className="text-white/90">
+                  • {Math.max(cartState.totalItems - offerAppliedCount, 0)} at normal price
+                </span>
               </div>
             </div>
           </div>

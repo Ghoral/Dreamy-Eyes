@@ -21,6 +21,7 @@ export interface CartItem {
   maxQuantity?: number;
   primary_thumbnail?: string;
   productImages?: string; // Store full product images JSON
+  p_type?: "sale";
 }
 
 export interface Offer {
@@ -195,27 +196,7 @@ const getTotalCartItems = (
   return normalTotal + offerTotal + accessoryTotal;
 };
 
-// Helper function to check if offer is active
-const isOfferActive = (
-  normalItems: CartItem[],
-  offerItems: CartItem[],
-  offer: Offer | null
-): boolean => {
-  if (!offer) return false;
-  const offerValue =
-    offer.value !== undefined && offer.value !== null ? Number(offer.value) : 0;
-  if (offerValue === 0) return false;
-
-  const totalItems =
-    normalItems.reduce((sum, item) => sum + item.quantity, 0) +
-    offerItems.reduce((sum, item) => sum + item.quantity, 0);
-  return totalItems > offerValue;
-};
-
-// Helper function to get total offer items quantity
-const getTotalOfferItemsQuantity = (offerItems: CartItem[]): number => {
-  return offerItems.reduce((sum, item) => sum + item.quantity, 0);
-};
+ 
 
 // Helper function to merge items arrays (for backward compatibility)
 const mergeItems = (
@@ -372,9 +353,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case "ADD_ITEM": {
       // Add item to normal items first, then reorganize
-      let newNormalItems = [...state.normalItems];
-      let newOfferItems = [...state.offerItems];
-      let newAccessoryItems = [...state.accessoryItems];
+      const newNormalItems = [...state.normalItems];
+      const newOfferItems = [...state.offerItems];
+      const newAccessoryItems = [...state.accessoryItems];
       
       // Check if it exists in normal items
       const normalIndex = newNormalItems.findIndex(
@@ -426,7 +407,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
 
     case "ADD_ACCESSORY_ITEM": {
-      let newAccessoryItems = [...state.accessoryItems];
+      const newAccessoryItems = [...state.accessoryItems];
       const accIndex = newAccessoryItems.findIndex(
         (item) => item.id === action.payload.id && item.color === action.payload.color
       );
@@ -554,9 +535,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
 
     case "UPDATE_QUANTITY": {
-      let newNormalItems = [...state.normalItems];
-      let newOfferItems = [...state.offerItems];
-      let newAccessoryItems = [...state.accessoryItems];
+      const newNormalItems = [...state.normalItems];
+      const newOfferItems = [...state.offerItems];
+      const newAccessoryItems = [...state.accessoryItems];
       const { id, color, quantity } = action.payload;
       const newQty = Math.max(1, quantity);
 
@@ -614,7 +595,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     }
 
     case "UPDATE_ACCESSORY_QUANTITY": {
-      let newAccessoryItems = [...state.accessoryItems];
+      const newAccessoryItems = [...state.accessoryItems];
       const { id, color, quantity } = action.payload;
       const newQty = Math.max(1, quantity);
       const idx = newAccessoryItems.findIndex(
@@ -678,9 +659,9 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "LOAD_CART": {
       // Ensure backward compatibility - if payload doesn't have normalItems/offerItems, migrate from items
       const payload = action.payload;
-      let normalItems = payload.normalItems || [];
-      let offerItems = payload.offerItems || [];
-      let accessoryItems = payload.accessoryItems || [];
+      const normalItems = payload.normalItems || [];
+      const offerItems = payload.offerItems || [];
+      const accessoryItems = payload.accessoryItems || [];
 
       // If old format (only has items), split them based on offerSelectedProducts
       if (
@@ -907,7 +888,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }
       }
       setIsInitialized(true);
-    } catch (error) {
+    } catch {
       setIsInitialized(true);
     }
   }, [isClient]);
@@ -981,7 +962,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         unsubscribe();
       }
     };
-  }, [isInitialized, isClient]);
+  }, [isInitialized, isClient, state.items.length, state.offerSelectedProducts, state.selectedOffer]);
 
   // Clear offer from Zustand store when cart is cleared or becomes empty
   useEffect(() => {
@@ -1120,6 +1101,18 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       type: "SET_OFFER",
       payload: { offer, selectedProducts },
     });
+    try {
+      if (typeof window !== "undefined") {
+        import("../store/offerStore").then(({ useOfferStore }) => {
+          const store = useOfferStore.getState();
+          if (offer) {
+            store.setOffer(offer as any, selectedProducts || []);
+          } else {
+            store.clearOffer();
+          }
+        });
+      }
+    } catch {}
   };
 
   return (

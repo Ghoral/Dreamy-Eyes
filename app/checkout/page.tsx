@@ -18,6 +18,7 @@ import {
 } from "../util";
 import { useOfferStore } from "../store/offerStore";
 import ModalOffers from "../components/modals/ModalOffers";
+import ModalAccessories from "../components/modals/ModalAccessories";
 import { Offer } from "../context/CartContext";
 import { useUserCountry } from "../hooks/useUserCountry";
 
@@ -164,6 +165,7 @@ export default function CheckoutPage() {
   );
   const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
+  const [isAccessoriesModalOpen, setIsAccessoriesModalOpen] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingOffer, setPendingOffer] = useState<Offer | null>(null);
   const [pendingSelectedProducts, setPendingSelectedProducts] = useState<any[]>(
@@ -175,6 +177,22 @@ export default function CheckoutPage() {
     loadDeliveryCharge();
   }, []);
 
+  useEffect(() => {
+    try {
+      if (cartState.items.length > 0) {
+        const seen =
+          typeof window !== "undefined"
+            ? localStorage.getItem("seen-accessories-checkout")
+            : null;
+        if (!seen) {
+          setIsAccessoriesModalOpen(true);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("seen-accessories-checkout", "true");
+          }
+        }
+      }
+    } catch {}
+  }, [cartState.items.length]);
   const loadDeliveryCharge = async () => {
     try {
       const supabase = createSupabaseClient();
@@ -325,6 +343,13 @@ export default function CheckoutPage() {
       setError("Please select a shipping address");
       return;
     }
+    const hasNonAccessoryItems =
+      (cartState.normalItems && cartState.normalItems.length > 0) ||
+      (cartState.offerItems && cartState.offerItems.length > 0);
+    if (!hasNonAccessoryItems) {
+      setError("Add at least one product to complete order");
+      return;
+    }
 
     // Validate pre-payment requirements
     if (paymentMethod === "pre_payment") {
@@ -375,10 +400,32 @@ export default function CheckoutPage() {
       const countryParam = (country || "nepal").toLowerCase();
       const conversionRate =
         countryParam === "india" ? await fetchExchangeRate() : 1;
+      const accessoryPayload = (() => {
+        const items = cartState.accessoryItems || [];
+        const byId = new Map<number, number>();
+        items.forEach((a) => {
+          const idNum =
+            typeof a.id === "string" ? Number(a.id) : (a.id as number);
+          if (!Number.isFinite(idNum)) return;
+          const qty = Math.max(1, Number(a.quantity) || 1);
+          byId.set(idNum, (byId.get(idNum) || 0) + qty);
+        });
+        return Array.from(byId.entries()).map(([id, quantity]) => ({
+          id,
+          quantity,
+        }));
+      })();
+      const orderItems = [
+        ...(cartState.normalItems || []),
+        ...(cartState.offerItems || []),
+      ].map((i) => {
+        const { p_type, ...rest } = i as any;
+        return p_type ? { ...rest, p_type } : rest;
+      });
       const payload = {
         p_address_id: selectedAddressId,
         p_order_number: order_number,
-        p_items: cartState.items,
+        p_items: orderItems,
         p_payment_method: paymentMethod,
         p_transaction_id:
           paymentMethod === "pre_payment" ? transactionId : null,
@@ -388,6 +435,8 @@ export default function CheckoutPage() {
         p_offer_id: offerId,
         p_offer_products:
           offerProducts && offerProducts.length > 0 ? offerProducts : null,
+        p_accessories:
+          accessoryPayload.length > 0 ? accessoryPayload : null,
       };
       console.log("Order RPC payload:", payload);
       const { data: orderData, error: orderError } =
@@ -492,6 +541,33 @@ export default function CheckoutPage() {
           </p>
         </div>
 
+        {/* Accessories Prompt */}
+        {cartState.items.length > 0 && (
+          <div className="mb-8 rounded-3xl border-2 border-primary-200 bg-gradient-to-r from-primary-50 via-white to-secondary-50 p-6 shadow-soft">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.1 0-2 .9-2 2m0 0c0 1.1.9 2 2 2m0-4c1.1 0 2 .9 2 2m-2 8a8 8 0 110-16 8 8 0 010 16z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-secondary-800">Enhance Your Look</h3>
+                  <p className="text-secondary-600">Must-have accessories to complete your style</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAccessoriesModalOpen(true)}
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
+              >
+                Browse Accessories
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5-5 5M6 7l5 5-5 5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
         {/* Error Display */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
@@ -1078,6 +1154,68 @@ export default function CheckoutPage() {
                 })()}
               </div>
 
+              {/* Accessories Items */}
+              <div className="space-y-4 mb-6">
+                {(() => {
+                  const accessories = cartState.accessoryItems || [];
+                  if (accessories.length === 0) return null;
+                  return (
+                    <>
+                      <h3 className="text-xl font-bold text-secondary-800 mb-4">
+                        Accessories
+                      </h3>
+                      {accessories.map((item, index) => (
+                        <div
+                          key={`acc-${index}`}
+                          className="flex items-start space-x-4 p-4 bg-secondary-50 rounded-xl"
+                        >
+                          <div className="w-16 h-16 bg-gradient-to-br from-secondary-100 to-primary-100 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
+                            <svg
+                              className="w-8 h-8 text-secondary-300"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-secondary-800 text-lg mb-1 truncate">
+                              {item.title || "Accessory"}
+                            </h4>
+                            <div className="text-sm text-secondary-500 mb-1">
+                              Qty: {item.quantity} ×{" "}
+                              {formatPriceWithCurrency(item.price, country)}
+                            </div>
+                            {item.maxQuantity && (
+                              <div className="text-sm text-secondary-500">
+                                Stock: {item.maxQuantity} available
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-lg font-bold text-primary-600">
+                              {formatPrice(
+                                calculatePriceSync(
+                                  item.price * item.quantity,
+                                  country
+                                ),
+                                country
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
+              </div>
+
               {/* Order Totals */}
               <div className="border-t border-secondary-100 pt-6 space-y-3">
                 {(() => {
@@ -1213,9 +1351,23 @@ export default function CheckoutPage() {
               <form onSubmit={handleSubmit} className="mt-8">
                 <button
                   type="submit"
-                  disabled={isProcessing || !selectedAddressId}
+                  disabled={
+                    isProcessing ||
+                    !selectedAddressId ||
+                    !(
+                      (cartState.normalItems &&
+                        cartState.normalItems.length > 0) ||
+                      (cartState.offerItems && cartState.offerItems.length > 0)
+                    )
+                  }
                   className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
-                    isProcessing || !selectedAddressId
+                    isProcessing ||
+                    !selectedAddressId ||
+                    !(
+                      (cartState.normalItems &&
+                        cartState.normalItems.length > 0) ||
+                      (cartState.offerItems && cartState.offerItems.length > 0)
+                    )
                       ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
                       : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
                   }`}
@@ -1310,6 +1462,12 @@ export default function CheckoutPage() {
         isOpen={isOffersModalOpen}
         onClose={() => setIsOffersModalOpen(false)}
         onSelectOffer={handleOfferSelect}
+      />
+
+      {/* Accessories Modal */}
+      <ModalAccessories
+        isOpen={isAccessoriesModalOpen}
+        onClose={() => setIsAccessoriesModalOpen(false)}
       />
 
       {/* Confirmation Dialog for changing offer */}

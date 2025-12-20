@@ -280,7 +280,8 @@ const ProductDetail = ({
       const result = await update_product_quantity(
         product.id,
         selectedColor.color,
-        newQuantity
+        newQuantity,
+        isSale ? "sale" : undefined
       );
 
       if (result.success) {
@@ -321,6 +322,7 @@ const ProductDetail = ({
       primary_thumbnail: product.primary_thumbnail || undefined,
       maxQuantity: parseInt(selectedColor.quantity),
       productImages: product.images || undefined,
+      ...(isSale && { p_type: "sale" as const }),
     };
 
     addItem(cartItem);

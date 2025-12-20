@@ -238,6 +238,7 @@ export default function PaginatedSalesList() {
       image: thumbnailUrl || undefined,
       primary_thumbnail: product.primary_thumbnail || undefined,
       maxQuantity: Number(firstColor.quantity),
+      p_type: "sale" as const,
     });
 
     setToast({

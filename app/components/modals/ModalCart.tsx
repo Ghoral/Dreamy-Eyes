@@ -103,9 +103,10 @@ const ModalCart = ({
   }, [onViewCart, onClose]);
 
   const handleCheckout = useCallback(() => {
+    if (cartItems.items.length === 0) return;
     onClose?.();
     router.push("/checkout");
-  }, [onClose, router]);
+  }, [onClose, router, cartItems.items.length]);
 
   if (!isOpen) return null;
 
@@ -347,7 +348,8 @@ const ModalCart = ({
                                       await update_product_quantity(
                                         item.id,
                                         item.colorHex,
-                                        newQuantity
+                                        newQuantity,
+                                        item.p_type === "sale" ? "sale" : undefined
                                       );
 
                                     if (result.success) {
@@ -468,7 +470,8 @@ const ModalCart = ({
                                       await update_product_quantity(
                                         item.id,
                                         item.colorHex,
-                                        newQuantity
+                                        newQuantity,
+                                        item.p_type === "sale" ? "sale" : undefined
                                       );
 
                                     if (result.success) {
@@ -606,6 +609,7 @@ const ModalCart = ({
                 </button>
                 <button
                   onClick={handleCheckout}
+                  disabled={cartItems.items.length === 0}
                   className="w-full py-3 px-6 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
                 >
                   Proceed to Checkout
