@@ -44,6 +44,7 @@ interface CartState {
   items: CartItem[]; // Kept for backward compatibility, will be computed from normalItems + offerItems
   normalItems: CartItem[]; // Regular cart items
   offerItems: CartItem[]; // Items under active offer
+  accessoryItems: CartItem[]; // Accessories items
   totalItems: number; // Total quantity across all items
   itemCount: number; // Number of unique items
   totalPrice: number;
@@ -53,9 +54,18 @@ interface CartState {
 
 type CartAction =
   | { type: "ADD_ITEM"; payload: CartItem }
+  | { type: "ADD_ACCESSORY_ITEM"; payload: CartItem }
   | { type: "REMOVE_ITEM"; payload: { id: string | number; color?: string } }
   | {
+      type: "REMOVE_ACCESSORY_ITEM";
+      payload: { id: string | number; color?: string };
+    }
+  | {
       type: "UPDATE_QUANTITY";
+      payload: { id: string | number; color?: string; quantity: number };
+    }
+  | {
+      type: "UPDATE_ACCESSORY_QUANTITY";
       payload: { id: string | number; color?: string; quantity: number };
     }
   | { type: "CLEAR_CART" }
@@ -69,6 +79,7 @@ const initialState: CartState = {
   items: [],
   normalItems: [],
   offerItems: [],
+  accessoryItems: [],
   totalItems: 0,
   itemCount: 0,
   totalPrice: 0,
@@ -172,11 +183,16 @@ const calculateOfferPrice = (
 // Helper function to get total cart items count (normalItems + offerItems)
 const getTotalCartItems = (
   normalItems: CartItem[],
-  offerItems: CartItem[]
+  offerItems: CartItem[],
+  accessoryItems: CartItem[]
 ): number => {
   const normalTotal = normalItems.reduce((sum, item) => sum + item.quantity, 0);
   const offerTotal = offerItems.reduce((sum, item) => sum + item.quantity, 0);
-  return normalTotal + offerTotal;
+  const accessoryTotal = accessoryItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
+  return normalTotal + offerTotal + accessoryTotal;
 };
 
 // Helper function to check if offer is active
@@ -190,7 +206,9 @@ const isOfferActive = (
     offer.value !== undefined && offer.value !== null ? Number(offer.value) : 0;
   if (offerValue === 0) return false;
 
-  const totalItems = getTotalCartItems(normalItems, offerItems);
+  const totalItems =
+    normalItems.reduce((sum, item) => sum + item.quantity, 0) +
+    offerItems.reduce((sum, item) => sum + item.quantity, 0);
   return totalItems > offerValue;
 };
 
@@ -202,7 +220,8 @@ const getTotalOfferItemsQuantity = (offerItems: CartItem[]): number => {
 // Helper function to merge items arrays (for backward compatibility)
 const mergeItems = (
   normalItems: CartItem[],
-  offerItems: CartItem[]
+  offerItems: CartItem[],
+  accessoryItems: CartItem[]
 ): CartItem[] => {
   const itemMap = new Map<string, CartItem>();
 
@@ -223,6 +242,17 @@ const mergeItems = (
     }
   });
 
+  // Merge accessory items
+  accessoryItems.forEach((item) => {
+    const key = `${item.id}-${item.color || ""}`;
+    const existing = itemMap.get(key);
+    if (existing) {
+      existing.quantity += item.quantity;
+    } else {
+      itemMap.set(key, { ...item });
+    }
+  });
+
   return Array.from(itemMap.values());
 };
 
@@ -230,6 +260,7 @@ const mergeItems = (
 const calculateTotalPriceWithOffer = (
   normalItems: CartItem[],
   offerItems: CartItem[],
+  accessoryItems: CartItem[],
   offer: Offer | null
 ): number => {
   // Calculate normal items total (regular price)
@@ -246,7 +277,13 @@ const calculateTotalPriceWithOffer = (
     return sum + offerPrice * item.quantity;
   }, 0);
 
-  return normalTotal + offerTotal;
+  // Calculate accessory items total (no offer discount)
+  const accessoryTotal = accessoryItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  return normalTotal + offerTotal + accessoryTotal;
 };
 
 // Helper function to add item to array handling duplicates
@@ -265,13 +302,14 @@ const addItemToArray = (array: CartItem[], item: CartItem) => {
 const reorganizeCart = (
   normalItems: CartItem[],
   offerItems: CartItem[],
+  accessoryItems: CartItem[],
   offer: Offer | null
-): { normalItems: CartItem[]; offerItems: CartItem[] } => {
+): { normalItems: CartItem[]; offerItems: CartItem[]; accessoryItems: CartItem[] } => {
   // Merge all items first to get a clean state
-  const allItems = mergeItems(normalItems, offerItems);
+  const allItems = mergeItems(normalItems, offerItems, []);
 
   if (!offer) {
-    return { normalItems: allItems, offerItems: [] };
+    return { normalItems: allItems, offerItems: [], accessoryItems };
   }
 
   const offerValue =
@@ -286,7 +324,7 @@ const reorganizeCart = (
   // If offer is not active (threshold not met) or invalid, everything is normal
   // Note: condition is total > offerValue because we need to buy X first
   if (offerValue <= 0 || offerQuantity <= 0 || totalCartItems <= offerValue) {
-    return { normalItems: allItems, offerItems: [] };
+    return { normalItems: allItems, offerItems: [], accessoryItems };
   }
 
   const newNormalItems: CartItem[] = [];
@@ -327,7 +365,7 @@ const reorganizeCart = (
     }
   });
 
-  return { normalItems: newNormalItems, offerItems: newOfferItems };
+  return { normalItems: newNormalItems, offerItems: newOfferItems, accessoryItems };
 };
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
@@ -336,6 +374,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       // Add item to normal items first, then reorganize
       let newNormalItems = [...state.normalItems];
       let newOfferItems = [...state.offerItems];
+      let newAccessoryItems = [...state.accessoryItems];
       
       // Check if it exists in normal items
       const normalIndex = newNormalItems.findIndex(
@@ -363,13 +402,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       }
 
       // Reorganize based on offer
-      const reorganized = reorganizeCart(newNormalItems, newOfferItems, state.selectedOffer || null);
+      const reorganized = reorganizeCart(newNormalItems, newOfferItems, newAccessoryItems, state.selectedOffer || null);
       
-      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
-      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
         reorganized.normalItems,
         reorganized.offerItems,
+        reorganized.accessoryItems,
         state.selectedOffer || null
       );
 
@@ -378,6 +418,42 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         items: mergedItems,
         normalItems: reorganized.normalItems,
         offerItems: reorganized.offerItems,
+        accessoryItems: reorganized.accessoryItems,
+        totalItems,
+        itemCount: mergedItems.length,
+        totalPrice,
+      };
+    }
+
+    case "ADD_ACCESSORY_ITEM": {
+      let newAccessoryItems = [...state.accessoryItems];
+      const accIndex = newAccessoryItems.findIndex(
+        (item) => item.id === action.payload.id && item.color === action.payload.color
+      );
+      if (accIndex >= 0) {
+        newAccessoryItems[accIndex] = {
+          ...newAccessoryItems[accIndex],
+          quantity:
+            newAccessoryItems[accIndex].quantity + action.payload.quantity,
+        };
+      } else {
+        newAccessoryItems.push(action.payload);
+      }
+      const reorganized = reorganizeCart(state.normalItems, state.offerItems, newAccessoryItems, state.selectedOffer || null);
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
+      const totalPrice = calculateTotalPriceWithOffer(
+        reorganized.normalItems,
+        reorganized.offerItems,
+        reorganized.accessoryItems,
+        state.selectedOffer || null
+      );
+      return {
+        ...state,
+        items: mergedItems,
+        normalItems: reorganized.normalItems,
+        offerItems: reorganized.offerItems,
+        accessoryItems: reorganized.accessoryItems,
         totalItems,
         itemCount: mergedItems.length,
         totalPrice,
@@ -387,6 +463,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "REMOVE_ITEM": {
       let newNormalItems = [...state.normalItems];
       let newOfferItems = [...state.offerItems];
+      let newAccessoryItems = [...state.accessoryItems];
 
       // Remove from wherever it is
       const normalIndex = newNormalItems.findIndex(
@@ -402,15 +479,22 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       if (offerIndex >= 0) {
         newOfferItems = newOfferItems.filter((_, i) => i !== offerIndex);
       }
+      const accessoryIndex = newAccessoryItems.findIndex(
+        (item) => item.id === action.payload.id && item.color === action.payload.color
+      );
+      if (accessoryIndex >= 0) {
+        newAccessoryItems = newAccessoryItems.filter((_, i) => i !== accessoryIndex);
+      }
 
       // Reorganize
-      const reorganized = reorganizeCart(newNormalItems, newOfferItems, state.selectedOffer || null);
+      const reorganized = reorganizeCart(newNormalItems, newOfferItems, newAccessoryItems, state.selectedOffer || null);
       
-      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
-      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
         reorganized.normalItems,
         reorganized.offerItems,
+        reorganized.accessoryItems,
         state.selectedOffer || null
       );
 
@@ -419,6 +503,50 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         items: mergedItems,
         normalItems: reorganized.normalItems,
         offerItems: reorganized.offerItems,
+        accessoryItems: reorganized.accessoryItems,
+        totalItems,
+        itemCount: mergedItems.length,
+        totalPrice,
+      };
+    }
+
+    case "REMOVE_ACCESSORY_ITEM": {
+      let newAccessoryItems = [...state.accessoryItems];
+      const idx = newAccessoryItems.findIndex(
+        (item) =>
+          item.id === action.payload.id && item.color === action.payload.color
+      );
+      if (idx >= 0) {
+        newAccessoryItems = newAccessoryItems.filter((_, i) => i !== idx);
+      }
+      const reorganized = reorganizeCart(
+        state.normalItems,
+        state.offerItems,
+        newAccessoryItems,
+        state.selectedOffer || null
+      );
+      const mergedItems = mergeItems(
+        reorganized.normalItems,
+        reorganized.offerItems,
+        reorganized.accessoryItems
+      );
+      const totalItems = getTotalCartItems(
+        reorganized.normalItems,
+        reorganized.offerItems,
+        reorganized.accessoryItems
+      );
+      const totalPrice = calculateTotalPriceWithOffer(
+        reorganized.normalItems,
+        reorganized.offerItems,
+        reorganized.accessoryItems,
+        state.selectedOffer || null
+      );
+      return {
+        ...state,
+        items: mergedItems,
+        normalItems: reorganized.normalItems,
+        offerItems: reorganized.offerItems,
+        accessoryItems: reorganized.accessoryItems,
         totalItems,
         itemCount: mergedItems.length,
         totalPrice,
@@ -428,6 +556,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "UPDATE_QUANTITY": {
       let newNormalItems = [...state.normalItems];
       let newOfferItems = [...state.offerItems];
+      let newAccessoryItems = [...state.accessoryItems];
       const { id, color, quantity } = action.payload;
       const newQty = Math.max(1, quantity);
 
@@ -448,17 +577,27 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
               const item = newOfferItems[offerIndex];
               const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
               newOfferItems[offerIndex] = { ...item, quantity: finalQty };
-          }
+           } else {
+               const accIndex = newAccessoryItems.findIndex(
+                 (item) => item.id === id && item.color === color
+               );
+               if (accIndex >= 0) {
+                 const item = newAccessoryItems[accIndex];
+                 const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
+                 newAccessoryItems[accIndex] = { ...item, quantity: finalQty };
+               }
+           }
       }
 
       // Reorganize
-      const reorganized = reorganizeCart(newNormalItems, newOfferItems, state.selectedOffer || null);
+      const reorganized = reorganizeCart(newNormalItems, newOfferItems, newAccessoryItems, state.selectedOffer || null);
       
-      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
-      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
         reorganized.normalItems,
         reorganized.offerItems,
+        reorganized.accessoryItems,
         state.selectedOffer || null
       );
 
@@ -467,6 +606,55 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         items: mergedItems,
         normalItems: reorganized.normalItems,
         offerItems: reorganized.offerItems,
+        accessoryItems: reorganized.accessoryItems,
+        totalItems,
+        itemCount: mergedItems.length,
+        totalPrice,
+      };
+    }
+
+    case "UPDATE_ACCESSORY_QUANTITY": {
+      let newAccessoryItems = [...state.accessoryItems];
+      const { id, color, quantity } = action.payload;
+      const newQty = Math.max(1, quantity);
+      const idx = newAccessoryItems.findIndex(
+        (item) => item.id === id && item.color === color
+      );
+      if (idx >= 0) {
+        const item = newAccessoryItems[idx];
+        const finalQty = item.maxQuantity
+          ? Math.min(newQty, item.maxQuantity)
+          : newQty;
+        newAccessoryItems[idx] = { ...item, quantity: finalQty };
+      }
+      const reorganized = reorganizeCart(
+        state.normalItems,
+        state.offerItems,
+        newAccessoryItems,
+        state.selectedOffer || null
+      );
+      const mergedItems = mergeItems(
+        reorganized.normalItems,
+        reorganized.offerItems,
+        reorganized.accessoryItems
+      );
+      const totalItems = getTotalCartItems(
+        reorganized.normalItems,
+        reorganized.offerItems,
+        reorganized.accessoryItems
+      );
+      const totalPrice = calculateTotalPriceWithOffer(
+        reorganized.normalItems,
+        reorganized.offerItems,
+        reorganized.accessoryItems,
+        state.selectedOffer || null
+      );
+      return {
+        ...state,
+        items: mergedItems,
+        normalItems: reorganized.normalItems,
+        offerItems: reorganized.offerItems,
+        accessoryItems: reorganized.accessoryItems,
         totalItems,
         itemCount: mergedItems.length,
         totalPrice,
@@ -479,6 +667,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         items: [],
         normalItems: [],
         offerItems: [],
+        accessoryItems: [],
         totalItems: 0,
         itemCount: 0,
         totalPrice: 0,
@@ -491,13 +680,15 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const payload = action.payload;
       let normalItems = payload.normalItems || [];
       let offerItems = payload.offerItems || [];
+      let accessoryItems = payload.accessoryItems || [];
 
       // If old format (only has items), split them based on offerSelectedProducts
       if (
         payload.items &&
         payload.items.length > 0 &&
         normalItems.length === 0 &&
-        offerItems.length === 0
+        offerItems.length === 0 &&
+        accessoryItems.length === 0
       ) {
         const offerProducts = payload.offerSelectedProducts || [];
         const offerProductMap = new Map<string, number>();
@@ -525,11 +716,12 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         });
       }
 
-      const mergedItems = mergeItems(normalItems, offerItems);
-      const totalItems = getTotalCartItems(normalItems, offerItems);
+      const mergedItems = mergeItems(normalItems, offerItems, accessoryItems);
+      const totalItems = getTotalCartItems(normalItems, offerItems, accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
         normalItems,
         offerItems,
+        accessoryItems,
         payload.selectedOffer || null
       );
 
@@ -538,6 +730,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         items: mergedItems,
         normalItems,
         offerItems,
+        accessoryItems,
         totalItems,
         itemCount: mergedItems.length,
         totalPrice,
@@ -549,13 +742,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const offerProducts = action.payload.selectedProducts || [];
       
       // Use reorganizeCart to handle everything
-      const reorganized = reorganizeCart(state.normalItems, state.offerItems, offer);
+      const reorganized = reorganizeCart(state.normalItems, state.offerItems, state.accessoryItems, offer);
       
-      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems);
-      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems);
+      const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
+      const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
         reorganized.normalItems,
         reorganized.offerItems,
+        reorganized.accessoryItems,
         offer || null
       );
 
@@ -564,6 +758,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         items: mergedItems,
         normalItems: reorganized.normalItems,
         offerItems: reorganized.offerItems,
+        accessoryItems: reorganized.accessoryItems,
         selectedOffer: offer,
         offerSelectedProducts: offerProducts,
         totalItems,
@@ -580,8 +775,15 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 interface CartContextType {
   state: CartState;
   addItem: (item: CartItem) => void;
+  addAccessoryItem: (item: CartItem) => void;
   removeItem: (id: string | number, color?: string) => void;
+  removeAccessoryItem: (id: string | number, color?: string) => void;
   updateQuantity: (
+    id: string | number,
+    quantity: number,
+    color?: string
+  ) => void;
+  updateAccessoryQuantity: (
     id: string | number,
     quantity: number,
     color?: string
@@ -626,14 +828,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart);
 
-        // Load cart - check for items, normalItems, or offerItems
+        // Load cart - check for items, normalItems, offerItems, or accessoryItems
         const hasItems = parsedCart.items && parsedCart.items.length > 0;
         const hasNormalItems =
           parsedCart.normalItems && parsedCart.normalItems.length > 0;
         const hasOfferItems =
           parsedCart.offerItems && parsedCart.offerItems.length > 0;
+        const hasAccessoryItems =
+          parsedCart.accessoryItems && parsedCart.accessoryItems.length > 0;
 
-        if (hasItems || hasNormalItems || hasOfferItems) {
+        if (hasItems || hasNormalItems || hasOfferItems || hasAccessoryItems) {
           // Validate quantities against maxQuantity limits
           const validateItems = (items: CartItem[]) => {
             return items.map((item: CartItem) => {
@@ -654,23 +858,37 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           let offerItems = parsedCart.offerItems
             ? validateItems(parsedCart.offerItems)
             : [];
+          let accessoryItems = parsedCart.accessoryItems
+            ? validateItems(parsedCart.accessoryItems)
+            : [];
 
           // If old format (only has items), migrate to new format
-          if (hasItems && normalItems.length === 0 && offerItems.length === 0) {
+          if (
+            hasItems &&
+            normalItems.length === 0 &&
+            offerItems.length === 0 &&
+            accessoryItems.length === 0
+          ) {
             const validatedItems = validateItems(parsedCart.items);
             // For old format, put all items in normalItems
             normalItems = validatedItems;
             offerItems = [];
+            accessoryItems = [];
           }
 
           // Merge items for backward compatibility
-          const mergedItems = mergeItems(normalItems, offerItems);
+          const mergedItems = mergeItems(normalItems, offerItems, accessoryItems);
 
           // Recalculate totals
-          const totalItems = getTotalCartItems(normalItems, offerItems);
+          const totalItems = getTotalCartItems(
+            normalItems,
+            offerItems,
+            accessoryItems
+          );
           const totalPrice = calculateTotalPriceWithOffer(
             normalItems,
             offerItems,
+            accessoryItems,
             parsedCart.selectedOffer || null
           );
 
@@ -679,6 +897,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
             items: mergedItems,
             normalItems,
             offerItems,
+            accessoryItems,
             totalItems,
             itemCount: mergedItems.length,
             totalPrice,
@@ -798,6 +1017,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
             items: state.items, // Keep for backward compatibility
             normalItems: state.normalItems,
             offerItems: state.offerItems,
+            accessoryItems: state.accessoryItems,
             selectedOffer: state.selectedOffer,
             offerSelectedProducts: state.offerSelectedProducts,
             totalItems: state.totalItems,
@@ -831,9 +1051,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const addItem = (item: CartItem) => {
     dispatch({ type: "ADD_ITEM", payload: item });
   };
+  const addAccessoryItem = (item: CartItem) => {
+    dispatch({ type: "ADD_ACCESSORY_ITEM", payload: item });
+  };
 
   const removeItem = (id: string | number, color?: string) => {
     dispatch({ type: "REMOVE_ITEM", payload: { id, color } });
+  };
+  const removeAccessoryItem = (id: string | number, color?: string) => {
+    dispatch({ type: "REMOVE_ACCESSORY_ITEM", payload: { id, color } });
   };
 
   const updateQuantity = (
@@ -842,6 +1068,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     color?: string
   ) => {
     dispatch({ type: "UPDATE_QUANTITY", payload: { id, color, quantity } });
+  };
+  const updateAccessoryQuantity = (
+    id: string | number,
+    quantity: number,
+    color?: string
+  ) => {
+    dispatch({
+      type: "UPDATE_ACCESSORY_QUANTITY",
+      payload: { id, color, quantity },
+    });
   };
 
   const clearCart = () => {
@@ -891,8 +1127,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       value={{
         state,
         addItem,
+        addAccessoryItem,
         removeItem,
+        removeAccessoryItem,
         updateQuantity,
+        updateAccessoryQuantity,
         clearCart,
         validateCart,
         setOffer,
