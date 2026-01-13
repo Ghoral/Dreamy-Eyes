@@ -47,8 +47,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["Quattrocento Sans", "sans-serif"],
-        serif: ["Quattrocento Sans", "sans-serif"],
+        sans: ["var(--font-quattrocento-sans)", "sans-serif"],
+        serif: ["var(--font-quattrocento-sans)", "serif"],
         script: ["Dancing Script", "cursive"],
       },
       animation: {
