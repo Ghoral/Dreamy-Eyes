@@ -14,9 +14,9 @@ export default function Home() {
       <BillboardCarousel />
       <ItemListing />
       <SalesSection />
-      <TikTokCarousel />
       <ProductWrapper />
       <AccessoriesSection />
+      <TikTokCarousel />
       <Footer />
     </div>
   );
