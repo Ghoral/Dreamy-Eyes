@@ -22,6 +22,37 @@ export const getProductImageUrl = (filename: string): string => {
   return `/product-image/${filename}`;
 };
 
+// Helper function to get Supabase public bucket URL for accessory images
+export const getAccessoryImageUrl = (filename: string): string => {
+  if (!filename) return "";
+
+  // If it's already a full URL, return as is
+  if (filename.startsWith("http://") || filename.startsWith("https://")) {
+    return filename;
+  }
+
+  // Construct Supabase public bucket URL (Primary choice)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (supabaseUrl) {
+    return `${supabaseUrl}/storage/v1/object/public/accessories/${filename}`;
+  }
+
+  // Fallback to NEXT_PUBLIC_IMAGE_URL pattern (like in others)
+  const imageUrl = process.env.NEXT_PUBLIC_IMAGE_URL;
+  if (imageUrl) {
+    // If NEXT_PUBLIC_IMAGE_URL specifically contains 'product-image', 
+    // we substitute it for 'accessories' to maintain consistency.
+    if (imageUrl.includes("product-image")) {
+      return `${imageUrl.replace("product-image", "accessories")}/${filename}`;
+    }
+    // Otherwise, append the accessories bucket to the base URL
+    return `${imageUrl}/accessories/${filename}`;
+  }
+
+  // Last resort fallback
+  return `/accessories/${filename}`;
+};
+
 export const getFirstImageUrl = (images: string): string | null => {
   try {
     const parsed = JSON.parse(images);

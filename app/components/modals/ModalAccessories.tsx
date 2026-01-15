@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
-import { formatPriceWithCurrency } from "@/app/util";
+import { formatPriceWithCurrency, getAccessoryImageUrl } from "@/app/util";
 import { createSupabaseClient } from "@/app/services/supabase/client/supabaseBrowserClient";
 import { useCart } from "@/app/context/CartContext";
 import Toast from "@/app/components/ui/Toast";
@@ -14,6 +14,7 @@ type Accessory = {
   description: string | null;
   price: number | string | null;
   quantity: number | string | null;
+  image: string | null;
 };
 
 export default function ModalAccessories({
@@ -117,13 +118,30 @@ export default function ModalAccessories({
                           {item.name || "Accessory"}
                         </h3>
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                          }`}
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                            }`}
                         >
                           {inStock ? "In Stock" : "Out of Stock"}
                         </span>
                       </div>
+
+                      {/* Accessory Image in Modal */}
+                      <div className="relative aspect-video mb-3 rounded-xl overflow-hidden bg-secondary-100">
+                        {item.image ? (
+                          <img
+                            src={getAccessoryImageUrl(item.image)}
+                            alt={item.name || "Accessory"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-secondary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+
                       <p className="text-secondary-600 text-sm mb-3 line-clamp-3">
                         {item.description || "No description available."}
                       </p>
