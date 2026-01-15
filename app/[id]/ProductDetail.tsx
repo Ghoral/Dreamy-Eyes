@@ -321,6 +321,7 @@ const ProductDetail = ({
       primary_thumbnail: product.primary_thumbnail || undefined,
       maxQuantity: parseInt(selectedColor.quantity),
       productImages: product.images || undefined,
+      category: "product" as const,
     };
 
     addItem(cartItem);

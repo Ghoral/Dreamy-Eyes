@@ -217,6 +217,7 @@ export default function ModalAccessories({
                                 quantity: addQty,
                                 maxQuantity: qty ?? undefined,
                                 image: item.image ? getAccessoryImageUrl(item.image) : undefined,
+                                category: "accessory" as const,
                               });
                               setToastConfig({ message: "Added to cart", isVisible: true });
                               setTimeout(() => {
