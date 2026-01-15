@@ -505,7 +505,7 @@ export default function CheckoutPage() {
             Add some products to your cart before proceeding to checkout.
           </p>
           <Link
-            href="/shop"
+            href="/"
             className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
           >
             <svg
@@ -680,8 +680,8 @@ export default function CheckoutPage() {
                       <label
                         htmlFor={`address-${address.id}`}
                         className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${selectedAddressId === address.id
-                            ? "border-primary-500 bg-primary-50 shadow-glow"
-                            : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                          ? "border-primary-500 bg-primary-50 shadow-glow"
+                          : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
                           }`}
                       >
                         <div className="flex items-start justify-between">
@@ -775,8 +775,8 @@ export default function CheckoutPage() {
                   <label
                     htmlFor="cash_on_delivery"
                     className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "cash_on_delivery"
-                        ? "border-primary-500 bg-primary-50 shadow-glow"
-                        : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                      ? "border-primary-500 bg-primary-50 shadow-glow"
+                      : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
                       }`}
                   >
                     <div className="flex items-start justify-between">
@@ -817,8 +817,8 @@ export default function CheckoutPage() {
                   <label
                     htmlFor="pre_payment"
                     className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "pre_payment"
-                        ? "border-primary-500 bg-primary-50 shadow-glow"
-                        : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                      ? "border-primary-500 bg-primary-50 shadow-glow"
+                      : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
                       }`}
                   >
                     <div className="flex items-start justify-between">
@@ -1366,14 +1366,14 @@ export default function CheckoutPage() {
                     )
                   }
                   className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${isProcessing ||
-                      !selectedAddressId ||
-                      !(
-                        (cartState.normalItems &&
-                          cartState.normalItems.length > 0) ||
-                        (cartState.offerItems && cartState.offerItems.length > 0)
-                      )
-                      ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
+                    !selectedAddressId ||
+                    !(
+                      (cartState.normalItems &&
+                        cartState.normalItems.length > 0) ||
+                      (cartState.offerItems && cartState.offerItems.length > 0)
+                    )
+                    ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
+                    : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
                     }`}
                 >
                   {isProcessing ? (

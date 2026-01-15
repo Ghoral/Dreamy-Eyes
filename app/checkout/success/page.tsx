@@ -173,7 +173,7 @@ export default function CheckoutSuccessPage() {
         {/* Action Buttons */}
         <div className="text-center space-y-4 mb-12">
           <Link
-            href="/shop"
+            href="/"
             className="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             <svg

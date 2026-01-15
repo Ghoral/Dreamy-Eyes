@@ -388,7 +388,7 @@ export default function ProfilePage() {
                 </Link>
 
                 <Link
-                  href="/shop"
+                  href="/"
                   className="flex items-center p-3 bg-secondary-50 hover:bg-primary-50 text-secondary-700 hover:text-primary-600 rounded-xl transition-all duration-300 group"
                 >
                   <svg

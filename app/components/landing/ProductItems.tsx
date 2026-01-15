@@ -225,7 +225,7 @@ const ProductItems = ({ data }: { data: any }) => {
 
         {/* Filter Button */}
         {filteredProducts && filteredProducts.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-8 flex justify-center">
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
               className="inline-flex items-center px-5 py-2.5 bg-white border-2 border-primary-200 text-primary-600 font-semibold rounded-xl hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -255,7 +255,7 @@ const ProductItems = ({ data }: { data: any }) => {
 
         {/* Products Grid */}
         {filteredProducts && filteredProducts.length > 0 ? (
-          <div className={`grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
             {filteredProducts.map((product: any, index: number) => {
               const imageUrl = getThumbnailUrl(product);
               const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
@@ -263,7 +263,7 @@ const ProductItems = ({ data }: { data: any }) => {
               return (
                 <div
                   key={index}
-                  className="group relative bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-primary-200 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  className="group relative bg-white rounded-xl overflow-hidden border border-gray-100 hover:border-primary-200 hover:shadow-xl transition-all duration-300 cursor-pointer w-[calc(50%-8px)] md:w-[calc(50%-12px)] lg:w-[calc(33.33%-21.33px)] xl:w-[calc(25%-24px)] flex-shrink-0"
                   onClick={() => handleProductClick(product)}
                 >
                   {/* Image Container */}
