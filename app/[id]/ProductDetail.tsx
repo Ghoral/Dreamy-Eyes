@@ -280,8 +280,7 @@ const ProductDetail = ({
       const result = await update_product_quantity(
         product.id,
         selectedColor.color,
-        newQuantity,
-        isSale ? "sale" : undefined
+        newQuantity
       );
 
       if (result.success) {
@@ -322,7 +321,6 @@ const ProductDetail = ({
       primary_thumbnail: product.primary_thumbnail || undefined,
       maxQuantity: parseInt(selectedColor.quantity),
       productImages: product.images || undefined,
-      ...(isSale && { p_type: "sale" as const }),
     };
 
     addItem(cartItem);
@@ -423,54 +421,34 @@ const ProductDetail = ({
               <div className="flex justify-center space-x-4">
                 {selectedColor
                   ? // Show images for the selected color
-                    getImagesForColor(selectedColor.color).length > 0
+                  getImagesForColor(selectedColor.color).length > 0
                     ? getImagesForColor(selectedColor.color).map((image, i) => {
-                        const imageUrl = getProductImageUrl(image);
-                        return (
-                          <div
-                            key={i}
-                            className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
-                              mainImage === imageUrl
-                                ? "ring-4 ring-primary-500 ring-offset-2"
-                                : "ring-1 ring-secondary-200 hover:ring-primary-300"
-                            }`}
-                            onClick={() => setMainImage(imageUrl)}
-                          >
-                            <img
-                              src={imageUrl}
-                              alt={`Thumbnail ${i + 1}`}
-                              className="w-full h-full object-contain bg-white"
-                            />
-                          </div>
-                        );
-                      })
-                    : // Show all available images if selected color has no images
-                      availableImages.map((img, i) => (
+                      const imageUrl = getProductImageUrl(image);
+                      return (
                         <div
                           key={i}
-                          className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
-                            mainImage === img
-                              ? "ring-4 ring-primary-500 ring-offset-2"
-                              : "ring-1 ring-secondary-200 hover:ring-primary-300"
-                          }`}
-                          onClick={() => setMainImage(img)}
+                          className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${mainImage === imageUrl
+                            ? "ring-4 ring-primary-500 ring-offset-2"
+                            : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                            }`}
+                          onClick={() => setMainImage(imageUrl)}
                         >
                           <img
-                            src={img}
+                            src={imageUrl}
                             alt={`Thumbnail ${i + 1}`}
                             className="w-full h-full object-contain bg-white"
                           />
                         </div>
-                      ))
-                  : // Show all available images if no color is selected
+                      );
+                    })
+                    : // Show all available images if selected color has no images
                     availableImages.map((img, i) => (
                       <div
                         key={i}
-                        className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${
-                          mainImage === img
-                            ? "ring-4 ring-primary-500 ring-offset-2"
-                            : "ring-1 ring-secondary-200 hover:ring-primary-300"
-                        }`}
+                        className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${mainImage === img
+                          ? "ring-4 ring-primary-500 ring-offset-2"
+                          : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                          }`}
                         onClick={() => setMainImage(img)}
                       >
                         <img
@@ -479,7 +457,24 @@ const ProductDetail = ({
                           className="w-full h-full object-contain bg-white"
                         />
                       </div>
-                    ))}
+                    ))
+                  : // Show all available images if no color is selected
+                  availableImages.map((img, i) => (
+                    <div
+                      key={i}
+                      className={`w-20 h-20 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-110 ${mainImage === img
+                        ? "ring-4 ring-primary-500 ring-offset-2"
+                        : "ring-1 ring-secondary-200 hover:ring-primary-300"
+                        }`}
+                      onClick={() => setMainImage(img)}
+                    >
+                      <img
+                        src={img}
+                        alt={`Thumbnail ${i + 1}`}
+                        className="w-full h-full object-contain bg-white"
+                      />
+                    </div>
+                  ))}
               </div>
             )}
           </div>
@@ -575,13 +570,12 @@ const ProductDetail = ({
                         />
                         <label
                           htmlFor={colorOption.label}
-                          className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                            isSelected
-                              ? "border-primary-500 bg-primary-50 shadow-glow"
-                              : isDisabled
+                          className={`block p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isSelected
+                            ? "border-primary-500 bg-primary-50 shadow-glow"
+                            : isDisabled
                               ? "border-secondary-200 bg-secondary-100 cursor-not-allowed opacity-60"
                               : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
-                          }`}
+                            }`}
                           onClick={() => {
                             if (!isDisabled) {
                               handleColorSelect(colorOption);
@@ -595,11 +589,10 @@ const ProductDetail = ({
                             />
                             <div className="flex-1 text-left">
                               <span
-                                className={`font-medium ${
-                                  isSelected
-                                    ? "text-primary-700"
-                                    : "text-secondary-700"
-                                }`}
+                                className={`font-medium ${isSelected
+                                  ? "text-primary-700"
+                                  : "text-secondary-700"
+                                  }`}
                               >
                                 {colorOption.label}
                               </span>
@@ -793,11 +786,10 @@ const ProductDetail = ({
             {/* Action Buttons */}
             <div className="space-y-4">
               <button
-                className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
-                  !selectedColor || getMaxQuantityForThisSession() === 0
-                    ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
-                }`}
+                className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${!selectedColor || getMaxQuantityForThisSession() === 0
+                  ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
+                  : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
+                  }`}
                 onClick={handleAddToCart}
                 disabled={
                   !selectedColor || getMaxQuantityForThisSession() === 0
@@ -821,8 +813,8 @@ const ProductDetail = ({
                     {!selectedColor
                       ? "Select Color First"
                       : getCurrentCartQuantity() > 0
-                      ? `Add ${quantity} More to Cart`
-                      : "Add to Cart"}
+                        ? `Add ${quantity} More to Cart`
+                        : "Add to Cart"}
                   </span>
                 </div>
               </button>
@@ -883,136 +875,136 @@ const ProductDetail = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {isSpecsArray
                   ? // Handle array format: [{"label": "size", "value": "14.5mm"}, ...]
-                    parsedSpecs
-                      .filter((item: any) => {
-                        // Filter out invalid items
-                        if (!item || typeof item !== "object") return false;
-                        if (item.label && item.value) return true;
+                  parsedSpecs
+                    .filter((item: any) => {
+                      // Filter out invalid items
+                      if (!item || typeof item !== "object") return false;
+                      if (item.label && item.value) return true;
+                      return false;
+                    })
+                    .map((item: any, index: number) => (
+                      <div
+                        key={index}
+                        className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200 hover:border-primary-400 hover:shadow-md transition-all"
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-secondary-700 capitalize text-sm">
+                            {item.label}
+                          </span>
+                          <span className="font-medium text-secondary-800">
+                            {item.value}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  : // Handle object format: {key: value, ...}
+                  Object.entries(parsedSpecs)
+                    .filter(([key, value]) => {
+                      // Filter out keys that are just numbers (array indices like "0", "1", etc.)
+                      // But allow keys that contain numbers with other characters
+                      if (/^[0-9]+$/.test(String(key))) return false;
+
+                      // Filter out null and undefined
+                      if (value === null || value === undefined) return false;
+
+                      // Filter out empty strings
+                      if (typeof value === "string" && value.trim() === "")
                         return false;
-                      })
-                      .map((item: any, index: number) => (
+
+                      // Filter out empty arrays
+                      if (Array.isArray(value) && value.length === 0)
+                        return false;
+
+                      // For objects, check if they have meaningful data
+                      if (
+                        typeof value === "object" &&
+                        !Array.isArray(value)
+                      ) {
+                        const obj = value as any;
+                        // If it has label and value, it's valid
+                        if (obj.label && obj.value) return true;
+                        // If it's an empty object, filter it out
+                        if (Object.keys(obj).length === 0) return false;
+                        // Otherwise, allow it (might have other properties)
+                        return true;
+                      }
+
+                      // Allow all other values (including 0, false, "0", "1" as they might be valid)
+                      return true;
+                    })
+                    .map(([key, value]) => {
+                      // Format the value properly
+                      let displayValue: string | React.ReactNode = "";
+
+                      if (
+                        typeof value === "object" &&
+                        value !== null &&
+                        !Array.isArray(value)
+                      ) {
+                        const obj = value as any;
+                        // Handle object with label and value
+                        if (obj.label && obj.value) {
+                          displayValue = (
+                            <span className="flex flex-col items-end">
+                              <span className="font-semibold text-primary-600">
+                                {obj.label}
+                              </span>
+                              <span className="text-sm text-secondary-600">
+                                {obj.value}
+                              </span>
+                            </span>
+                          );
+                        } else if (obj.value !== undefined) {
+                          displayValue = String(obj.value);
+                        } else if (obj.name !== undefined) {
+                          displayValue = String(obj.name);
+                        } else {
+                          // Try to stringify the object
+                          displayValue = JSON.stringify(value);
+                        }
+                      } else if (Array.isArray(value)) {
+                        displayValue = value
+                          .map((item) => {
+                            if (typeof item === "object" && item !== null) {
+                              if (item.label && item.value) {
+                                return `${item.label}: ${item.value}`;
+                              }
+                              return (
+                                item.value ||
+                                item.name ||
+                                JSON.stringify(item)
+                              );
+                            }
+                            return String(item);
+                          })
+                          .join(", ");
+                      } else {
+                        displayValue = String(value);
+                      }
+
+                      return (
                         <div
-                          key={index}
+                          key={key}
                           className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200 hover:border-primary-400 hover:shadow-md transition-all"
                         >
                           <div className="flex justify-between items-center">
                             <span className="font-semibold text-secondary-700 capitalize text-sm">
-                              {item.label}
+                              {key.charAt(0).toUpperCase() +
+                                key.slice(1).replace(/([A-Z])/g, " $1")}
                             </span>
-                            <span className="font-medium text-secondary-800">
-                              {item.value}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                  : // Handle object format: {key: value, ...}
-                    Object.entries(parsedSpecs)
-                      .filter(([key, value]) => {
-                        // Filter out keys that are just numbers (array indices like "0", "1", etc.)
-                        // But allow keys that contain numbers with other characters
-                        if (/^[0-9]+$/.test(String(key))) return false;
-
-                        // Filter out null and undefined
-                        if (value === null || value === undefined) return false;
-
-                        // Filter out empty strings
-                        if (typeof value === "string" && value.trim() === "")
-                          return false;
-
-                        // Filter out empty arrays
-                        if (Array.isArray(value) && value.length === 0)
-                          return false;
-
-                        // For objects, check if they have meaningful data
-                        if (
-                          typeof value === "object" &&
-                          !Array.isArray(value)
-                        ) {
-                          const obj = value as any;
-                          // If it has label and value, it's valid
-                          if (obj.label && obj.value) return true;
-                          // If it's an empty object, filter it out
-                          if (Object.keys(obj).length === 0) return false;
-                          // Otherwise, allow it (might have other properties)
-                          return true;
-                        }
-
-                        // Allow all other values (including 0, false, "0", "1" as they might be valid)
-                        return true;
-                      })
-                      .map(([key, value]) => {
-                        // Format the value properly
-                        let displayValue: string | React.ReactNode = "";
-
-                        if (
-                          typeof value === "object" &&
-                          value !== null &&
-                          !Array.isArray(value)
-                        ) {
-                          const obj = value as any;
-                          // Handle object with label and value
-                          if (obj.label && obj.value) {
-                            displayValue = (
-                              <span className="flex flex-col items-end">
-                                <span className="font-semibold text-primary-600">
-                                  {obj.label}
+                            <div className="text-right">
+                              {typeof displayValue === "string" ? (
+                                <span className="font-medium text-secondary-800">
+                                  {displayValue}
                                 </span>
-                                <span className="text-sm text-secondary-600">
-                                  {obj.value}
-                                </span>
-                              </span>
-                            );
-                          } else if (obj.value !== undefined) {
-                            displayValue = String(obj.value);
-                          } else if (obj.name !== undefined) {
-                            displayValue = String(obj.name);
-                          } else {
-                            // Try to stringify the object
-                            displayValue = JSON.stringify(value);
-                          }
-                        } else if (Array.isArray(value)) {
-                          displayValue = value
-                            .map((item) => {
-                              if (typeof item === "object" && item !== null) {
-                                if (item.label && item.value) {
-                                  return `${item.label}: ${item.value}`;
-                                }
-                                return (
-                                  item.value ||
-                                  item.name ||
-                                  JSON.stringify(item)
-                                );
-                              }
-                              return String(item);
-                            })
-                            .join(", ");
-                        } else {
-                          displayValue = String(value);
-                        }
-
-                        return (
-                          <div
-                            key={key}
-                            className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200 hover:border-primary-400 hover:shadow-md transition-all"
-                          >
-                            <div className="flex justify-between items-center">
-                              <span className="font-semibold text-secondary-700 capitalize text-sm">
-                                {key.charAt(0).toUpperCase() +
-                                  key.slice(1).replace(/([A-Z])/g, " $1")}
-                              </span>
-                              <div className="text-right">
-                                {typeof displayValue === "string" ? (
-                                  <span className="font-medium text-secondary-800">
-                                    {displayValue}
-                                  </span>
-                                ) : (
-                                  displayValue
-                                )}
-                              </div>
+                              ) : (
+                                displayValue
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
+                        </div>
+                      );
+                    })}
                 {product.power && (
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-primary-200 hover:border-primary-400 hover:shadow-md transition-all">
                     <div className="flex justify-between items-center">
@@ -1038,8 +1030,8 @@ const ProductDetail = ({
             ? "Please select a color first!"
             : getCurrentCartQuantity() > 0 &&
               getCurrentCartQuantity() > parseInt(selectedColor.quantity)
-            ? `${quantity} more ${product.title} added to cart!`
-            : `${product.title} added to cart!`
+              ? `${quantity} more ${product.title} added to cart!`
+              : `${product.title} added to cart!`
         }
         type={!selectedColor ? "error" : "success"}
         isVisible={showToast}

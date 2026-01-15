@@ -191,7 +191,7 @@ export default function CheckoutPage() {
           }
         }
       }
-    } catch {}
+    } catch { }
   }, [cartState.items.length]);
   const loadDeliveryCharge = async () => {
     try {
@@ -679,11 +679,10 @@ export default function CheckoutPage() {
                       />
                       <label
                         htmlFor={`address-${address.id}`}
-                        className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                          selectedAddressId === address.id
+                        className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${selectedAddressId === address.id
                             ? "border-primary-500 bg-primary-50 shadow-glow"
                             : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -775,11 +774,10 @@ export default function CheckoutPage() {
                   />
                   <label
                     htmlFor="cash_on_delivery"
-                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                      paymentMethod === "cash_on_delivery"
+                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "cash_on_delivery"
                         ? "border-primary-500 bg-primary-50 shadow-glow"
                         : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -818,11 +816,10 @@ export default function CheckoutPage() {
                   />
                   <label
                     htmlFor="pre_payment"
-                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                      paymentMethod === "pre_payment"
+                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "pre_payment"
                         ? "border-primary-500 bg-primary-50 shadow-glow"
                         : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -833,7 +830,7 @@ export default function CheckoutPage() {
                           </span>
                         </div>
                         <p className="text-secondary-600 text-sm mb-4">
-                          Pay in advance. Delivery charge of 
+                          Pay in advance. Delivery charge of
                           {formatPrice(
                             calculatePriceSync(deliveryCharge, country),
                             country
@@ -920,7 +917,7 @@ export default function CheckoutPage() {
                 </h2>
               </div>
 
-              
+
 
               {/* Offer Items Section */}
               {(() => {
@@ -1169,20 +1166,28 @@ export default function CheckoutPage() {
                           key={`acc-${index}`}
                           className="flex items-start space-x-4 p-4 bg-secondary-50 rounded-xl"
                         >
-                          <div className="w-16 h-16 bg-gradient-to-br from-secondary-100 to-primary-100 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
-                            <svg
-                              className="w-8 h-8 text-secondary-300"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          <div className="w-16 h-16 bg-gradient-to-br from-secondary-50 to-primary-50 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.title || "Accessory"}
+                                className="w-full h-full object-contain"
                               />
-                            </svg>
+                            ) : (
+                              <svg
+                                className="w-8 h-8 text-secondary-300"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-semibold text-secondary-800 text-lg mb-1 truncate">
@@ -1360,17 +1365,16 @@ export default function CheckoutPage() {
                       (cartState.offerItems && cartState.offerItems.length > 0)
                     )
                   }
-                  className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
-                    isProcessing ||
-                    !selectedAddressId ||
-                    !(
-                      (cartState.normalItems &&
-                        cartState.normalItems.length > 0) ||
-                      (cartState.offerItems && cartState.offerItems.length > 0)
-                    )
+                  className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${isProcessing ||
+                      !selectedAddressId ||
+                      !(
+                        (cartState.normalItems &&
+                          cartState.normalItems.length > 0) ||
+                        (cartState.offerItems && cartState.offerItems.length > 0)
+                      )
                       ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
                       : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
-                  }`}
+                    }`}
                 >
                   {isProcessing ? (
                     <div className="flex items-center justify-center space-x-2">

@@ -348,8 +348,7 @@ const ModalCart = ({
                                       await update_product_quantity(
                                         item.id,
                                         item.colorHex,
-                                        newQuantity,
-                                        item.p_type === "sale" ? "sale" : undefined
+                                        newQuantity
                                       );
 
                                     if (result.success) {
@@ -357,7 +356,7 @@ const ModalCart = ({
                                       updateQuantity(
                                         item.id,
                                         result.validated_quantity ||
-                                          newQuantity,
+                                        newQuantity,
                                         item.color
                                       );
                                     } else {
@@ -402,7 +401,7 @@ const ModalCart = ({
                               }}
                               disabled={
                                 checkingQuantities[
-                                  `${item.id}-${item.color}`
+                                `${item.id}-${item.color}`
                                 ] || item.quantity <= 1
                               }
                               className="w-8 h-8 bg-secondary-100 hover:bg-secondary-200 rounded-full flex items-center justify-center transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -470,8 +469,7 @@ const ModalCart = ({
                                       await update_product_quantity(
                                         item.id,
                                         item.colorHex,
-                                        newQuantity,
-                                        item.p_type === "sale" ? "sale" : undefined
+                                        newQuantity
                                       );
 
                                     if (result.success) {
@@ -479,7 +477,7 @@ const ModalCart = ({
                                       updateQuantity(
                                         item.id,
                                         result.validated_quantity ||
-                                          newQuantity,
+                                        newQuantity,
                                         item.color
                                       );
                                     } else {

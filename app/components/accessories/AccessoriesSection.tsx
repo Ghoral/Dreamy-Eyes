@@ -241,6 +241,7 @@ const AccessoriesSection = () => {
                         price: Number(rawPrice),
                         quantity: selectedQty,
                         maxQuantity: qty ?? undefined,
+                        image: item.image ? getAccessoryImageUrl(item.image) : undefined,
                       });
                       setToastConfig({
                         message: "Added to cart successfully",
