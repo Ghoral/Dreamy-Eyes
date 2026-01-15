@@ -69,7 +69,7 @@ const SalesSection = () => {
 
   const handleAddToCart = (e: React.MouseEvent, product: Product) => {
     e.stopPropagation();
-    
+
     // Navigate to product detail page instead of adding to cart immediately
     const productId = product.id || product.title;
     router.push(`/sale/${encodeURIComponent(productId)}`);
@@ -134,7 +134,7 @@ const SalesSection = () => {
                 key={product.id || index}
                 className="group relative bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2 border border-secondary-100 overflow-hidden w-[calc(100%-1rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.67rem)] lg:w-[calc(25%-0.75rem)] max-w-sm"
               >
-                <Link href={`/sale/${product.id || product.title}`} className="block h-full">
+                <Link href={`/${product.id || product.title}`} className="block h-full">
                   {/* Image Container */}
                   <div className="relative aspect-square bg-gradient-to-br from-secondary-100 to-primary-100 overflow-hidden">
                     {imageUrl ? (
@@ -175,7 +175,7 @@ const SalesSection = () => {
 
                     {/* Wishlist Icon */}
                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <button 
+                      <button
                         className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white shadow-md transition-colors"
                         onClick={(e) => {
                           e.preventDefault();
