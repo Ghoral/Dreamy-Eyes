@@ -63,212 +63,129 @@ const ApplicatorsSection = () => {
     };
   }, []);
 
-  if (loading) {
-    return null;
-  }
+  const handleQuantityCheck = async (item: Accessory, nextQty: number) => {
+    if (nextQty < 1) return;
 
-  if (error || items.length === 0) {
+    try {
+      setPendingId(item.id);
+      const supabase = createSupabaseClient();
+      const { data, error } = await supabase.rpc(
+        "check_accessory_availability",
+        { accessory_id: item.id }
+      );
+
+      if (error) throw error;
+      const available = typeof data === "boolean" ? data : (data?.available ?? data?.is_available ?? false);
+
+      if (!available) {
+        setToastConfig({
+          message: "Sorry, this quantity is no longer available in stock.",
+          isVisible: true,
+        });
+        return;
+      }
+
+      setQuantityMap((m) => ({ ...m, [item.id]: nextQty }));
+    } catch (err) {
+      setToastConfig({
+        message: "Failed to verify stock availability.",
+        isVisible: true,
+      });
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  if (loading || error || items.length === 0) {
     return null;
   }
 
   return (
-    <section id="applicators-section" className="py-20 bg-gradient-to-br from-primary-50 via-white to-secondary-50 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-primary-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float" />
-        <div
-          className="absolute -bottom-24 -left-24 w-96 h-96 bg-secondary-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float"
-          style={{ animationDelay: "1.5s" }}
-        />
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-bold rounded-full mb-4 shadow-sm">
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8c-1.1 0-2 .9-2 2m0 0c0 1.1.9 2 2 2m0-4c1.1 0 2 .9 2 2m-2 8a8 8 0 110-16 8 8 0 010 16z"
-              />
-            </svg>
-            Applicators
+    <section id="applicators-section" className="py-32 bg-white relative">
+      <div className="max-w-[1400px] mx-auto px-4">
+        <div className="flex flex-col md:flex-row items-baseline gap-8 mb-20">
+          <div className="flex-1">
+            <span className="text-secondary-400 font-black tracking-[0.4em] uppercase text-xs mb-6 block">Precision Tools</span>
+            <h2 className="text-5xl md:text-8xl font-black text-secondary-900 tracking-tighter leading-none mb-8">
+              THE <span className="text-primary-500 italic font-serif">KIT</span>
+            </h2>
           </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-secondary-900 mb-3 tracking-tight">
-            Complete Your Application
-          </h2>
-          <p className="text-base md:text-lg text-secondary-600 max-w-2xl mx-auto leading-relaxed font-medium">
-            Essential applicators and tools for perfect lens application every time.
+          <p className="max-w-md text-secondary-500 font-medium">
+            Every detail matters. Our professional-grade applicator kits ensure a seamless, hygienic, and perfect application experience.
           </p>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {items.map((item) => {
-            const rawPrice =
-              typeof item.price === "string"
-                ? parseFloat(item.price)
-                : (item.price as number | null);
-            const priceDisplay =
-              rawPrice != null ? formatPriceWithCurrency(rawPrice, country) : "—";
-            const qty =
-              typeof item.quantity === "string"
-                ? parseInt(item.quantity)
-                : (item.quantity as number | null);
+            const rawPrice = typeof item.price === "string" ? parseFloat(item.price) : (item.price as number | null);
+            const priceDisplay = rawPrice != null ? formatPriceWithCurrency(rawPrice, country) : "—";
+            const qty = typeof item.quantity === "string" ? parseInt(item.quantity) : (item.quantity as number | null);
             const inStock = (qty ?? 0) > 0;
             const selectedQty = quantityMap[item.id] ?? 1;
 
-            const handleQuantityCheck = async (nextQty: number) => {
-              if (nextQty < 1) return;
-
-              try {
-                setPendingId(item.id);
-                const supabase = createSupabaseClient();
-                const { data, error } = await supabase.rpc(
-                  "check_accessory_availability",
-                  { accessory_id: item.id }
-                );
-
-                if (error) throw error;
-
-                const available = typeof data === "boolean" ? data : (data?.available ?? data?.is_available ?? false);
-
-                if (!available) {
-                  setToastConfig({
-                    message: "Sorry, this quantity is no longer available in stock.",
-                    isVisible: true,
-                  });
-                  return;
-                }
-
-                setQuantityMap((m) => ({ ...m, [item.id]: nextQty }));
-              } catch (err) {
-                setToastConfig({
-                  message: "Failed to verify stock availability.",
-                  isVisible: true,
-                });
-              } finally {
-                setPendingId(null);
-              }
-            };
-
             return (
-              <div
-                key={item.id}
-                className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-secondary-100 overflow-hidden w-full sm:w-[calc(50%-1.5rem)] md:w-[calc(33.333%-1.5rem)] lg:w-[calc(25%-1.5rem)] max-w-[300px]"
-              >
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-lg font-bold text-secondary-800 group-hover:text-primary-600 transition-colors duration-300">
-                      {item.name || "Accessory"}
-                    </h3>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${inStock
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                        }`}
-                    >
-                      {inStock ? "In Stock" : "Out of Stock"}
-                    </span>
-                  </div>
-
-                  {/* Accessory Image */}
-                  <div className="relative aspect-[4/3] mb-4 rounded-xl overflow-hidden bg-secondary-50 group-hover:shadow-inner transition-all duration-300">
+              <div key={item.id} className="group relative">
+                <div className="bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring overflow-hidden p-8 border border-secondary-100 h-full flex flex-col">
+                  <div className="relative aspect-square mb-10 rounded-2xl overflow-hidden bg-white shadow-soft">
                     {item.image ? (
                       <img
                         src={getAccessoryImageUrl(item.image)}
                         alt={item.name || "Accessory"}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <svg className="w-12 h-12 text-secondary-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
+                      <div className="w-full h-full flex items-center justify-center text-6xl">🛠️</div>
                     )}
                   </div>
-
-                  <p className="text-secondary-600 text-sm mb-4 line-clamp-3 h-[60px]">
-                    {item.description || "No description available."}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-primary-600">
-                      {priceDisplay}
-                    </span>
-                    {qty != null && (
-                      <span className="text-secondary-500 text-sm">
-                        Total: {qty}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="inline-flex items-center rounded-xl border border-secondary-200 overflow-hidden">
-                      <button
-                        className="px-3 py-2 bg-secondary-50 hover:bg-secondary-100 text-secondary-700 disabled:opacity-50 transition-colors"
-                        disabled={!inStock || selectedQty <= 1 || pendingId === item.id}
-                        onClick={() => handleQuantityCheck(selectedQty - 1)}
-                      >
-                        −
-                      </button>
-                      <div className="px-4 py-2 font-semibold text-secondary-800 min-w-[40px] text-center">
-                        {pendingId === item.id ? (
-                          <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                        ) : (
-                          selectedQty
-                        )}
-                      </div>
-                      <button
-                        className="px-3 py-2 bg-secondary-50 hover:bg-secondary-100 text-secondary-700 disabled:opacity-50 transition-colors"
-                        disabled={!inStock || (qty != null && selectedQty >= qty) || pendingId === item.id}
-                        onClick={() => handleQuantityCheck(selectedQty + 1)}
-                      >
-                        +
-                      </button>
+                  <div className="flex-1 space-y-4">
+                    <div className="flex justify-between items-start gap-4">
+                      <h3 className="text-2xl font-black text-secondary-900 tracking-tight leading-tight uppercase group-hover:text-primary-500 transition-colors">
+                        {item.name || "Accessory"}
+                      </h3>
+                      {!inStock && <span className="text-[10px] font-black text-red-500 tracking-widest uppercase">OUT</span>}
                     </div>
+                    <p className="text-secondary-400 text-sm font-medium line-clamp-2">
+                      {item.description || "Essential precision tool for lens maintenance."}
+                    </p>
                   </div>
-                  <button
-                    disabled={!inStock || rawPrice == null || pendingId === item.id}
-                    onClick={() => {
-                      addAccessoryItem({
-                        id: item.id,
-                        title: item.name || "Accessory",
-                        description: item.description || undefined,
-                        price: Number(rawPrice),
-                        quantity: selectedQty,
-                        maxQuantity: qty ?? undefined,
-                        image: item.image ? getAccessoryImageUrl(item.image) : undefined,
-                        category: "accessory" as const,
-                      });
-                      setToastConfig({
-                        message: "Added to cart successfully",
-                        isVisible: true,
-                      });
-                      setTimeout(() => {
-                        setToastConfig({ message: "", isVisible: false });
-                      }, 1500);
-                    }}
-                    className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 md:py-3 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-95 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="mt-8 pt-8 border-t border-secondary-200/50">
+                    <div className="flex items-center justify-between mb-8">
+                      <span className="text-2xl font-black text-secondary-900">{priceDisplay}</span>
+                      <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl shadow-sm">
+                        <button
+                          disabled={!inStock || selectedQty <= 1 || pendingId === item.id}
+                          onClick={() => handleQuantityCheck(item, selectedQty - 1)}
+                          className="text-secondary-400 hover:text-primary-500 transition-colors font-black"
+                        >—</button>
+                        <span className="font-black text-secondary-900 w-4 text-center">{selectedQty}</span>
+                        <button
+                          disabled={!inStock || (qty != null && selectedQty >= qty) || pendingId === item.id}
+                          onClick={() => handleQuantityCheck(item, selectedQty + 1)}
+                          className="text-secondary-400 hover:text-primary-500 transition-colors font-black"
+                        >+</button>
+                      </div>
+                    </div>
+                    <button
+                      disabled={!inStock || rawPrice == null || pendingId === item.id}
+                      onClick={() => {
+                        addAccessoryItem({
+                          id: item.id,
+                          title: item.name || "Accessory",
+                          description: item.description || undefined,
+                          price: Number(rawPrice),
+                          quantity: selectedQty,
+                          maxQuantity: qty ?? undefined,
+                          image: item.image ? getAccessoryImageUrl(item.image) : undefined,
+                          category: "accessory" as const,
+                        });
+                        setToastConfig({ message: "Item added", isVisible: true });
+                        setTimeout(() => setToastConfig({ message: "", isVisible: false }), 2000);
+                      }}
+                      className="w-full py-5 bg-secondary-900 text-white rounded-3xl font-black tracking-widest text-xs hover:bg-primary-500 transition-all duration-500 shadow-xl"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                      />
-                    </svg>
-                    Add to Cart
-                  </button>
+                      ADD TO KIT
+                    </button>
+                  </div>
                 </div>
               </div>
             );

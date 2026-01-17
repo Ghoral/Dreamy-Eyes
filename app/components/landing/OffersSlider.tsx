@@ -88,177 +88,108 @@ const OffersSlider = () => {
   const isSingleOffer = offers.length === 1;
 
   return (
-    <section className="bg-gradient-to-r from-primary-50 to-secondary-50 py-8 border-y border-primary-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-end justify-between mb-12 gap-6 relative z-10">
-          <div className="flex-1 text-center md:text-left">
-            <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm border border-primary-200 text-primary-700 text-sm font-bold rounded-full mb-6 shadow-sm animate-fade-in-up">
-              <svg
-                className="w-4 h-4 mr-2 text-primary-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-                />
-              </svg>
-              LIMITED TIME OFFERS
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-secondary-900 mb-6 tracking-tight">
-              Unlock <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-primary-700">Exclusive</span> Savings
+    <section id="offers-section" className="bg-secondary-900 py-32 relative overflow-hidden">
+      {/* Abstract Background Shapes */}
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
+        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[60%] bg-primary-500 blur-[120px] rounded-full"></div>
+        <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[60%] bg-accent-500 blur-[120px] rounded-full"></div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto relative z-10">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row items-end justify-between mb-20 px-4 md:px-8">
+          <div className="max-w-2xl">
+            <span className="text-primary-400 font-black tracking-[0.3em] uppercase text-xs mb-4 block">Special Rewards</span>
+            <h2 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none">
+              Elite <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400">Offer</span> Lounge
             </h2>
-            <p className="text-lg md:text-xl text-secondary-600 max-w-2xl leading-relaxed font-medium">
-              Discover unbeatable deals on our premium lenses. Grab your favorites before they're gone!
-            </p>
+            <p className="text-xl text-white/60 font-medium">Curated benefits for our most discerning customers. Collect and apply during checkout.</p>
           </div>
-          
-          {/* Pause/Play Button Removed */}
+
+          <div className="flex gap-4 mt-8 md:mt-0">
+            <button
+              onClick={() => scrollContainerRef.current?.scrollBy({ left: -400, behavior: 'smooth' })}
+              className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-secondary-900 transition-all duration-500 backdrop-blur-md"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <button
+              onClick={() => scrollContainerRef.current?.scrollBy({ left: 400, behavior: 'smooth' })}
+              className="w-14 h-14 rounded-full bg-white text-secondary-900 flex items-center justify-center hover:bg-primary-500 hover:text-white transition-all duration-500 shadow-xl"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </button>
+          </div>
         </div>
 
-        {/* Offers Slider */}
-        <div 
+        {/* Scrollable Container with start/end padding to prevent cutting */}
+        <div
           ref={scrollContainerRef}
-          className="overflow-x-auto pb-4 pt-4 flex w-full"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
+          className="flex gap-8 overflow-x-auto pb-12 pt-4 px-4 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory"
         >
-          <div className="flex space-x-4 m-auto">
-            {displayOffers.map((offer, index) => {
-              const isApplied =
-                cartState.selectedOffer?.id === offer.id;
+          {displayOffers.map((offer, index) => {
+            const isApplied = cartState.selectedOffer?.id === offer.id;
 
-              return (
-                <div
-                  key={`${offer.id}-${index}`}
-                  className={`relative flex-shrink-0 w-80 bg-white rounded-2xl p-6 border-2 transition-all duration-300 ${
-                    isApplied
-                      ? "border-green-500 shadow-lg shadow-green-200"
-                      : "border-primary-200 hover:border-primary-400 hover:shadow-lg"
-                  }`}
-                >
-                  {/* Applied Badge */}
-                  {isApplied && (
-                    <div className="absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span>APPLIED</span>
+            return (
+              <div
+                key={`${offer.id}-${index}`}
+                className="flex-shrink-0 w-[320px] snap-start"
+              >
+                <div className={`relative h-[220px] rounded-2xl overflow-hidden group transition-all duration-700 ${isApplied ? "scale-105 shadow-[0_0_50px_rgba(195,78,138,0.3)]" : "hover:scale-[1.02]"
+                  }`}>
+                  {/* Card Background Layer */}
+                  <div className={`absolute inset-0 transition-colors duration-700 ${isApplied ? "bg-primary-600" : "bg-white/5 backdrop-blur-xl border border-white/10"
+                    }`} />
+
+                  {/* Graphic Element */}
+                  <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-white/5 rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-1000" />
+
+                  {/* Content Layout */}
+                  <div className="relative h-full p-10 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start mb-6">
+                        <div className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${isApplied ? "bg-white text-primary-600" : "bg-primary-500 text-white"
+                          }`}>
+                          {offer.discount_type === 'percentage' ? `${offer.discount_value}% DISCOUNT` : `$${offer.discount_value} OFF`}
+                        </div>
+                        {isApplied && (
+                          <div className="animate-pulse text-white">
+                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                          </div>
+                        )}
+                      </div>
+
+                      <h3 className={`text-3xl font-black mb-2 tracking-tight ${isApplied ? "text-white" : "text-white"}`}>
+                        {offer.title || offer.name}
+                      </h3>
+                      <p className={`text-sm font-medium leading-relaxed max-w-[80%] ${isApplied ? "text-white/80" : "text-white/50"}`}>
+                        {offer.description}
+                      </p>
                     </div>
-                  )}
 
-                  {/* Offer Content */}
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-secondary-800 mb-2">
-                      {offer.title || offer.name}
-                    </h3>
-                    <p className="text-sm text-secondary-600 line-clamp-2">
-                      {offer.description}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => handleApplyOffer(offer)}
+                        disabled={isApplied}
+                        className={`px-8 py-3 rounded-2xl font-black text-sm transition-all duration-500 ${isApplied
+                          ? "bg-white/10 text-white border border-white/20 cursor-default"
+                          : "bg-white text-secondary-900 shadow-xl hover:bg-primary-500 hover:text-white"
+                          }`}
+                      >
+                        {isApplied ? "ACTIVATED" : "CLAIM TOKEN"}
+                      </button>
+                      <div className={`text-[10px] font-bold tracking-widest ${isApplied ? "text-white/40" : "text-white/20"}`}>
+                        REF: {String(offer.id).slice(0, 8).toUpperCase()}
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Offer Details */}
-                  <div className="space-y-2 mb-4">
-                    {offer.discount_type && offer.discount_value && (
-                      <div className="flex items-center space-x-2 text-sm">
-                        <svg
-                          className="w-5 h-5 text-primary-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                          />
-                        </svg>
-                        <span className="text-secondary-700 font-semibold">
-                          {offer.discount_type === "percentage"
-                            ? `${offer.discount_value}% OFF`
-                            : `$${offer.discount_value} OFF`}
-                        </span>
-                      </div>
-                    )}
-
-                    {offer.minimum_quantity && (
-                      <div className="flex items-center space-x-2 text-sm">
-                        <svg
-                          className="w-5 h-5 text-secondary-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                          />
-                        </svg>
-                        <span className="text-secondary-600">
-                          Min. {offer.minimum_quantity} items
-                        </span>
-                      </div>
-                    )}
-
-                    {offer.minimum_value && (
-                      <div className="flex items-center space-x-2 text-sm">
-                        <svg
-                          className="w-5 h-5 text-secondary-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span className="text-secondary-600">
-                          Min. ${offer.minimum_value}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Apply Button */}
-                  <button
-                    onClick={() => handleApplyOffer(offer)}
-                    disabled={isApplied}
-                    className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 ${
-                      isApplied
-                        ? "bg-green-500 text-white cursor-not-allowed"
-                        : "bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 shadow-md hover:shadow-lg"
-                    }`}
-                  >
-                    {isApplied ? "Applied" : "Apply Offer"}
-                  </button>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+              </div>
+            );
+          })}
 
-        {/* Info Text */}
-        <div className="text-center mt-2">
+          {/* Spacer to prevent cut at the end */}
+          <div className="flex-shrink-0 w-8 md:w-16" />
         </div>
       </div>
     </section>

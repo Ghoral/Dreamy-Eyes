@@ -39,47 +39,51 @@ export default function EyeLashesSection() {
     const router = useRouter();
 
     return (
-        <section id="eyelashes-section" className="py-16 bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Minimal header */}
-                <div className="text-center mb-10">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                        Eye Lashes
-                    </h2>
-                    <p className="text-gray-600">Enhance your natural beauty</p>
+        <section id="eyelashes-section" className="py-32 bg-secondary-50 relative overflow-hidden">
+            {/* Background Text */}
+            <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none select-none overflow-hidden opacity-[0.03]">
+                <span className="text-[30vw] font-black tracking-tighter whitespace-nowrap">LASHES</span>
+            </div>
+
+            <div className="max-w-[1400px] mx-auto px-4 relative">
+                <div className="flex flex-col md:flex-row items-end justify-between mb-20 gap-8">
+                    <div>
+                        <span className="text-primary-500 font-black tracking-[0.3em] uppercase text-xs mb-4 block">Beauty Elevated</span>
+                        <h2 className="text-5xl md:text-7xl font-black text-secondary-900 tracking-tighter leading-tight">
+                            EYE <span className="font-serif italic font-normal text-primary-500">LASHES</span>
+                        </h2>
+                    </div>
+                    <p className="max-w-md text-secondary-500 font-medium text-right hidden md:block">
+                        Transform your gaze with our handcrafted, premium lash extensions. Designed for every mood and occasion.
+                    </p>
                 </div>
 
-                {/* Compact grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                    {DUMMY_EYELASHES.map((lash) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+                    {DUMMY_EYELASHES.map((lash, index) => (
                         <div
                             key={lash.id}
                             onClick={() => router.push(`/eyelashes/${lash.id}`)}
-                            className="group cursor-pointer bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-lg hover:border-pink-300 transition-all duration-300"
+                            className={`group cursor-pointer relative ${index % 2 !== 0 ? 'md:mt-12' : ''}`}
                         >
-                            {/* Compact image */}
-                            <div className="relative aspect-square bg-gradient-to-br from-pink-50 to-purple-50 rounded-xl mb-3 overflow-hidden">
-                                {lash.image ? (
-                                    <Image
-                                        src={lash.image}
-                                        alt={lash.title}
-                                        fill
-                                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <span className="text-4xl">👁️</span>
-                                    </div>
-                                )}
-                            </div>
+                            <div className="relative aspect-[3/4] bg-white rounded-2xl transition-all duration-700 ease-soft-spring overflow-hidden shadow-soft border border-secondary-100 p-8">
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary-50/50 to-transparent"></div>
 
-                            {/* Compact info */}
-                            <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
-                                {lash.title}
-                            </h3>
-                            <p className="text-lg font-bold text-pink-600">
-                                {formatPrice(lash.price, country)}
-                            </p>
+                                <div className="relative h-full flex flex-col items-center justify-center text-center">
+                                    <div className="text-6xl mb-8 group-hover:scale-125 transition-transform duration-700">✨</div>
+                                    <h3 className="text-2xl font-black text-secondary-900 mb-2 leading-tight uppercase tracking-tight">
+                                        {lash.title}
+                                    </h3>
+                                    <div className="text-primary-500 font-black text-lg">
+                                        {formatPrice(lash.price, country)}
+                                    </div>
+
+                                    <div className="mt-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                        <div className="px-6 py-2 bg-secondary-900 text-white rounded-full text-[10px] font-black tracking-widest uppercase">
+                                            SELECT STYLE
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
