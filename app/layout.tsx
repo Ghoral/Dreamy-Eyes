@@ -29,7 +29,6 @@ export default function RootLayout({
           <UserMetadataLogger />
           <ExchangeRateLoader />
           <Header />
-          <OfferBanner />
           {children}
         </CartProvider>
       </body>

@@ -17,7 +17,7 @@ const Navbar = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { state: cartState } = useCart();
+  const { state: cartState, setOffer } = useCart();
   const { country } = useUserCountry();
 
   useEffect(() => {
@@ -68,7 +68,7 @@ const Navbar = () => {
 
           {/* Nav Links (Desktop Left) */}
           <div className="hidden lg:flex items-center gap-10">
-            {["Home", "Shop", "Lens Tech", "About"].map((item) => (
+            {["Home", "About"].map((item) => (
               <Link
                 key={item}
                 href={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
@@ -93,6 +93,30 @@ const Navbar = () => {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4 md:gap-8">
+            {/* Minimal Applied Offer Info */}
+            {cartState.selectedOffer && (
+              <div className={`flex items-center gap-2 pl-3 md:pl-4 pr-2 py-1 md:py-1.5 rounded-full border transition-all duration-500 group/offer ${isScrolled ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
+                }`}>
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-primary-500 rounded-full animate-pulse" />
+                  <span className={`text-[9px] md:text-[10px] font-black tracking-widest uppercase ${isScrolled ? "text-primary-600" : "text-white"
+                    }`}>
+                    {cartState.selectedOffer.name || cartState.selectedOffer.title || "OFFER ACTIVE"}
+                  </span>
+                </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOffer(null, []);
+                  }}
+                  className={`p-1 rounded-full transition-all duration-300 ${isScrolled ? "hover:bg-primary-100 text-primary-400" : "hover:bg-white/20 text-white/50"}`}
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            )}
+
             <button
               onClick={() => setIsCartModalOpen(true)}
               className={`relative group transition-transform hover:scale-110 ${isScrolled ? "text-secondary-900" : "text-white"}`}
@@ -127,7 +151,7 @@ const Navbar = () => {
               </button>
             </div>
             <div className="flex flex-col gap-8">
-              {["Home", "Shop", "Category", "About", "Contact"].map((item) => (
+              {["Home", "About", "Contact"].map((item) => (
                 <Link
                   key={item}
                   href="/"

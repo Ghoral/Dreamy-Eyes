@@ -148,7 +148,7 @@ const OffersSlider = () => {
                   <div className="relative h-full p-10 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start mb-6">
-                        <div className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${isApplied ? "bg-white text-primary-600" : "bg-primary-500 text-white"
+                        <div className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase font-price ${isApplied ? "bg-white text-primary-600" : "bg-primary-500 text-white"
                           }`}>
                           {offer.discount_type === 'percentage' ? `${offer.discount_value}% DISCOUNT` : `$${offer.discount_value} OFF`}
                         </div>
