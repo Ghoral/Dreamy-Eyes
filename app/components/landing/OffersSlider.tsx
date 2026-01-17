@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { get_enabled_offers } from "@/app/api/offers";
 import { useCart, Offer } from "@/app/context/CartContext";
 
 const OffersSlider = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { state: cartState, setOffer } = useCart();
 
   useEffect(() => {
@@ -25,164 +23,89 @@ const OffersSlider = () => {
         setLoading(false);
       }
     };
-
     fetchOffers();
   }, []);
 
-  // Auto-scroll animation removed as per user request to show only DB data without duplication
-  /*
-  useEffect(() => {
-    // Disable animation if only one offer or paused
-    if (!scrollContainerRef.current || offers.length <= 1 || isPaused) return;
-
-    const scrollContainer = scrollContainerRef.current;
-    let animationId: number;
-    let scrollPosition = 0;
-    const scrollSpeed = 0.5; // pixels per frame
-
-    const animate = () => {
-      scrollPosition += scrollSpeed;
-      
-      // Reset scroll position when reaching the end of the first set
-      if (scrollPosition >= scrollContainer.scrollWidth / 2) {
-        scrollPosition = 0;
-      }
-      
-      scrollContainer.scrollLeft = scrollPosition;
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animationId = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, [offers, isPaused]);
-  */
-
   const handleApplyOffer = (offer: Offer) => {
-    // Apply offer with current cart items
     setOffer(offer, cartState.items);
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!offers || offers.length === 0) {
+  if (loading || !offers || offers.length === 0) {
     return null;
   }
 
-  // Use offers directly from DB without duplication
-  const displayOffers = offers;
-  const isSingleOffer = offers.length === 1;
-
   return (
-    <section id="offers-section" className="bg-secondary-900 py-32 relative overflow-hidden">
-      {/* Abstract Background Shapes */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
-        <div className="absolute top-[-10%] left-[-5%] w-[40%] h-[60%] bg-primary-500 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[60%] bg-accent-500 blur-[120px] rounded-full"></div>
+    <section id="offers-section" className="bg-secondary-900 py-12 md:py-20 relative overflow-hidden">
+      {/* Premium Cinematic Background */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] bg-primary-500/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[60%] bg-accent-500/10 blur-[120px] rounded-full" />
       </div>
 
-      <div className="max-w-[1400px] mx-auto relative z-10">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row items-end justify-between mb-20 px-4 md:px-8">
-          <div className="max-w-2xl">
-            <span className="text-primary-400 font-black tracking-[0.3em] uppercase text-xs mb-4 block">Special Rewards</span>
-            <h2 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none">
-              Elite <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400">Offer</span> Lounge
-            </h2>
-            <p className="text-xl text-white/60 font-medium">Curated benefits for our most discerning customers. Collect and apply during checkout.</p>
-          </div>
-
-          <div className="flex gap-4 mt-8 md:mt-0">
-            <button
-              onClick={() => scrollContainerRef.current?.scrollBy({ left: -400, behavior: 'smooth' })}
-              className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-secondary-900 transition-all duration-500 backdrop-blur-md"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-            </button>
-            <button
-              onClick={() => scrollContainerRef.current?.scrollBy({ left: 400, behavior: 'smooth' })}
-              className="w-14 h-14 rounded-full bg-white text-secondary-900 flex items-center justify-center hover:bg-primary-500 hover:text-white transition-all duration-500 shadow-xl"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-            </button>
-          </div>
+      <div className="max-w-[1400px] mx-auto relative z-10 px-6">
+        {/* Boutique Header */}
+        <div className="flex flex-col items-center text-center mb-10 md:mb-16">
+          <span className="text-primary-400 font-black tracking-[0.4em] uppercase text-[9px] mb-3 block">Member Exclusives</span>
+          <h2 className="text-4xl md:text-8xl font-black text-white mb-4 tracking-tighter leading-none">
+            REWARD <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-300">VAULT</span>
+          </h2>
+          <p className="text-[10px] md:text-xs text-secondary-400 font-bold uppercase tracking-widest max-w-sm">Curated privileges for your collection.</p>
         </div>
 
-        {/* Scrollable Container with start/end padding to prevent cutting */}
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-8 overflow-x-auto pb-12 pt-4 px-4 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory justify-start md:justify-center"
-        >
-          {displayOffers.map((offer, index) => {
+        {/* 2-Column Voucher Grid */}
+        <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-center justify-center gap-4 md:gap-8">
+          {offers.map((offer, index) => {
             const isApplied = cartState.selectedOffer?.id === offer.id;
 
             return (
               <div
-                key={`${offer.id}-${index}`}
-                className="flex-shrink-0 w-[320px] snap-start"
+                key={`offer-${offer.id}-${index}`}
+                onClick={() => !isApplied && handleApplyOffer(offer)}
+                className={`group relative flex flex-col items-center justify-between w-full lg:w-[320px] aspect-[4/5] lg:aspect-auto lg:h-[380px] p-6 md:p-10 rounded-[2rem] border transition-all duration-700 cursor-pointer overflow-hidden ${isApplied
+                    ? "bg-white border-white shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105"
+                    : "bg-white/5 border-white/10 hover:border-primary-500/30 hover:bg-white/10"
+                  }`}
               >
-                <div className={`relative h-[220px] rounded-2xl overflow-hidden group transition-all duration-700 ${isApplied ? "scale-105 shadow-[0_0_50px_rgba(195,78,138,0.3)]" : "hover:scale-[1.02]"
-                  }`}>
-                  {/* Card Background Layer */}
-                  <div className={`absolute inset-0 transition-colors duration-700 ${isApplied ? "bg-primary-600" : "bg-white/5 backdrop-blur-xl border border-white/10"
-                    }`} />
+                {/* Background Decor */}
+                <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full transition-opacity duration-700 ${isApplied ? 'bg-primary-500/10 opacity-100' : 'bg-primary-500/5 opacity-0 group-hover:opacity-100'}`} />
 
-                  {/* Graphic Element */}
-                  <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-white/5 rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-1000" />
+                {/* Voucher Header: Icon */}
+                <div className={`text-4xl md:text-6xl mb-4 md:mb-8 transition-all duration-700 ${isApplied ? 'saturate-100 scale-110' : 'saturate-0 opacity-20 group-hover:opacity-100 group-hover:scale-110'}`}>
+                  {offer.discount_type === 'percentage' ? '🏷️' : '🎁'}
+                </div>
 
-                  {/* Content Layout */}
-                  <div className="relative h-full p-10 flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start mb-6">
-                        <div className={`px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase font-price ${isApplied ? "bg-white text-primary-600" : "bg-primary-500 text-white"
-                          }`}>
-                          {offer.discount_type === 'percentage' ? `${offer.discount_value}% DISCOUNT` : `$${offer.discount_value} OFF`}
-                        </div>
-                        {isApplied && (
-                          <div className="animate-pulse text-white">
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                          </div>
-                        )}
-                      </div>
+                {/* Perforated Separator */}
+                <div className="w-full flex items-center gap-2 mb-4 md:mb-8">
+                  <div className={`h-[1px] flex-1 ${isApplied ? 'bg-secondary-100' : 'bg-white/10'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full border ${isApplied ? 'border-primary-500 bg-primary-500' : 'border-white/20'}`} />
+                  <div className={`h-[1px] flex-1 ${isApplied ? 'bg-secondary-100' : 'bg-white/10'}`} />
+                </div>
 
-                      <h3 className={`text-3xl font-black mb-2 tracking-tight ${isApplied ? "text-white" : "text-white"}`}>
-                        {offer.title || offer.name}
-                      </h3>
-                      <p className={`text-sm font-medium leading-relaxed max-w-[80%] ${isApplied ? "text-white/80" : "text-white/50"}`}>
-                        {offer.description}
-                      </p>
+                {/* Content */}
+                <div className="text-center flex-1 flex flex-col justify-center gap-2 md:gap-4">
+                  <span className={`text-[8px] md:text-[10px] font-black tracking-[0.3em] uppercase ${isApplied ? 'text-primary-500' : 'text-primary-500/60'}`}>
+                    {isApplied ? "Privilege Applied" : "Redeem Privilege"}
+                  </span>
+                  <h3 className={`text-sm md:text-3xl font-black tracking-tighter leading-none uppercase ${isApplied ? 'text-secondary-900' : 'text-white'}`}>
+                    {offer.title || offer.name}
+                  </h3>
+                  {offer.description && (
+                    <p className={`hidden md:block text-[11px] font-medium leading-tight opacity-40 line-clamp-2 ${isApplied ? 'text-secondary-900' : 'text-white'}`}>
+                      {offer.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Footer Reference */}
+                <div className={`mt-4 pt-4 border-t w-full flex justify-between items-center ${isApplied ? 'border-secondary-100' : 'border-white/5'}`}>
+                  <span className={`text-[7px] md:text-[9px] font-mono tracking-widest ${isApplied ? 'text-secondary-300' : 'text-white/20'}`}>
+                    REF: {String(offer.id).slice(0, 6).toUpperCase()}
+                  </span>
+                  {isApplied && (
+                    <div className="bg-primary-500 text-white p-1 rounded-full">
+                      <svg className="w-2 h-2 md:w-3 md:h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </div>
-
-                    <div className="flex items-center justify-between">
-                      <button
-                        onClick={() => handleApplyOffer(offer)}
-                        disabled={isApplied}
-                        className={`px-8 py-3 rounded-2xl font-black text-sm transition-all duration-500 ${isApplied
-                          ? "bg-white/10 text-white border border-white/20 cursor-default"
-                          : "bg-white text-secondary-900 shadow-xl hover:bg-primary-500 hover:text-white"
-                          }`}
-                      >
-                        {isApplied ? "ACTIVATED" : "APPLY OFFER"}
-                      </button>
-                      <div className={`text-[10px] font-bold tracking-widest ${isApplied ? "text-white/40" : "text-white/20"}`}>
-                        REF: {String(offer.id).slice(0, 8).toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );
