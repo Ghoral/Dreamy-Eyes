@@ -15,9 +15,10 @@ export default function Home() {
       <BillboardCarousel />
       <ItemListing />
       <ProductWrapper />
+      <EyeLashesSection />
       <ApplicatorsSection />
       <SolutionsSection />
-      <EyeLashesSection />
+      <div className="w-full h-px bg-secondary-200 opacity-60 max-w-7xl mx-auto my-12 md:my-24" />
       <TikTokCarousel />
       <Footer />
     </div>

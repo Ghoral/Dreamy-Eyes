@@ -45,11 +45,11 @@ const TikTokCarousel = () => {
   }
 
   return (
-    <section className="relative py-12 bg-secondary-900 overflow-hidden">
+    <section className="relative py-12 bg-white overflow-hidden">
       {/* Dynamic Background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-[20%] left-[-10%] w-[60%] h-[60%] bg-primary-600 blur-[150px] rounded-full animate-pulse-slow"></div>
-        <div className="absolute bottom-[20%] right-[-10%] w-[60%] h-[60%] bg-accent-600 blur-[150px] rounded-full animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-[20%] left-[-10%] w-[60%] h-[60%] bg-primary-100 blur-[150px] rounded-full animate-pulse-slow"></div>
+        <div className="absolute bottom-[20%] right-[-10%] w-[60%] h-[60%] bg-accent-100 blur-[150px] rounded-full animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 relative z-10">
@@ -58,25 +58,25 @@ const TikTokCarousel = () => {
           {/* Left: Creative Content */}
           <div className="space-y-12">
             <div>
-              <span className="text-primary-400 font-black tracking-[0.4em] uppercase text-xs mb-6 block">Join the Culture</span>
-              <h2 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none mb-8">
-                SOCIAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400">LOUNGE</span>
+              <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-xs mb-6 block">Join the Culture</span>
+              <h2 className="text-6xl md:text-8xl font-black text-secondary-900 tracking-tighter leading-none mb-8">
+                SOCIAL <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-500">LOUNGE</span>
               </h2>
-              <p className="text-xl text-white/60 font-medium max-w-lg leading-relaxed">
+              <p className="text-xl text-secondary-400 font-medium max-w-lg leading-relaxed">
                 Step into our digital universe. Real people, real stories, and the ultimate lens inspiration.
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="p-8 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 group hover:bg-white/10 transition-all duration-500">
+              <div className="p-8 bg-secondary-50 backdrop-blur-2xl rounded-2xl border border-secondary-100 group hover:bg-secondary-100 transition-all duration-500">
                 <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">📸</div>
-                <h4 className="text-white font-black text-lg mb-2">STYLE GUIDES</h4>
-                <p className="text-white/40 text-sm">Discover how to pair lenses with your daily aesthetic.</p>
+                <h4 className="text-secondary-900 font-black text-lg mb-2">STYLE GUIDES</h4>
+                <p className="text-secondary-400 text-sm">Discover how to pair lenses with your daily aesthetic.</p>
               </div>
-              <div className="p-8 bg-white/5 backdrop-blur-2xl rounded-2xl border border-white/10 group hover:bg-white/10 transition-all duration-500">
+              <div className="p-8 bg-secondary-50 backdrop-blur-2xl rounded-2xl border border-secondary-100 group hover:bg-secondary-100 transition-all duration-500">
                 <div className="text-3xl mb-4 group-hover:scale-110 transition-transform">🔥</div>
-                <h4 className="text-white font-black text-lg mb-2">TRENDING NOW</h4>
-                <p className="text-white/40 text-sm">Stay ahead with the latest eye-fashion movements.</p>
+                <h4 className="text-secondary-900 font-black text-lg mb-2">TRENDING NOW</h4>
+                <p className="text-secondary-400 text-sm">Stay ahead with the latest eye-fashion movements.</p>
               </div>
             </div>
 
@@ -85,13 +85,13 @@ const TikTokCarousel = () => {
                 href={appDetails?.instagram_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center px-10 py-5 bg-white text-secondary-900 font-black tracking-widest text-xs rounded-full hover:bg-primary-500 hover:text-white transition-all duration-500 shadow-2xl"
+                className="flex-1 flex items-center justify-center px-10 py-5 bg-secondary-900 text-white font-black tracking-widest text-xs rounded-full hover:bg-primary-500 transition-all duration-500 shadow-2xl"
               >
                 FOLLOW US ON INSTAGRAM
               </a>
               <button
                 onClick={scrollToProducts}
-                className="flex-1 flex items-center justify-center px-10 py-5 bg-white/5 backdrop-blur-md border border-white/10 text-white font-black tracking-widest text-xs rounded-full hover:bg-white/10 transition-all duration-500"
+                className="flex-1 flex items-center justify-center px-10 py-5 bg-white border border-secondary-100 text-secondary-900 font-black tracking-widest text-xs rounded-full hover:bg-secondary-50 transition-all duration-500"
               >
                 SHOP THE LOOK
               </button>
@@ -100,9 +100,9 @@ const TikTokCarousel = () => {
 
           {/* Right: Modern Embed Frame */}
           <div className="relative flex justify-center">
-            <div className="absolute inset-0 bg-primary-500/20 blur-[100px] rounded-full"></div>
+            <div className="absolute inset-0 bg-primary-200 blur-[100px] rounded-full opacity-60"></div>
 
-            <div className="relative bg-white p-4 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] max-w-[380px] w-full">
+            <div className="relative bg-white p-4 rounded-2xl shadow-xl max-w-[380px] w-full border border-secondary-100">
               <div className="rounded-xl overflow-hidden">
                 <InstagramEmbed
                   url={appDetails?.instagram?.[0] || 'https://www.instagram.com/reels/DFCsfB1z2I0/'}

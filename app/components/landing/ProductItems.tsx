@@ -238,15 +238,15 @@ const ProductItems = ({ data }: { data: any }) => {
 
         {/* Products Grid */}
         {!country || isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="w-full">
+              <div key={i} className="w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]">
                 <ProductCardShimmer />
               </div>
             ))}
           </div>
         ) : filteredProducts && filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
             {filteredProducts.map((product: any, index: number) => {
               const imageUrl = getThumbnailUrl(product);
               const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
@@ -254,7 +254,7 @@ const ProductItems = ({ data }: { data: any }) => {
               return (
                 <div
                   key={index}
-                  className="group cursor-pointer w-full"
+                  className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
                   onClick={() => handleProductClick(product)}
                 >
                   <div className="relative aspect-[4/5] mb-10 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
@@ -272,11 +272,9 @@ const ProductItems = ({ data }: { data: any }) => {
                       </div>
                     )}
 
-
-
                     {product.tags && (
                       <div className="absolute bottom-3 left-3 md:bottom-8 md:left-8">
-                        <span className="px-2 md:px-5 py-1 md:py-2 bg-white/80 md:bg-white/90 backdrop-blur-md rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest text-secondary-900 shadow-sm uppercase">
+                        <span className="px-2 md:px-5 py-1 md:py-2 bg-white/90 backdrop-blur-md rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest text-primary-500 shadow-sm uppercase">
                           {Array.isArray(product.tags) ? product.tags[0] : String(product.tags)}
                         </span>
                       </div>
@@ -284,14 +282,13 @@ const ProductItems = ({ data }: { data: any }) => {
                   </div>
 
                   <div className="flex flex-col gap-3 md:gap-4">
-                    <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">{product.sub_title || "LENS SERIES"}</span>
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-2 md:gap-4">
-                      <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase flex-1">
+                      <h3 className="text-sm md:text-3xl font-black text-primary-500 tracking-tighter leading-tight group-hover:text-secondary-900 transition-colors uppercase flex-1">
                         {product.title}
                       </h3>
                       <div className="text-left md:text-right shrink-0">
                         <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
-                        <div className="text-sm md:text-2xl font-black text-secondary-900 font-price">
+                        <div className="text-sm md:text-2xl font-black text-secondary-900 font-price group-hover:text-primary-500 transition-colors">
                           {formatPrice(currentPrice, country)}
                         </div>
                       </div>
