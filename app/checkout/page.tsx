@@ -507,7 +507,7 @@ export default function CheckoutPage() {
 
         {/* Error Stage */}
         {error && (
-          <div className="max-w-4xl mx-auto mb-12 bg-red-50 border border-red-100 rounded-[2rem] p-6 animate-in slide-in-from-top duration-700">
+          <div className="max-w-4xl mx-auto mb-12 bg-red-50 border border-red-100 rounded p-6 animate-in slide-in-from-top duration-700">
             <div className="flex items-center gap-4 text-red-600">
               <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 font-bold">!</div>
               <span className="font-black uppercase tracking-widest text-[11px]">{error}</span>
@@ -521,7 +521,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-7 space-y-12">
 
             {/* Shipping Module */}
-            <div className="bg-white border border-secondary-100 rounded-[3rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700">
+            <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_30px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex flex-col">
                   <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1">Destinations</span>
@@ -531,9 +531,9 @@ export default function CheckoutPage() {
               </div>
 
               {addresses.length === 0 ? (
-                <div className="py-12 border-2 border-dashed border-secondary-100 rounded-[2.5rem] text-center">
+                <div className="py-12 border-2 border-dashed border-secondary-100 rounded text-center">
                   <p className="text-secondary-400 font-black uppercase tracking-widest text-[10px] mb-6">No logistics data found</p>
-                  <Link href="/shipping-address" className="px-8 py-4 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-500 transition-all">Define Destination</Link>
+                  <Link href="/shipping-address" className="px-8 py-4 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all">Define Destination</Link>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -550,7 +550,7 @@ export default function CheckoutPage() {
                       />
                       <label
                         htmlFor={`address-${address.id}`}
-                        className={`block p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-500 ${selectedAddressId === address.id
+                        className={`block p-8 rounded border-2 cursor-pointer transition-all duration-500 ${selectedAddressId === address.id
                           ? "border-primary-500 bg-primary-50 shadow-[0_15px_30px_rgba(195,78,138,0.1)]"
                           : "border-secondary-50 bg-white hover:border-secondary-200"
                           }`}
@@ -576,7 +576,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment Module */}
-            <div className="bg-white border border-secondary-100 rounded-[3rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700">
+            <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_30px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700">
               <div className="flex flex-col mb-8">
                 <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1">Payments</span>
                 <h2 className="text-3xl font-black text-secondary-900 tracking-tighter">PAYMENT <span className="text-secondary-400 font-serif italic font-normal">METHOD</span></h2>
@@ -599,12 +599,12 @@ export default function CheckoutPage() {
                     />
                     <label
                       htmlFor={method.id}
-                      className={`block p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-500 ${paymentMethod === method.id
+                      className={`block p-8 rounded border-2 cursor-pointer transition-all duration-500 ${paymentMethod === method.id
                         ? "border-primary-500 bg-primary-50 shadow-[0_15px_30px_rgba(195,78,138,0.1)]"
                         : "border-secondary-50 bg-white hover:border-secondary-200 outline-none"
                         }`}
                     >
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 ${paymentMethod === method.id ? "bg-primary-500 text-white shadow-glow" : "bg-secondary-50 text-secondary-400"}`}>
+                      <div className={`w-10 h-10 rounded flex items-center justify-center mb-6 transition-all duration-500 ${paymentMethod === method.id ? "bg-primary-500 text-white shadow-glow" : "bg-secondary-50 text-secondary-400"}`}>
                         {method.id === "cash_on_delivery" ? (
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                         ) : (
@@ -621,6 +621,13 @@ export default function CheckoutPage() {
               {/* Cash on Delivery Fields */}
               {paymentMethod === "cash_on_delivery" && (
                 <div className="mt-8 space-y-6 pt-8 border-t border-secondary-50 animate-in slide-in-from-right duration-700">
+                  <div className="bg-primary-50 border border-primary-100 p-6 rounded flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0 text-primary-500 font-bold">!</div>
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-secondary-900 mb-1">Advance Payment Required</h4>
+                      <p className="text-secondary-500 text-xs font-medium leading-relaxed">Please note that <span className="text-secondary-900 font-bold">Delivery Charges</span> must be paid in advance to confirm your Cash on Delivery order.</p>
+                    </div>
+                  </div>
                   <div>
                     <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Customer ID <span className="text-primary-500">*</span></label>
                     <input
@@ -628,7 +635,7 @@ export default function CheckoutPage() {
                       value={customerId}
                       onChange={(e) => setCustomerId(e.target.value)}
                       placeholder="e.g. Citizenship/License/Passport Number"
-                      className="w-full bg-secondary-50 border border-secondary-100 rounded-2xl px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
+                      className="w-full bg-secondary-50 border border-secondary-100 rounded px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
                     />
                   </div>
                   <div>
@@ -638,10 +645,10 @@ export default function CheckoutPage() {
                         type="file"
                         accept="image/*"
                         onChange={handleCustomerIdImageChange}
-                        className="block w-full text-xs text-secondary-400 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-secondary-900 file:text-white hover:file:bg-primary-500 transition-all"
+                        className="block w-full text-xs text-secondary-400 file:mr-4 file:py-3 file:px-6 file:rounded file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-secondary-900 file:text-white hover:file:bg-primary-500 transition-all"
                       />
                       {customerIdPreview && (
-                        <div className="relative rounded-[2rem] overflow-hidden border border-secondary-100 aspect-video bg-white">
+                        <div className="relative rounded overflow-hidden border border-secondary-100 aspect-video bg-white">
                           <img src={customerIdPreview} alt="customer ID" className="w-full h-full object-contain" />
                         </div>
                       )}
@@ -660,7 +667,7 @@ export default function CheckoutPage() {
                       value={transactionId}
                       onChange={(e) => setTransactionId(e.target.value)}
                       placeholder="e.g. TXN-998877"
-                      className="w-full bg-secondary-50 border border-secondary-100 rounded-2xl px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
+                      className="w-full bg-secondary-50 border border-secondary-100 rounded px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
                     />
                   </div>
                   <div>
@@ -670,10 +677,10 @@ export default function CheckoutPage() {
                         type="file"
                         accept="image/*"
                         onChange={handleScreenshotChange}
-                        className="block w-full text-xs text-secondary-400 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-secondary-900 file:text-white hover:file:bg-primary-500 transition-all"
+                        className="block w-full text-xs text-secondary-400 file:mr-4 file:py-3 file:px-6 file:rounded file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-secondary-900 file:text-white hover:file:bg-primary-500 transition-all"
                       />
                       {screenshotPreview && (
-                        <div className="relative rounded-[2rem] overflow-hidden border border-secondary-100 aspect-video bg-white">
+                        <div className="relative rounded overflow-hidden border border-secondary-100 aspect-video bg-white">
                           <img src={screenshotPreview} alt="payment proof" className="w-full h-full object-contain" />
                         </div>
                       )}
@@ -686,7 +693,7 @@ export default function CheckoutPage() {
 
           {/* Right Column - Secure Ledger */}
           <div className="lg:col-span-5 space-y-12">
-            <div className="bg-secondary-900 rounded-[3rem] p-10 text-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative overflow-hidden group">
+            <div className="bg-secondary-900 rounded p-10 text-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
               <div className="flex flex-col mb-10 relative z-10">
@@ -698,7 +705,7 @@ export default function CheckoutPage() {
               <div className="space-y-6 mb-10 relative z-10 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                 {[...(cartState.normalItems || []), ...(cartState.offerItems || []), ...(cartState.accessoryItems || [])].map((item, idx) => (
                   <div key={idx} className="flex gap-4 border-b border-white/5 pb-4 last:border-0">
-                    <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden flex-shrink-0 bg-white/5">
+                    <div className="w-12 h-12 rounded border border-white/10 overflow-hidden flex-shrink-0 bg-white/5">
                       {item.image ? <img src={item.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] opacity-20">DE</div>}
                     </div>
                     <div className="flex-1">
@@ -751,7 +758,7 @@ export default function CheckoutPage() {
                         <button
                           type="submit"
                           disabled={isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))}
-                          className={`w-full h-20 rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))
+                          className={`w-full h-20 rounded font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))
                             ? "bg-white/5 text-white/20 cursor-not-allowed"
                             : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.3)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.5)] active:scale-[0.98]"
                             }`}
@@ -771,13 +778,13 @@ export default function CheckoutPage() {
             </div>
 
             {/* Accessories Prompt */}
-            <div className="bg-white border border-secondary-100 rounded-[3rem] p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group">
+            <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group">
               <div className="flex-1">
                 <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
                 <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
                 <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
               </div>
-              <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
+              <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
             </div>
           </div>
         </div>
@@ -796,13 +803,13 @@ export default function CheckoutPage() {
       {/* Confirmation Dialog */}
       {showConfirmDialog && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-secondary-900/60 backdrop-blur-xl animate-in fade-in duration-500">
-          <div className="bg-white rounded-[3rem] p-12 max-w-lg w-full shadow-2xl border border-secondary-100 text-center flex flex-col items-center">
+          <div className="bg-white rounded p-12 max-w-lg w-full shadow-2xl border border-secondary-100 text-center flex flex-col items-center">
             <div className="w-20 h-20 bg-primary-100 text-primary-500 rounded-full flex items-center justify-center mb-8 font-black text-2xl animate-bounce">!</div>
             <h3 className="text-2xl font-black text-secondary-900 uppercase tracking-tight mb-4">Reset Collection?</h3>
             <p className="text-secondary-500 font-medium mb-10 leading-relaxed italic">Synchronizing a new offer requires clearing the current vault. Proceed with reset?</p>
             <div className="flex gap-4 w-full">
-              <button onClick={() => setShowConfirmDialog(false)} className="flex-1 py-5 bg-secondary-50 text-secondary-900 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-secondary-100 transition-all">Cancel</button>
-              <button onClick={confirmOfferChange} className="flex-1 py-5 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl hover:bg-red-600 transition-all">Yes, Reset</button>
+              <button onClick={() => setShowConfirmDialog(false)} className="flex-1 py-5 bg-secondary-50 text-secondary-900 font-black text-[10px] uppercase tracking-widest rounded hover:bg-secondary-100 transition-all">Cancel</button>
+              <button onClick={confirmOfferChange} className="flex-1 py-5 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded shadow-xl hover:bg-red-600 transition-all">Yes, Reset</button>
             </div>
           </div>
         </div>
