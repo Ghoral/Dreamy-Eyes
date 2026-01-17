@@ -158,17 +158,11 @@ const ProductItems = ({ data }: { data: any }) => {
   return (
     <section id="products-section" className="w-full py-24 bg-white relative">
       <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 border-b border-secondary-100 pb-16">
-          <div className="max-w-3xl">
-            <span className="text-primary-500 font-bold tracking-[0.4em] uppercase text-xs mb-4 block">Editorial Choice</span>
-            <h2 className="text-7xl md:text-9xl font-extrabold text-secondary-900 tracking-tighter leading-none mb-6">
-              THE <span className="text-secondary-400 font-serif italic font-normal">ART</span> OF VISION
-            </h2>
-            <p className="text-xl text-secondary-400 font-medium">Precision ocular aesthetics for the modern gaze.</p>
-          </div>
 
-          {/* Compact Boutique Category Bar */}
-          <div className="flex flex-wrap items-center gap-3">
+
+        {/* Navigation & Filter Chip Row */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 pt-8 border-t border-secondary-100">
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
             {availableTags.map((tag) => {
               const isActive = tag.type === 'filter' ? selectedTag === tag.value : false;
 
@@ -176,40 +170,35 @@ const ProductItems = ({ data }: { data: any }) => {
                 <button
                   key={tag.label}
                   onClick={() => handleTagClick(tag)}
-                  className={`flex items-center gap-4 px-6 py-4 rounded-xl border transition-all duration-500 group relative ${isActive
-                    ? "bg-secondary-900 border-secondary-900 shadow-xl scale-[1.05]"
-                    : "bg-secondary-50 border-secondary-100 hover:border-primary-500 hover:bg-white"
+                  className={`flex items-center gap-3 px-4 md:px-5 py-2.5 md:py-3 rounded-full border transition-all duration-500 group relative ${isActive
+                    ? "bg-secondary-900 border-secondary-900 shadow-lg text-white"
+                    : "bg-white border-secondary-200 text-secondary-900 hover:border-primary-500 hover:shadow-md"
                     }`}
                 >
-                  <span className={`text-2xl transition-transform duration-500 group-hover:scale-110 ${isActive ? 'saturate-100' : 'saturate-0 opacity-40'}`}>
+                  <span className={`text-lg md:text-xl transition-transform duration-500 group-hover:scale-110 ${isActive ? 'saturate-100' : 'saturate-0 opacity-60'}`}>
                     {tag.icon}
                   </span>
-                  <div className="flex flex-col items-start leading-none">
-                    <span className={`text-[10px] font-black tracking-widest uppercase mb-1 ${isActive ? 'text-primary-400' : 'text-secondary-400'}`}>
+                  <div className="flex flex-col items-start leading-none pr-1">
+                    <span className={`text-[7px] md:text-[8px] font-black tracking-widest uppercase mb-0.5 ${isActive ? 'text-primary-400' : 'text-secondary-400'}`}>
                       {tag.desc}
                     </span>
-                    <h4 className={`font-black text-sm tracking-tight ${isActive ? 'text-white' : 'text-secondary-900 group-hover:text-primary-500 transition-colors'}`}>
-                      {tag.label.toUpperCase()}
+                    <h4 className="font-black text-[10px] md:text-xs tracking-tight uppercase">
+                      {tag.label}
                     </h4>
                   </div>
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {/* Filter Action Row */}
-        <div className="flex justify-end mb-12">
           <button
             onClick={() => setIsFilterDrawerOpen(true)}
-            className="group relative flex items-center gap-4 px-6 md:px-8 py-3 md:py-4 bg-secondary-900 rounded-2xl hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
+            className="group relative flex items-center gap-3 px-6 py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105 shrink-0"
           >
-            <div className="relative">
-              <svg className="w-4 h-4 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-            </div>
-            <span className="text-[10px] md:text-xs font-black tracking-[0.2em] md:tracking-[0.3em] text-white uppercase">Refine Search</span>
+            <svg className="w-3.5 h-3.5 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            <span className="text-[10px] font-black tracking-[0.2em] text-white uppercase">Refine Search</span>
           </button>
         </div>
 
@@ -261,15 +250,13 @@ const ProductItems = ({ data }: { data: any }) => {
                   </div>
 
                   <div className="flex flex-col gap-3 md:gap-4">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex flex-col">
-                        <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">{product.sub_title || "LENS SERIES"}</span>
-                        <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase">
-                          {product.title}
-                        </h3>
-                      </div>
-                      <div className="flex items-baseline gap-1 md:gap-2 pt-2 border-t border-secondary-50">
-                        <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block">MSRP</span>
+                    <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">{product.sub_title || "LENS SERIES"}</span>
+                    <div className="flex justify-between items-start gap-4">
+                      <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase flex-1">
+                        {product.title}
+                      </h3>
+                      <div className="text-right shrink-0">
+                        <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
                         <div className="text-sm md:text-2xl font-black text-secondary-900 font-price">
                           {formatPrice(currentPrice, country)}
                         </div>

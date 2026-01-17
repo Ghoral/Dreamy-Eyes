@@ -68,8 +68,6 @@ export default function SolutionsSection() {
                                     {solution.icon}
                                 </div>
 
-
-
                                 <div className="absolute bottom-3 left-3 md:bottom-8 md:left-8">
                                     <span className="px-2 md:px-5 py-1 md:py-2 bg-secondary-900 text-white rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest shadow-sm uppercase">
                                         ESSENTIAL
@@ -78,15 +76,13 @@ export default function SolutionsSection() {
                             </div>
 
                             <div className="flex flex-col gap-3 md:gap-4">
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex flex-col">
-                                        <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">{solution.sub_title}</span>
-                                        <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase">
-                                            {solution.title}
-                                        </h3>
-                                    </div>
-                                    <div className="flex items-baseline gap-1 md:gap-2 pt-2 border-t border-secondary-50">
-                                        <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block">MSRP</span>
+                                <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">{solution.sub_title}</span>
+                                <div className="flex justify-between items-start gap-4">
+                                    <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase flex-1">
+                                        {solution.title}
+                                    </h3>
+                                    <div className="text-right shrink-0">
+                                        <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
                                         <div className="text-sm md:text-2xl font-black text-secondary-900 font-price">
                                             {formatPrice(solution.price, country)}
                                         </div>

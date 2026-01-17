@@ -169,17 +169,15 @@ const ApplicatorsSection = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 md:gap-4">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2 md:gap-4">
-                    <div className="flex-1">
-                      <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block truncate">PRECISION ACCESSORY</span>
-                      <h3 className="text-lg md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight md:leading-none group-hover:text-primary-500 transition-colors uppercase truncate">
-                        {item.name || "Accessory"}
-                      </h3>
-                    </div>
-                    <div className="text-left md:text-right flex md:block items-baseline gap-2">
+                <div className="flex flex-col gap-3 md:gap-4">
+                  <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">PRECISION ACCESSORY</span>
+                  <div className="flex justify-between items-start gap-4">
+                    <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase flex-1">
+                      {item.name || "Accessory"}
+                    </h3>
+                    <div className="text-right shrink-0">
                       <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
-                      <div className="text-lg md:text-2xl font-black text-secondary-900 font-price">
+                      <div className="text-sm md:text-2xl font-black text-secondary-900 font-price">
                         {rawPrice != null ? formatPriceWithCurrency(rawPrice, country) : "—"}
                       </div>
                     </div>
