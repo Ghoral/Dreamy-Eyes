@@ -22,8 +22,16 @@ const Navbar = () => {
   const { country } = useUserCountry();
 
   // Certain pages should always have the "scrolled" (solid/dark) navbar style
-  const isWhitePage = ["/login", "/register", "/checkout", "/forgot-password", "/reset-password", "/profile", "/shipping-address"].includes(pathname);
-  const shouldShowDarkNav = isScrolled || isWhitePage;
+  const isWhitePage = [
+    "/login",
+    "/register",
+    "/checkout",
+    "/forgot-password",
+    "/reset-password",
+    "/profile",
+    "/shipping-address"
+  ].includes(pathname) || /^\/[^/]+$/.test(pathname); // Matches dynamic [id] product pages (single slug)
+  const shouldShowDarkNav = isScrolled || (pathname !== "/" && isWhitePage);
 
   useEffect(() => {
     const handleScroll = () => {

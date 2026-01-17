@@ -102,7 +102,7 @@ const TikTokCarousel = () => {
           <div className="relative flex justify-center">
             <div className="absolute inset-0 bg-primary-500/20 blur-[100px] rounded-full"></div>
 
-            <div className="relative bg-white p-4 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] transform rotate-2 hover:rotate-0 transition-transform duration-700 max-w-[380px] w-full">
+            <div className="relative bg-white p-4 rounded-2xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] max-w-[380px] w-full">
               <div className="rounded-xl overflow-hidden">
                 <InstagramEmbed
                   url={appDetails?.instagram?.[0] || 'https://www.instagram.com/reels/DFCsfB1z2I0/'}
