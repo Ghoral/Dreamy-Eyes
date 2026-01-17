@@ -298,6 +298,27 @@ const ProductDetail = ({
                 />
               </div>
 
+              {/* The Blueprints Summary (Compact Specs) */}
+              {hasSpecs && (
+                <div className="grid grid-cols-3 gap-4 border-y border-secondary-100 py-6">
+                  {isSpecsArray ? (
+                    parsedSpecs.slice(0, 3).map((item: any, idx: number) => (
+                      <div key={idx} className="flex flex-col gap-1">
+                        <span className="text-[8px] font-black text-primary-500 uppercase tracking-widest">{item.label}</span>
+                        <span className="text-xs font-black text-secondary-900 uppercase">{item.value}</span>
+                      </div>
+                    ))
+                  ) : (
+                    Object.entries(parsedSpecs).slice(0, 3).map(([key, value]) => (
+                      <div key={key} className="flex flex-col gap-1">
+                        <span className="text-[8px] font-black text-primary-500 uppercase tracking-widest capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                        <span className="text-xs font-black text-secondary-900 uppercase">{String(value)}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
               {/* Boutique Configuration */}
               <div className="flex flex-col gap-8">
 
@@ -398,33 +419,7 @@ const ProductDetail = ({
           </div>
         </div>
 
-        {/* Technical Ledger (Specifications) */}
-        {hasSpecs && (
-          <div className="mt-24">
-            <div className="flex flex-col items-center mb-12">
-              <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-3">The Craft</span>
-              <h3 className="text-3xl md:text-5xl font-black text-secondary-900 tracking-tighter">MASTER <span className="text-secondary-400 font-serif italic font-normal">DETAILS</span></h3>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {isSpecsArray ? (
-                parsedSpecs.map((item: any, idx: number) => (
-                  <div key={idx} className="bg-white border border-secondary-100 rounded-3xl p-8 flex flex-col gap-2 hover:border-primary-200 hover:bg-secondary-50 transition-all group">
-                    <span className="text-[10px] font-black text-secondary-400 uppercase tracking-widest transition-colors group-hover:text-primary-500">{item.label}</span>
-                    <span className="text-xl font-black text-secondary-900 tracking-tight uppercase leading-none">{item.value}</span>
-                  </div>
-                ))
-              ) : (
-                Object.entries(parsedSpecs).map(([key, value]) => (
-                  <div key={key} className="bg-white border border-secondary-100 rounded-3xl p-8 flex flex-col gap-2 hover:border-primary-200 hover:bg-secondary-50 transition-all group">
-                    <span className="text-[10px] font-black text-secondary-400 uppercase tracking-widest transition-colors group-hover:text-primary-500 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                    <span className="text-xl font-black text-secondary-900 tracking-tight uppercase leading-none">{String(value)}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
 
       </div>
 
