@@ -43,7 +43,6 @@ const ProductItems = ({ data }: { data: any }) => {
     const fetchFilteredProducts = async () => {
       if (isFirstRender.current) {
         isFirstRender.current = false;
-        return;
       }
       if (!country) return;
       setIsLoading(true);
@@ -79,6 +78,30 @@ const ProductItems = ({ data }: { data: any }) => {
     router.push(getProductLink(product));
   };
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const handleTagClick = (tag: any) => {
+    if (tag.type === 'scroll') {
+      scrollToSection(tag.scrollId);
+    } else {
+      setSelectedTag(tag.value);
+      // Optional: scroll back to product top if changing filter
+      scrollToSection('products-section');
+    }
+  };
+
   const availableColors = useMemo(() => {
     const colorSet = new Set<string>();
     if (!normalizedData) return [];
@@ -93,10 +116,11 @@ const ProductItems = ({ data }: { data: any }) => {
   }, [normalizedData]);
 
   const availableTags = [
-    { label: "Sale", value: "sale" },
-    { label: "Latest Arrival", value: "latest_arrival" },
-    { label: "Top Seller", value: "top_seller" },
-    { label: "Best Reviewed", value: "best_reviewed" },
+    { label: "Lenses", value: "all", icon: "👁️", desc: "Core", type: 'filter' },
+    { label: "Sale", value: "sale", icon: "🏷️", desc: "Value", type: 'filter' },
+    { label: "Eye Lashes", scrollId: "eyelashes-section", icon: "✨", desc: "Style", type: 'scroll' },
+    { label: "Solutions", scrollId: "solutions-section", icon: "💧", desc: "Pure", type: 'scroll' },
+    { label: "Tools", scrollId: "applicators-section", icon: "🛠️", desc: "Kit", type: 'scroll' },
   ];
 
   const filteredProducts = useMemo(() => {
@@ -132,49 +156,69 @@ const ProductItems = ({ data }: { data: any }) => {
   }, [normalizedData, selectedColor, priceMin, priceMax, powerMin, powerMax]);
 
   return (
-    <section id="products-section" className="w-full py-32 bg-white relative">
-      <div className="max-w-[1600px] mx-auto px-4 md:px-12">
-        {/* Creative Header */}
-        <div className="mb-24 flex flex-col md:flex-row items-baseline justify-between gap-8 border-b border-secondary-100 pb-12">
-          <div className="max-w-2xl">
-            <h2 className="text-7xl md:text-9xl font-black text-secondary-900 tracking-tighter leading-none mb-8">
-              THE <span className="text-primary-500 italic font-serif">COLLECTION</span>
+    <section id="products-section" className="w-full py-24 bg-white relative">
+      <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 border-b border-secondary-100 pb-16">
+          <div className="max-w-3xl">
+            <span className="text-primary-500 font-bold tracking-[0.4em] uppercase text-xs mb-4 block">Editorial Choice</span>
+            <h2 className="text-7xl md:text-9xl font-extrabold text-secondary-900 tracking-tighter leading-none mb-6">
+              THE <span className="text-secondary-400 font-serif italic font-normal">ART</span> OF VISION
             </h2>
-            <p className="text-xl text-secondary-500 font-medium max-w-lg leading-relaxed">
-              Curating the world's most sophisticated eye aesthetic solutions. Precision engineered, naturally inspired.
-            </p>
+            <p className="text-xl text-secondary-400 font-medium">Precision ocular aesthetics for the modern gaze.</p>
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            {availableTags.map((tag) => (
-              <button
-                key={tag.value}
-                onClick={() => setSelectedTag(tag.value)}
-                className={`px-8 py-3 rounded-full text-sm font-black transition-all duration-300 ${selectedTag === tag.value
-                  ? "bg-secondary-900 text-white shadow-xl"
-                  : "bg-secondary-50 text-secondary-500 hover:bg-secondary-100"
-                  }`}
-              >
-                {tag.label.toUpperCase()}
-              </button>
-            ))}
+          {/* Compact Boutique Category Bar */}
+          <div className="flex flex-wrap items-center gap-3">
+            {availableTags.map((tag) => {
+              const isActive = tag.type === 'filter' ? selectedTag === tag.value : false;
+
+              return (
+                <button
+                  key={tag.label}
+                  onClick={() => handleTagClick(tag)}
+                  className={`flex items-center gap-4 px-6 py-4 rounded-xl border transition-all duration-500 group relative ${isActive
+                      ? "bg-secondary-900 border-secondary-900 shadow-xl scale-[1.05]"
+                      : "bg-secondary-50 border-secondary-100 hover:border-primary-500 hover:bg-white"
+                    }`}
+                >
+                  <span className={`text-2xl transition-transform duration-500 group-hover:scale-110 ${isActive ? 'saturate-100' : 'saturate-0 opacity-40'}`}>
+                    {tag.icon}
+                  </span>
+                  <div className="flex flex-col items-start leading-none">
+                    <span className={`text-[10px] font-black tracking-widest uppercase mb-1 ${isActive ? 'text-primary-400' : 'text-secondary-400'}`}>
+                      {tag.desc}
+                    </span>
+                    <h4 className={`font-black text-sm tracking-tight ${isActive ? 'text-white' : 'text-secondary-900 group-hover:text-primary-500 transition-colors'}`}>
+                      {tag.label.toUpperCase()}
+                    </h4>
+                  </div>
+                </button>
+              );
+            })}
+
+            <div className="h-10 w-px bg-secondary-200 mx-2 hidden lg:block"></div>
 
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
-              className="px-6 py-3 bg-white border border-secondary-200 rounded-full hover:border-primary-500 transition-colors"
+              className="flex items-center gap-3 px-6 py-4 bg-white border-2 border-dashed border-secondary-200 rounded-xl hover:border-primary-500 hover:text-primary-500 group transition-all"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+              <svg className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+              <span className="font-black text-xs tracking-widest">REFINE</span>
             </button>
           </div>
         </div>
 
         {/* Products Grid */}
         {!country || isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-12">
-            {[...Array(8)].map((_, i) => <ProductCardShimmer key={i} />)}
+          <div className="flex flex-wrap justify-center gap-12">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]">
+                <ProductCardShimmer />
+              </div>
+            ))}
           </div>
         ) : filteredProducts && filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-20">
+          <div className="flex flex-wrap justify-center gap-x-12 gap-y-24">
             {filteredProducts.map((product: any, index: number) => {
               const imageUrl = getThumbnailUrl(product);
               const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
@@ -182,48 +226,59 @@ const ProductItems = ({ data }: { data: any }) => {
               return (
                 <div
                   key={index}
-                  className="group cursor-pointer"
+                  className="group cursor-pointer w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
                   onClick={() => handleProductClick(product)}
                 >
-                  <div className="relative aspect-[4/5] mb-8 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
+                  <div className="relative aspect-[4/5] mb-10 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
                         alt={product.title}
                         fill
                         className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-1"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 30vw, 25vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-secondary-200">
                         <svg className="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-white/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                      <div className="bg-white text-secondary-900 px-8 py-3 rounded-full font-black text-xs tracking-widest translate-y-4 group-hover:translate-y-0 transition-transform duration-500 shadow-2xl">
-                        QUICK VIEW
+
+                    <div className="absolute inset-x-0 bottom-0 p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-700">
+                      <div className="bg-white px-10 py-5 rounded-2xl shadow-2xl flex items-center justify-between">
+                        <span className="font-black text-xs tracking-widest text-secondary-900">EXPLORE ART</span>
+                        <svg className="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                       </div>
                     </div>
+
                     {product.tags && (
                       <div className="absolute top-8 left-8">
-                        <span className="px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black tracking-widest text-secondary-900 shadow-sm uppercase">
+                        <span className="px-5 py-2 bg-white/90 backdrop-blur-md rounded-xl text-[10px] font-black tracking-widest text-secondary-900 shadow-sm uppercase">
                           {Array.isArray(product.tags) ? product.tags[0] : String(product.tags)}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="space-y-3 px-4">
-                    <div className="flex justify-between items-start gap-4">
-                      <h3 className="text-xl font-bold text-secondary-900 tracking-tight leading-tight group-hover:text-primary-500 transition-colors uppercase">
-                        {product.title}
-                      </h3>
-                      <div className="text-xl font-black text-secondary-900">
-                        {formatPrice(currentPrice, country)}
+
+                  <div className="flex flex-col gap-4">
+                    <div className="flex justify-between items-end">
+                      <div className="flex-1">
+                        <span className="text-[10px] font-bold text-primary-500 tracking-[0.3em] uppercase mb-2 block">{product.sub_title || "LENS SERIES"}</span>
+                        <h3 className="text-3xl font-black text-secondary-900 tracking-tighter leading-none group-hover:text-primary-500 transition-colors uppercase">
+                          {product.title}
+                        </h3>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
+                        <div className="text-2xl font-black text-secondary-900">
+                          {formatPrice(currentPrice, country)}
+                        </div>
                       </div>
                     </div>
-                    <p className="text-secondary-400 text-sm font-medium uppercase tracking-widest">
-                      {product.sub_title || "Premium Lens Series"}
-                    </p>
+
+                    <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
+                      <div className="absolute inset-0 bg-primary-500 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                    </div>
                   </div>
                 </div>
               );
@@ -231,9 +286,9 @@ const ProductItems = ({ data }: { data: any }) => {
           </div>
         ) : (
           !isLoading && (
-            <div className="text-center py-40 bg-secondary-50 rounded-[5rem]">
-              <h3 className="text-5xl font-black text-secondary-900 mb-6">REWORKING THE ART</h3>
-              <p className="text-secondary-500 font-medium">New designs are coming soon. Stay connected.</p>
+            <div className="text-center py-60 bg-secondary-50 rounded-2xl">
+              <h3 className="text-6xl font-black text-secondary-900 mb-6 tracking-tighter">THE VAULT IS EMPTY</h3>
+              <p className="text-secondary-400 font-medium text-xl max-w-lg mx-auto leading-relaxed">We're currently curating new perspectives. Please check back as our collection evolves.</p>
             </div>
           )
         )}
@@ -241,18 +296,18 @@ const ProductItems = ({ data }: { data: any }) => {
 
       {isFilterDrawerOpen && (
         <>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" onClick={() => setIsFilterDrawerOpen(false)} />
+          <div className="fixed inset-0 bg-secondary-900/60 backdrop-blur-md z-[60]" onClick={() => setIsFilterDrawerOpen(false)} />
           <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-[70] shadow-2xl p-12 overflow-y-auto">
             <div className="flex justify-between items-center mb-16">
-              <h3 className="text-4xl font-black text-secondary-900 tracking-tighter">FILTERS</h3>
-              <button onClick={() => setIsFilterDrawerOpen(false)} className="p-4 bg-secondary-50 rounded-full">
+              <h3 className="text-5xl font-black text-secondary-900 tracking-tighter">FILTERS</h3>
+              <button onClick={() => setIsFilterDrawerOpen(false)} className="p-4 bg-secondary-50 rounded-full hover:bg-secondary-100 transition-colors">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="space-y-12">
               <div>
-                <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Color</label>
-                <select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)} className="w-full py-4 border-b-2 border-secondary-100 font-bold text-xl focus:border-primary-500 appearance-none bg-transparent">
+                <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Color Spectrum</label>
+                <select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl focus:border-primary-500 appearance-none bg-transparent transition-colors">
                   <option value="all">ALL COLORS</option>
                   {availableColors.map((c) => <option key={c} value={c}>{c.toUpperCase()}</option>)}
                 </select>
@@ -260,16 +315,21 @@ const ProductItems = ({ data }: { data: any }) => {
               <div className="grid grid-cols-2 gap-8">
                 <div>
                   <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Min Price</label>
-                  <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-full py-4 border-b-2 border-secondary-100 font-bold text-xl placeholder:text-secondary-200" placeholder="0" />
+                  <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none" placeholder="0" />
                 </div>
                 <div>
                   <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Max Price</label>
-                  <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-full py-4 border-b-2 border-secondary-100 font-bold text-xl placeholder:text-secondary-200" placeholder="∞" />
+                  <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none" placeholder="∞" />
                 </div>
               </div>
-              <button onClick={() => { setSelectedColor("all"); setPriceMin(""); setPriceMax(""); setPowerMin(""); setPowerMax(""); setSelectedTag("all"); setIsFilterDrawerOpen(false); }} className="w-full py-6 bg-secondary-900 text-white font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-primary-500 transition-colors shadow-2xl mt-12">
-                RESET ALL FILTERS
-              </button>
+              <div className="pt-20 space-y-4">
+                <button onClick={() => setIsFilterDrawerOpen(false)} className="w-full py-6 bg-secondary-900 text-white font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-primary-500 transition-all shadow-2xl">
+                  APPLY FILTERS
+                </button>
+                <button onClick={() => { setSelectedColor("all"); setPriceMin(""); setPriceMax(""); setPowerMin(""); setPowerMax(""); setSelectedTag("all"); setIsFilterDrawerOpen(false); }} className="w-full py-6 bg-secondary-50 text-secondary-400 font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
+                  RESET ALL
+                </button>
+              </div>
             </div>
           </div>
         </>

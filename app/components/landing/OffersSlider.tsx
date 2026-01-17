@@ -125,7 +125,7 @@ const OffersSlider = () => {
         {/* Scrollable Container with start/end padding to prevent cutting */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-8 overflow-x-auto pb-12 pt-4 px-4 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory"
+          className="flex gap-8 overflow-x-auto pb-12 pt-4 px-4 md:px-8 no-scrollbar scroll-smooth snap-x snap-mandatory justify-start md:justify-center"
         >
           {displayOffers.map((offer, index) => {
             const isApplied = cartState.selectedOffer?.id === offer.id;
@@ -176,7 +176,7 @@ const OffersSlider = () => {
                           : "bg-white text-secondary-900 shadow-xl hover:bg-primary-500 hover:text-white"
                           }`}
                       >
-                        {isApplied ? "ACTIVATED" : "CLAIM TOKEN"}
+                        {isApplied ? "ACTIVATED" : "APPLY OFFER"}
                       </button>
                       <div className={`text-[10px] font-bold tracking-widest ${isApplied ? "text-white/40" : "text-white/20"}`}>
                         REF: {String(offer.id).slice(0, 8).toUpperCase()}
@@ -187,9 +187,6 @@ const OffersSlider = () => {
               </div>
             );
           })}
-
-          {/* Spacer to prevent cut at the end */}
-          <div className="flex-shrink-0 w-8 md:w-16" />
         </div>
       </div>
     </section>

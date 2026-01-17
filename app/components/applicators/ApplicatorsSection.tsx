@@ -42,9 +42,7 @@ const ApplicatorsSection = () => {
           .order("created_at", { ascending: false })
           .limit(12);
 
-        if (error) {
-          throw new Error(error.message || "Failed to fetch accessories");
-        }
+        if (error) throw new Error(error.message || "Failed to fetch accessories");
 
         if (!mounted) return;
         setItems(Array.isArray(data) ? data : []);
@@ -58,133 +56,136 @@ const ApplicatorsSection = () => {
     };
 
     fetchAccessories();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   const handleQuantityCheck = async (item: Accessory, nextQty: number) => {
     if (nextQty < 1) return;
-
     try {
       setPendingId(item.id);
       const supabase = createSupabaseClient();
-      const { data, error } = await supabase.rpc(
-        "check_accessory_availability",
-        { accessory_id: item.id }
-      );
-
+      const { data, error } = await supabase.rpc("check_accessory_availability", { accessory_id: item.id });
       if (error) throw error;
       const available = typeof data === "boolean" ? data : (data?.available ?? data?.is_available ?? false);
-
       if (!available) {
-        setToastConfig({
-          message: "Sorry, this quantity is no longer available in stock.",
-          isVisible: true,
-        });
+        setToastConfig({ message: "Sorry, this quantity is no longer available in stock.", isVisible: true });
         return;
       }
-
       setQuantityMap((m) => ({ ...m, [item.id]: nextQty }));
     } catch (err) {
-      setToastConfig({
-        message: "Failed to verify stock availability.",
-        isVisible: true,
-      });
+      setToastConfig({ message: "Failed to verify stock availability.", isVisible: true });
     } finally {
       setPendingId(null);
     }
   };
 
-  if (loading || error || items.length === 0) {
-    return null;
-  }
+  if (loading || error || items.length === 0) return null;
 
   return (
     <section id="applicators-section" className="py-32 bg-white relative">
-      <div className="max-w-[1400px] mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-baseline gap-8 mb-20">
-          <div className="flex-1">
-            <span className="text-secondary-400 font-black tracking-[0.4em] uppercase text-xs mb-6 block">Precision Tools</span>
-            <h2 className="text-5xl md:text-8xl font-black text-secondary-900 tracking-tighter leading-none mb-8">
-              THE <span className="text-primary-500 italic font-serif">KIT</span>
+      <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 border-b border-secondary-100 pb-16">
+          <div className="max-w-3xl">
+            <span className="text-primary-500 font-bold tracking-[0.4em] uppercase text-xs mb-4 block">Precision Instruments</span>
+            <h2 className="text-7xl md:text-9xl font-extrabold text-secondary-900 tracking-tighter leading-none mb-6">
+              THE <span className="text-secondary-400 font-serif italic font-normal">KIT</span>
             </h2>
+            <p className="text-xl text-secondary-400 font-medium">Elevating the application ritual with professional-grade tools.</p>
           </div>
-          <p className="max-w-md text-secondary-500 font-medium">
-            Every detail matters. Our professional-grade applicator kits ensure a seamless, hygienic, and perfect application experience.
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="flex flex-wrap justify-center gap-x-12 gap-y-24">
           {items.map((item) => {
             const rawPrice = typeof item.price === "string" ? parseFloat(item.price) : (item.price as number | null);
-            const priceDisplay = rawPrice != null ? formatPriceWithCurrency(rawPrice, country) : "—";
             const qty = typeof item.quantity === "string" ? parseInt(item.quantity) : (item.quantity as number | null);
             const inStock = (qty ?? 0) > 0;
             const selectedQty = quantityMap[item.id] ?? 1;
 
             return (
-              <div key={item.id} className="group relative">
-                <div className="bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring overflow-hidden p-8 border border-secondary-100 h-full flex flex-col">
-                  <div className="relative aspect-square mb-10 rounded-2xl overflow-hidden bg-white shadow-soft">
-                    {item.image ? (
-                      <img
-                        src={getAccessoryImageUrl(item.image)}
-                        alt={item.name || "Accessory"}
-                        className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-6xl">🛠️</div>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div className="flex justify-between items-start gap-4">
-                      <h3 className="text-2xl font-black text-secondary-900 tracking-tight leading-tight uppercase group-hover:text-primary-500 transition-colors">
-                        {item.name || "Accessory"}
-                      </h3>
-                      {!inStock && <span className="text-[10px] font-black text-red-500 tracking-widest uppercase">OUT</span>}
+              <div key={item.id} className="group cursor-pointer w-full sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]">
+                <div className="relative aspect-[4/5] mb-10 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
+                  {item.image ? (
+                    <img
+                      src={getAccessoryImageUrl(item.image)}
+                      alt={item.name || "Accessory"}
+                      className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-8xl">🛠️</div>
+                  )}
+
+                  {/* Top Badge */}
+                  {!inStock && (
+                    <div className="absolute top-8 right-8">
+                      <span className="px-5 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black tracking-widest shadow-sm uppercase">
+                        OUT OF STOCK
+                      </span>
                     </div>
-                    <p className="text-secondary-400 text-sm font-medium line-clamp-2">
-                      {item.description || "Essential precision tool for lens maintenance."}
-                    </p>
+                  )}
+
+                  <div className="absolute top-8 left-8">
+                    <span className="px-5 py-2 bg-white/90 backdrop-blur-md rounded-xl text-[10px] font-black tracking-widest text-secondary-900 shadow-sm uppercase">
+                      PRO TOOL
+                    </span>
                   </div>
-                  <div className="mt-8 pt-8 border-t border-secondary-200/50">
-                    <div className="flex items-center justify-between mb-8">
-                      <span className="text-2xl font-black text-secondary-900">{priceDisplay}</span>
-                      <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-2xl shadow-sm">
+
+                  {/* Quantity Overlay */}
+                  <div className="absolute inset-x-0 bottom-0 p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-700">
+                    <div className="bg-white p-2 rounded-2xl shadow-2xl flex items-center gap-2">
+                      <div className="flex-1 flex items-center justify-between px-6 py-3 bg-secondary-50 rounded-xl">
                         <button
                           disabled={!inStock || selectedQty <= 1 || pendingId === item.id}
-                          onClick={() => handleQuantityCheck(item, selectedQty - 1)}
-                          className="text-secondary-400 hover:text-primary-500 transition-colors font-black"
+                          onClick={(e) => { e.stopPropagation(); handleQuantityCheck(item, selectedQty - 1); }}
+                          className="text-secondary-900 hover:text-primary-500 transition-colors font-black text-xl w-8 h-8 flex items-center justify-center disabled:opacity-30"
                         >—</button>
-                        <span className="font-black text-secondary-900 w-4 text-center">{selectedQty}</span>
+                        <span className="font-black text-secondary-900 text-lg w-8 text-center">{selectedQty}</span>
                         <button
                           disabled={!inStock || (qty != null && selectedQty >= qty) || pendingId === item.id}
-                          onClick={() => handleQuantityCheck(item, selectedQty + 1)}
-                          className="text-secondary-400 hover:text-primary-500 transition-colors font-black"
+                          onClick={(e) => { e.stopPropagation(); handleQuantityCheck(item, selectedQty + 1); }}
+                          className="text-secondary-900 hover:text-primary-500 transition-colors font-black text-xl w-8 h-8 flex items-center justify-center disabled:opacity-30"
                         >+</button>
                       </div>
+                      <button
+                        disabled={!inStock || rawPrice == null || pendingId === item.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addAccessoryItem({
+                            id: item.id,
+                            title: item.name || "Accessory",
+                            price: Number(rawPrice),
+                            quantity: selectedQty,
+                            maxQuantity: qty ?? undefined,
+                            image: item.image ? getAccessoryImageUrl(item.image) : undefined,
+                            category: "accessory" as const,
+                          });
+                          setToastConfig({ message: "Successfully Added", isVisible: true });
+                          setTimeout(() => setToastConfig({ message: "", isVisible: false }), 2000);
+                        }}
+                        className="bg-secondary-900 text-white px-8 py-4 rounded-xl font-black text-[10px] tracking-widest hover:bg-primary-500 transition-all disabled:opacity-50 uppercase shadow-lg"
+                      >
+                        ADD TO KIT
+                      </button>
                     </div>
-                    <button
-                      disabled={!inStock || rawPrice == null || pendingId === item.id}
-                      onClick={() => {
-                        addAccessoryItem({
-                          id: item.id,
-                          title: item.name || "Accessory",
-                          description: item.description || undefined,
-                          price: Number(rawPrice),
-                          quantity: selectedQty,
-                          maxQuantity: qty ?? undefined,
-                          image: item.image ? getAccessoryImageUrl(item.image) : undefined,
-                          category: "accessory" as const,
-                        });
-                        setToastConfig({ message: "Item added", isVisible: true });
-                        setTimeout(() => setToastConfig({ message: "", isVisible: false }), 2000);
-                      }}
-                      className="w-full py-5 bg-secondary-900 text-white rounded-3xl font-black tracking-widest text-xs hover:bg-primary-500 transition-all duration-500 shadow-xl"
-                    >
-                      ADD TO KIT
-                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-end">
+                    <div className="flex-1">
+                      <span className="text-[10px] font-bold text-primary-500 tracking-[0.3em] uppercase mb-2 block truncate">PRECISION ACCESSORY</span>
+                      <h3 className="text-3xl font-black text-secondary-900 tracking-tighter leading-none group-hover:text-primary-500 transition-colors uppercase truncate">
+                        {item.name || "Accessory"}
+                      </h3>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">UNIT PRICE</span>
+                      <div className="text-2xl font-black text-secondary-900">
+                        {rawPrice != null ? formatPriceWithCurrency(rawPrice, country) : "—"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
+                    <div className="absolute inset-0 bg-primary-500 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
                   </div>
                 </div>
               </div>

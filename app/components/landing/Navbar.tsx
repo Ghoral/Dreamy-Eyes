@@ -53,8 +53,8 @@ const Navbar = () => {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-12 py-4 ${isScrolled
-            ? "bg-white/80 backdrop-blur-2xl shadow-glow py-4"
-            : "bg-transparent py-6"
+          ? "bg-white/80 backdrop-blur-2xl shadow-glow py-4"
+          : "bg-transparent py-6"
           }`}
       >
         <div className="max-w-[1800px] mx-auto flex justify-between items-center">
@@ -72,7 +72,7 @@ const Navbar = () => {
               <Link
                 key={item}
                 href={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${isScrolled ? "text-secondary-900" : "text-white/90"
+                className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${isScrolled ? "text-secondary-900" : "text-white"
                   }`}
               >
                 {item}
@@ -83,7 +83,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link href="/" className="absolute left-1/2 -translate-x-1/2 transition-transform hover:scale-110 duration-500">
             <div className={`flex flex-col items-center transition-all duration-500 ${isScrolled ? "scale-90" : "scale-100"}`}>
-              <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif ${isScrolled ? "text-secondary-900" : "text-white"
+              <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif drop-shadow-md ${isScrolled ? "text-secondary-900" : "text-white"
                 }`}>
                 Dreamy <span className="text-primary-500">Eyes</span>
               </span>
