@@ -203,7 +203,7 @@ export default function ModalOffers({
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center transition-colors"
               >
                 <svg
                   className="w-5 h-5"
@@ -241,19 +241,341 @@ export default function ModalOffers({
                   const isSelected = localSelectedOffer?.id === offer.id;
 
                   return (
-                    key = { offer.id }
-                      onClick = {() => handleSelectOffer(offer)}
-                className={`relative p-6 rounded border-2 cursor-pointer transition-all overflow-hidden transform hover:scale-[1.02] ${isSelected
-                    ? "border-primary-500 bg-gradient-to-br from-primary-50 via-primary-100 to-primary-50 shadow-xl ring-2 ring-primary-300"
-                    : "border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-400 hover:shadow-lg"
-                  }`}
+                    <div
+                      key={offer.id}
+                      onClick={() => handleSelectOffer(offer)}
+                      className={`relative p-6 rounded border-2 cursor-pointer transition-all overflow-hidden transform hover:scale-[1.02] ${isSelected
+                        ? "border-primary-500 bg-gradient-to-br from-primary-50 via-primary-100 to-primary-50 shadow-xl ring-2 ring-primary-300"
+                        : "border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-400 hover:shadow-lg"
+                        }`}
                     >
-                {/* Offer Badge/Sticker - Top Right */}
-                {isSelected && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 text-white px-5 py-2 rounded-bl rounded-tr shadow-xl transform rotate-3">
-                    <div className="flex items-center space-x-1.5">
+                      {/* Offer Badge/Sticker - Top Right */}
+                      {isSelected && (
+                        <div className="absolute top-0 right-0 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 text-white px-5 py-2 rounded shadow-xl transform rotate-3">
+                          <div className="flex items-center space-x-1.5">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2.5}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                            <span className="text-xs font-extrabold tracking-wide">
+                              SELECTED
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {!isSelected && (
+                        <div className="absolute top-0 right-0 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white px-5 py-2 rounded shadow-lg transform rotate-3">
+                          <span className="text-xs font-extrabold tracking-wide">
+                            AVAILABLE
+                          </span>
+                        </div>
+                      )}
+                      {/* Offer Number Badge - Sticker Style */}
+                      <div className="absolute top-4 left-4 bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 text-white w-14 h-14 rounded flex items-center justify-center shadow-xl font-extrabold text-xl border-4 border-white transform -rotate-12 z-10">
+                        #{offer.id}
+                      </div>
+
+                      <div className="flex items-start justify-between pt-2">
+                        <div className="flex-1 ml-20">
+                          <h3 className="text-2xl font-extrabold text-secondary-800 mb-2 mt-1">
+                            {offer.name || offer.title || `Offer #${offer.id}`}
+                          </h3>
+                          {offer.description && (
+                            <p className="text-secondary-600 mb-3">
+                              {offer.description}
+                            </p>
+                          )}
+                          <div className="space-y-2 text-sm">
+                            {/* Show value (buy X items) */}
+                            {offer.value !== undefined &&
+                              offer.value !== null && (
+                                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
+                                  <p className="text-secondary-700 font-medium text-sm">
+                                    💰{" "}
+                                    <strong>
+                                      Buy {Number(offer.value)} items
+                                    </strong>{" "}
+                                    (at normal price) to qualify
+                                    {cartState.totalItems >=
+                                      Number(offer.value) ? (
+                                      <span className="text-green-600 ml-2 font-bold">
+                                        ✓ You qualify!
+                                      </span>
+                                    ) : (
+                                      <span className="text-red-600 ml-2">
+                                        (Add{" "}
+                                        {Number(offer.value) -
+                                          cartState.totalItems}{" "}
+                                        more item
+                                        {Number(offer.value) -
+                                          cartState.totalItems >
+                                          1
+                                          ? "s"
+                                          : ""}
+                                        )
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              )}
+                            {/* Show quantity (get Y items with offer) */}
+                            {offer.quantity !== undefined &&
+                              offer.quantity !== null && (
+                                <div className="bg-primary-50 border border-primary-200 rounded p-3 mb-2">
+                                  <p className="text-primary-700 font-semibold text-sm mb-1">
+                                    🎁{" "}
+                                    <strong>
+                                      Get {Number(offer.quantity)} item
+                                      {Number(offer.quantity) > 1
+                                        ? "s"
+                                        : ""}{" "}
+                                      with offer benefit
+                                    </strong>
+                                  </p>
+                                  {cartState.totalItems >
+                                    Number(offer.quantity) ? (
+                                    <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
+                                      <p className="text-xs text-amber-800">
+                                        📊{" "}
+                                        <strong>
+                                          You have {cartState.totalItems} items
+                                          in cart.
+                                        </strong>
+                                        <br />•{" "}
+                                        <strong>
+                                          {Number(offer.quantity)} item
+                                          {Number(offer.quantity) > 1
+                                            ? "s"
+                                            : ""}
+                                        </strong>{" "}
+                                        → Get offer benefit
+                                        <br />• Remaining{" "}
+                                        <strong>
+                                          {cartState.totalItems -
+                                            Number(offer.quantity)}{" "}
+                                          items
+                                        </strong>{" "}
+                                        → Normal price
+                                      </p>
+                                    </div>
+                                  ) : cartState.totalItems ===
+                                    Number(offer.quantity) ? (
+                                    <p className="text-xs text-secondary-600 mt-1">
+                                      All {cartState.totalItems} item
+                                      {Number(offer.quantity) > 1
+                                        ? "s"
+                                        : ""}{" "}
+                                      will receive the offer benefit.
+                                    </p>
+                                  ) : (
+                                    <p className="text-xs text-secondary-600 mt-1">
+                                      When you apply this offer,{" "}
+                                      {Number(offer.quantity)} item
+                                      {Number(offer.quantity) > 1
+                                        ? "s"
+                                        : ""}{" "}
+                                      will get the benefit.
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            {/* Fallback to minimum_quantity for backward compatibility */}
+                            {!offer.value && offer.minimum_quantity && (
+                              <p>
+                                Minimum quantity: {offer.minimum_quantity} items
+                                {cartState.totalItems >=
+                                  offer.minimum_quantity ? (
+                                  <span className="text-green-600 ml-2">✓</span>
+                                ) : (
+                                  <span className="text-red-600 ml-2">
+                                    (Need{" "}
+                                    {offer.minimum_quantity -
+                                      cartState.totalItems}{" "}
+                                    more)
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                            {offer.minimum_value && (
+                              <p>
+                                Minimum value: ${offer.minimum_value}
+                                {cartState.totalPrice >= offer.minimum_value ? (
+                                  <span className="text-green-600 ml-2">✓</span>
+                                ) : (
+                                  <span className="text-red-600 ml-2">
+                                    (Need $
+                                    {(
+                                      offer.minimum_value - cartState.totalPrice
+                                    ).toFixed(2)}{" "}
+                                    more)
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                            {offer.discount_type && offer.discount_value && (
+                              <p className="text-primary-600 font-semibold">
+                                Benefit:{" "}
+                                {offer.discount_type === "percentage"
+                                  ? `${offer.discount_value}%`
+                                  : `$${offer.discount_value}`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="border-t border-secondary-100 p-6 bg-secondary-50">
+            {/* Info Note */}
+            {localSelectedOffer && (
+              <div className="mb-4 bg-amber-50 border border-amber-200 rounded p-3">
+                <p className="text-sm text-amber-800 font-medium mb-2">
+                  📋 <strong>How this offer works:</strong>
+                </p>
+                <div className="text-xs text-amber-700 space-y-1">
+                  {localSelectedOffer.value && localSelectedOffer.quantity ? (
+                    <>
+                      <p>
+                        •{" "}
+                        <strong>
+                          Buy {Number(localSelectedOffer.value)} items
+                        </strong>{" "}
+                        at normal price to qualify
+                      </p>
+                      <p>
+                        •{" "}
+                        <strong>
+                          Get {Number(localSelectedOffer.quantity)} item
+                          {Number(localSelectedOffer.quantity) > 1 ? "s" : ""}
+                        </strong>{" "}
+                        with offer benefit
+                      </p>
+                      {cartState.totalItems >
+                        Number(localSelectedOffer.quantity) && (
+                          <p>
+                            •{" "}
+                            <strong>
+                              Remaining{" "}
+                              {cartState.totalItems -
+                                Number(localSelectedOffer.quantity)}{" "}
+                              items
+                            </strong>{" "}
+                            → Normal price
+                          </p>
+                        )}
+                      <p className="text-amber-600 mt-2 italic">
+                        Example: Buy {Number(localSelectedOffer.value)} get{" "}
+                        {Number(localSelectedOffer.quantity)} → You have{" "}
+                        {cartState.totalItems} items,{" "}
+                        {Number(localSelectedOffer.quantity)} get offer, rest
+                        are normal price
+                      </p>
+                    </>
+                  ) : localSelectedOffer.quantity &&
+                    cartState.totalItems >
+                    Number(localSelectedOffer.quantity) ? (
+                    <>
+                      <p>
+                        •{" "}
+                        <strong>
+                          {Number(localSelectedOffer.quantity)} item
+                          {Number(localSelectedOffer.quantity) > 1 ? "s" : ""}
+                        </strong>{" "}
+                        → Will receive offer benefit
+                      </p>
+                      <p>
+                        •{" "}
+                        <strong>
+                          Remaining{" "}
+                          {cartState.totalItems -
+                            Number(localSelectedOffer.quantity)}{" "}
+                          items
+                        </strong>{" "}
+                        → Will be charged at normal price
+                      </p>
+                    </>
+                  ) : (
+                    <p>
+                      •{" "}
+                      {Number(localSelectedOffer.quantity) ||
+                        cartState.totalItems}{" "}
+                      item
+                      {Number(localSelectedOffer.quantity) > 1 ||
+                        cartState.totalItems > 1
+                        ? "s"
+                        : ""}{" "}
+                      in your cart will receive the offer benefit
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer with buttons */}
+          <div className="border-t border-secondary-200 p-4 bg-secondary-50 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-white border-2 border-secondary-200 text-secondary-700 rounded text-sm font-semibold hover:bg-secondary-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApplyOffer}
+                disabled={!localSelectedOffer}
+                className={`px-4 py-2 rounded text-sm font-semibold transition-all ${localSelectedOffer
+                  ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  }`}
+              >
+                Apply Offer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div >
+
+      {/* Warning Toast when offer is applied */}
+      < Toast
+        message="Offer applied! Note: If you remove or decrease any item quantity, your cart will be cleared."
+        type="info"
+        isVisible={showWarningToast}
+        onClose={() => setShowWarningToast(false)
+        }
+        duration={6000}
+      />
+
+      {/* Confirmation Dialog for changing offer */}
+      {
+        showConfirmDialog && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+              onClick={() => setShowConfirmDialog(false)}
+            />
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <div className="bg-white rounded shadow-2xl max-w-md w-full p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-yellow-100 rounded flex items-center justify-center">
                       <svg
-                        className="w-4 h-4"
+                        className="w-6 h-6 text-yellow-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -261,386 +583,65 @@ export default function ModalOffers({
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          strokeWidth={2.5}
-                          d="M5 13l4 4L19 7"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                         />
                       </svg>
-                      <span className="text-xs font-extrabold tracking-wide">
-                        SELECTED
-                      </span>
                     </div>
                   </div>
-                )}
-                {!isSelected && (
-                  <div className="absolute top-0 right-0 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white px-5 py-2 rounded-bl rounded-tr shadow-lg transform rotate-3">
-                    <span className="text-xs font-extrabold tracking-wide">
-                      AVAILABLE
-                    </span>
-                  </div>
-                )}
-                {/* Offer Number Badge - Sticker Style */}
-                <div className="absolute top-4 left-4 bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl font-extrabold text-xl border-4 border-white transform -rotate-12 z-10">
-                  #{offer.id}
-                </div>
-
-                <div className="flex items-start justify-between pt-2">
-                  <div className="flex-1 ml-20">
-                    <h3 className="text-2xl font-extrabold text-secondary-800 mb-2 mt-1">
-                      {offer.name || offer.title || `Offer #${offer.id}`}
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-secondary-800 mb-2">
+                      Change Offer?
                     </h3>
-                    {offer.description && (
-                      <p className="text-secondary-600 mb-3">
-                        {offer.description}
-                      </p>
-                    )}
-                    <div className="space-y-2 text-sm">
-                      {/* Show value (buy X items) */}
-                      {offer.value !== undefined &&
-                        offer.value !== null && (
-                          <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
-                            <p className="text-secondary-700 font-medium text-sm">
-                              💰{" "}
-                              <strong>
-                                Buy {Number(offer.value)} items
-                              </strong>{" "}
-                              (at normal price) to qualify
-                              {cartState.totalItems >=
-                                Number(offer.value) ? (
-                                <span className="text-green-600 ml-2 font-bold">
-                                  ✓ You qualify!
-                                </span>
-                              ) : (
-                                <span className="text-red-600 ml-2">
-                                  (Add{" "}
-                                  {Number(offer.value) -
-                                    cartState.totalItems}{" "}
-                                  more item
-                                  {Number(offer.value) -
-                                    cartState.totalItems >
-                                    1
-                                    ? "s"
-                                    : ""}
-                                  )
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        )}
-                      {/* Show quantity (get Y items with offer) */}
-                      {offer.quantity !== undefined &&
-                        offer.quantity !== null && (
-                          <div className="bg-primary-50 border border-primary-200 rounded p-3 mb-2">
-                            <p className="text-primary-700 font-semibold text-sm mb-1">
-                              🎁{" "}
-                              <strong>
-                                Get {Number(offer.quantity)} item
-                                {Number(offer.quantity) > 1
-                                  ? "s"
-                                  : ""}{" "}
-                                with offer benefit
-                              </strong>
-                            </p>
-                            {cartState.totalItems >
-                              Number(offer.quantity) ? (
-                              <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
-                                <p className="text-xs text-amber-800">
-                                  📊{" "}
-                                  <strong>
-                                    You have {cartState.totalItems} items
-                                    in cart.
-                                  </strong>
-                                  <br />•{" "}
-                                  <strong>
-                                    {Number(offer.quantity)} item
-                                    {Number(offer.quantity) > 1
-                                      ? "s"
-                                      : ""}
-                                  </strong>{" "}
-                                  → Get offer benefit
-                                  <br />• Remaining{" "}
-                                  <strong>
-                                    {cartState.totalItems -
-                                      Number(offer.quantity)}{" "}
-                                    items
-                                  </strong>{" "}
-                                  → Normal price
-                                </p>
-                              </div>
-                            ) : cartState.totalItems ===
-                              Number(offer.quantity) ? (
-                              <p className="text-xs text-secondary-600 mt-1">
-                                All {cartState.totalItems} item
-                                {Number(offer.quantity) > 1
-                                  ? "s"
-                                  : ""}{" "}
-                                will receive the offer benefit.
-                              </p>
-                            ) : (
-                              <p className="text-xs text-secondary-600 mt-1">
-                                When you apply this offer,{" "}
-                                {Number(offer.quantity)} item
-                                {Number(offer.quantity) > 1
-                                  ? "s"
-                                  : ""}{" "}
-                                will get the benefit.
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      {/* Fallback to minimum_quantity for backward compatibility */}
-                      {!offer.value && offer.minimum_quantity && (
-                        <p>
-                          Minimum quantity: {offer.minimum_quantity} items
-                          {cartState.totalItems >=
-                            offer.minimum_quantity ? (
-                            <span className="text-green-600 ml-2">✓</span>
-                          ) : (
-                            <span className="text-red-600 ml-2">
-                              (Need{" "}
-                              {offer.minimum_quantity -
-                                cartState.totalItems}{" "}
-                              more)
-                            </span>
-                          )}
-                        </p>
-                      )}
-                      {offer.minimum_value && (
-                        <p>
-                          Minimum value: ${offer.minimum_value}
-                          {cartState.totalPrice >= offer.minimum_value ? (
-                            <span className="text-green-600 ml-2">✓</span>
-                          ) : (
-                            <span className="text-red-600 ml-2">
-                              (Need $
-                              {(
-                                offer.minimum_value - cartState.totalPrice
-                              ).toFixed(2)}{" "}
-                              more)
-                            </span>
-                          )}
-                        </p>
-                      )}
-                      {offer.discount_type && offer.discount_value && (
-                        <p className="text-primary-600 font-semibold">
-                          Benefit:{" "}
-                          {offer.discount_type === "percentage"
-                            ? `${offer.discount_value}%`
-                            : `$${offer.discount_value}`}
-                        </p>
-                      )}
+                    <p className="text-secondary-600 mb-4">
+                      You already have an offer applied. Changing to a new offer
+                      will <strong>clear your entire cart</strong>. Are you sure
+                      you want to continue?
+                    </p>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => {
+                          setShowConfirmDialog(false);
+                          setPendingOffer(null);
+                        }}
+                        className="flex-1 px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded font-semibold transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (pendingOffer) {
+                            // Clear cart and offer first
+                            clearCart();
+                            clearOffer();
+                            // Then apply the new offer (with empty selectedProducts since cart is cleared)
+                            setOfferStore(pendingOffer, []);
+                            onSelectOffer(pendingOffer, []);
+                            setHasAppliedOffer(true);
+                            justAppliedRef.current = true;
+                            // Show warning toast
+                            setShowWarningToast(true);
+                            // Close dialogs and navigate
+                            setShowConfirmDialog(false);
+                            setPendingOffer(null);
+                            onClose();
+                            setTimeout(() => {
+                              router.push("/");
+                            }, 100);
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded font-semibold transition-colors"
+                      >
+                        Yes, Clear Cart
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
-            );
-                })}
-          </div>
-            )}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-secondary-100 p-6 bg-secondary-50">
-          {/* Info Note */}
-          {localSelectedOffer && (
-            <div className="mb-4 bg-amber-50 border border-amber-200 rounded p-3">
-              <p className="text-sm text-amber-800 font-medium mb-2">
-                📋 <strong>How this offer works:</strong>
-              </p>
-              <div className="text-xs text-amber-700 space-y-1">
-                {localSelectedOffer.value && localSelectedOffer.quantity ? (
-                  <>
-                    <p>
-                      •{" "}
-                      <strong>
-                        Buy {Number(localSelectedOffer.value)} items
-                      </strong>{" "}
-                      at normal price to qualify
-                    </p>
-                    <p>
-                      •{" "}
-                      <strong>
-                        Get {Number(localSelectedOffer.quantity)} item
-                        {Number(localSelectedOffer.quantity) > 1 ? "s" : ""}
-                      </strong>{" "}
-                      with offer benefit
-                    </p>
-                    {cartState.totalItems >
-                      Number(localSelectedOffer.quantity) && (
-                        <p>
-                          •{" "}
-                          <strong>
-                            Remaining{" "}
-                            {cartState.totalItems -
-                              Number(localSelectedOffer.quantity)}{" "}
-                            items
-                          </strong>{" "}
-                          → Normal price
-                        </p>
-                      )}
-                    <p className="text-amber-600 mt-2 italic">
-                      Example: Buy {Number(localSelectedOffer.value)} get{" "}
-                      {Number(localSelectedOffer.quantity)} → You have{" "}
-                      {cartState.totalItems} items,{" "}
-                      {Number(localSelectedOffer.quantity)} get offer, rest
-                      are normal price
-                    </p>
-                  </>
-                ) : localSelectedOffer.quantity &&
-                  cartState.totalItems >
-                  Number(localSelectedOffer.quantity) ? (
-                  <>
-                    <p>
-                      •{" "}
-                      <strong>
-                        {Number(localSelectedOffer.quantity)} item
-                        {Number(localSelectedOffer.quantity) > 1 ? "s" : ""}
-                      </strong>{" "}
-                      → Will receive offer benefit
-                    </p>
-                    <p>
-                      •{" "}
-                      <strong>
-                        Remaining{" "}
-                        {cartState.totalItems -
-                          Number(localSelectedOffer.quantity)}{" "}
-                        items
-                      </strong>{" "}
-                      → Will be charged at normal price
-                    </p>
-                  </>
-                ) : (
-                  <p>
-                    •{" "}
-                    {Number(localSelectedOffer.quantity) ||
-                      cartState.totalItems}{" "}
-                    item
-                    {Number(localSelectedOffer.quantity) > 1 ||
-                      cartState.totalItems > 1
-                      ? "s"
-                      : ""}{" "}
-                    in your cart will receive the offer benefit
-                  </p>
-                )}
-              </div>
             </div>
-          )}
-        </div>
-
-        {/* Footer with buttons */}
-        <div className="border-t border-secondary-200 p-4 bg-secondary-50 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-white border-2 border-secondary-200 text-secondary-700 rounded text-sm font-semibold hover:bg-secondary-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleApplyOffer}
-              disabled={!localSelectedOffer}
-              className={`px-4 py-2 rounded text-sm font-semibold transition-all ${localSelectedOffer
-                  ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }`}
-            >
-              Apply Offer
-            </button>
-          </div>
-        </div>
-      </div>
-    </div >
-
-      {/* Warning Toast when offer is applied */ }
-      < Toast
-  message = "Offer applied! Note: If you remove or decrease any item quantity, your cart will be cleared."
-  type = "info"
-  isVisible = { showWarningToast }
-  onClose = {() => setShowWarningToast(false)
-}
-duration = { 6000}
-  />
-
-  {/* Confirmation Dialog for changing offer */ }
-{
-  showConfirmDialog && (
-    <>
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
-        onClick={() => setShowConfirmDialog(false)}
-      />
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-        <div className="bg-white rounded shadow-2xl max-w-md w-full p-6">
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-secondary-800 mb-2">
-                Change Offer?
-              </h3>
-              <p className="text-secondary-600 mb-4">
-                You already have an offer applied. Changing to a new offer
-                will <strong>clear your entire cart</strong>. Are you sure
-                you want to continue?
-              </p>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => {
-                    setShowConfirmDialog(false);
-                    setPendingOffer(null);
-                  }}
-                  className="flex-1 px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded font-semibold transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (pendingOffer) {
-                      // Clear cart and offer first
-                      clearCart();
-                      clearOffer();
-                      // Then apply the new offer (with empty selectedProducts since cart is cleared)
-                      setOfferStore(pendingOffer, []);
-                      onSelectOffer(pendingOffer, []);
-                      setHasAppliedOffer(true);
-                      justAppliedRef.current = true;
-                      // Show warning toast
-                      setShowWarningToast(true);
-                      // Close dialogs and navigate
-                      setShowConfirmDialog(false);
-                      setPendingOffer(null);
-                      onClose();
-                      setTimeout(() => {
-                        router.push("/");
-                      }, 100);
-                    }
-                  }}
-                  className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded font-semibold transition-colors"
-                >
-                  Yes, Clear Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
+          </>
+        )
+      }
     </>
   );
 }

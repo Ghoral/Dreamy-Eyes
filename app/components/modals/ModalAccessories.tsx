@@ -74,7 +74,7 @@ export default function ModalAccessories({
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -118,7 +118,7 @@ export default function ModalAccessories({
                           {item.name || "Accessory"}
                         </h3>
                         <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                          className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold ${inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
                             }`}
                         >
                           {inStock ? "In Stock" : "Out of Stock"}

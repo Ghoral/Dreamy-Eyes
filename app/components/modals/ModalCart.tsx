@@ -130,7 +130,7 @@ const ModalCart = ({
               </div>
               <button
                 onClick={onClose}
-                className="w-12 h-12 bg-secondary-50 hover:bg-secondary-100 text-secondary-400 hover:text-secondary-900 rounded-full flex items-center justify-center transition-all duration-300"
+                className="w-12 h-12 bg-secondary-50 hover:bg-secondary-100 text-secondary-400 hover:text-secondary-900 rounded flex items-center justify-center transition-all duration-300"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -143,7 +143,7 @@ const ModalCart = ({
           {/* Offer Banner */}
           {isOfferApplied && selectedOffer && (
             <div className="mx-8 mb-4 bg-primary-50/50 border border-primary-100 rounded p-4 flex items-start gap-3 animate-in slide-in-from-top duration-700">
-              <div className="w-8 h-8 rounded-full bg-primary-500 flex-shrink-0 flex items-center justify-center shadow-[0_0_15px_rgba(195,78,138,0.3)]">
+              <div className="w-8 h-8 rounded bg-primary-500 flex-shrink-0 flex items-center justify-center shadow-[0_0_15px_rgba(195,78,138,0.3)]">
                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
@@ -161,8 +161,8 @@ const ModalCart = ({
           <div className="flex-1 overflow-y-auto px-8 py-2 custom-scrollbar relative z-10">
             {cartItems.items.length === 0 ? (
               <div className="py-20 flex flex-col items-center text-center">
-                <div className="w-32 h-32 bg-secondary-50 rounded-full flex items-center justify-center mb-6 relative group">
-                  <div className="absolute inset-0 bg-primary-500/10 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
+                <div className="w-32 h-32 bg-secondary-50 rounded flex items-center justify-center mb-6 relative group">
+                  <div className="absolute inset-0 bg-primary-500/10 rounded blur-2xl group-hover:blur-3xl transition-all duration-500 opacity-0 group-hover:opacity-100" />
                   <svg className="w-12 h-12 text-secondary-300 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                   </svg>
