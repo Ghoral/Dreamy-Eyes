@@ -163,6 +163,9 @@ export default function CheckoutPage() {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(
     null
   );
+  const [customerId, setCustomerId] = useState("");
+  const [customerIdImage, setCustomerIdImage] = useState<File | null>(null);
+  const [customerIdPreview, setCustomerIdPreview] = useState<string | null>(null);
   const [deliveryCharge, setDeliveryCharge] = useState<number>(0);
   const [isOffersModalOpen, setIsOffersModalOpen] = useState(false);
   const [isAccessoriesModalOpen, setIsAccessoriesModalOpen] = useState(false);
@@ -260,6 +263,18 @@ export default function CheckoutPage() {
     }
   };
 
+  const handleCustomerIdImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCustomerIdImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomerIdPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleOfferSelect = (offer: Offer, selectedProducts: any[]) => {
     const currentOffer = cartState.selectedOffer || zustandOffer;
     if (currentOffer && currentOffer.id !== offer.id) {
@@ -339,6 +354,17 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (paymentMethod === "cash_on_delivery") {
+      if (!customerId.trim()) {
+        setError("Customer ID is required for Cash on Delivery");
+        return;
+      }
+      if (!customerIdImage) {
+        setError("ID image is required for Cash on Delivery");
+        return;
+      }
+    }
+
     if (paymentMethod === "pre_payment") {
       if (!transactionId.trim()) {
         setError("Transaction ID is required for pre-payment");
@@ -371,6 +397,14 @@ export default function CheckoutPage() {
         paymentUrl = await uploadScreenshotToStorage(paymentScreenshot);
         if (!paymentUrl) {
           throw new Error("Failed to upload payment screenshot");
+        }
+      }
+
+      let customerIdUrl: string | null = null;
+      if (paymentMethod === "cash_on_delivery" && customerIdImage) {
+        customerIdUrl = await uploadScreenshotToStorage(customerIdImage);
+        if (!customerIdUrl) {
+          throw new Error("Failed to upload customer ID image");
         }
       }
 
@@ -409,8 +443,8 @@ export default function CheckoutPage() {
         p_items: orderItems,
         p_payment_method: paymentMethod,
         p_transaction_id:
-          paymentMethod === "pre_payment" ? transactionId : null,
-        p_payment_url: paymentUrl,
+          paymentMethod === "pre_payment" ? transactionId : (paymentMethod === "cash_on_delivery" ? customerId : null),
+        p_payment_url: paymentMethod === "pre_payment" ? paymentUrl : (paymentMethod === "cash_on_delivery" ? customerIdUrl : null),
         p_country: countryParam,
         p_conversion_rate: conversionRate,
         p_offer_id: offerId,
@@ -583,6 +617,38 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Cash on Delivery Fields */}
+              {paymentMethod === "cash_on_delivery" && (
+                <div className="mt-8 space-y-6 pt-8 border-t border-secondary-50 animate-in slide-in-from-right duration-700">
+                  <div>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Customer ID <span className="text-primary-500">*</span></label>
+                    <input
+                      type="text"
+                      value={customerId}
+                      onChange={(e) => setCustomerId(e.target.value)}
+                      placeholder="e.g. Citizenship/License/Passport Number"
+                      className="w-full bg-secondary-50 border border-secondary-100 rounded-2xl px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">ID Document Image <span className="text-primary-500">*</span></label>
+                    <div className="flex flex-col gap-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleCustomerIdImageChange}
+                        className="block w-full text-xs text-secondary-400 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-secondary-900 file:text-white hover:file:bg-primary-500 transition-all"
+                      />
+                      {customerIdPreview && (
+                        <div className="relative rounded-[2rem] overflow-hidden border border-secondary-100 aspect-video bg-white">
+                          <img src={customerIdPreview} alt="customer ID" className="w-full h-full object-contain" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Prepayment Fields */}
               {paymentMethod === "pre_payment" && (
