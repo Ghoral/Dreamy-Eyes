@@ -9,7 +9,7 @@ const ProductWrapper = async () => {
     "latest_arrival",
     "top_seller",
     "best_reviewed",
-  ]);
+  ], null); // Server component - will use default Nepal pricing, client will re-fetch with correct country
 
 
   return (

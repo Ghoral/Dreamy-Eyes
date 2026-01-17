@@ -160,12 +160,10 @@ export const fetchExchangeRate = async (): Promise<number> => {
       exchangeRateCache &&
       Date.now() - exchangeRateCache.timestamp < CACHE_DURATION
     ) {
-      console.log("Using cached exchange rate:", exchangeRateCache.rate);
       return exchangeRateCache.rate;
     }
 
-    // Fetch from API using fawazahmed0/currency-api
-    console.log("Fetching exchange rate from API...");
+
 
     // Primary URL: cdn.jsdelivr.net
     // Fallback URL: currency-api.pages.dev
@@ -179,20 +177,16 @@ export const fetchExchangeRate = async (): Promise<number> => {
 
     // Try primary URL first
     try {
-      console.log("Fetching from primary URL:", primaryUrl);
       response = await fetch(primaryUrl);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       rates = await response.json();
-      console.log("Exchange rate API response:", rates);
     } catch (primaryError) {
       console.warn("Primary URL failed, trying fallback:", primaryError);
       // Try fallback URL
       try {
-        console.log("Fetching from fallback URL:", fallbackUrl);
         response = await fetch(fallbackUrl);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         rates = await response.json();
-        console.log("Exchange rate API response (fallback):", rates);
       } catch (fallbackError) {
         console.error("Both URLs failed:", fallbackError);
         throw fallbackError;
@@ -207,7 +201,6 @@ export const fetchExchangeRate = async (): Promise<number> => {
       const nprRates = (rates as { npr: { [key: string]: number } }).npr;
       if (nprRates && typeof nprRates === "object" && "inr" in nprRates) {
         finalRate = nprRates.inr;
-        console.log("Extracted INR rate:", finalRate);
       } else {
         console.warn("INR rate not found in response, using fallback");
         finalRate = FALLBACK_RATE;
@@ -233,7 +226,6 @@ export const fetchExchangeRate = async (): Promise<number> => {
       timestamp: Date.now(),
     };
 
-    console.log("Cached exchange rate:", exchangeRateCache);
     return finalRate;
   } catch (error) {
     console.error("Error fetching exchange rate:", error);
@@ -293,8 +285,9 @@ export const calculatePriceSync = (
 // Format price with currency symbol
 export const formatPrice = (price: number, country: string | null): string => {
   const countryLower = country?.toLowerCase() || "";
-  const currency = countryLower === "india" ? "INR" : "NPR";
-  const symbol = currency === "INR" ? "₹" : "Rs";
+  // Show Rs only for Nepal, ₹ for everyone else (India and other countries)
+  const symbol = countryLower === "nepal" ? "Rs" : "₹";
+  console.log('[formatPrice] Country:', country, '-> Symbol:', symbol);
 
   // Format with 2 decimal places
   return `${symbol} ${price.toFixed(2)}`;

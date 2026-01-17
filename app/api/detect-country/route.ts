@@ -74,6 +74,14 @@ export function GET(req: NextRequest) {
     countryName = "nepal";
   }
 
+  console.log('[detect-country API] Headers:', {
+    'x-forwarded-for': req.headers.get('x-forwarded-for'),
+    'x-real-ip': req.headers.get('x-real-ip'),
+    'x-vercel-ip-country': req.headers.get('x-vercel-ip-country'),
+    'cf-ipcountry': req.headers.get('cf-ipcountry'),
+  });
+  console.log('[detect-country API] IP:', ip, '| Country Code:', country, '| Country Name:', countryName);
+
   // Encrypt the country value
   const encryptedCountry = encryptValue(countryName);
 

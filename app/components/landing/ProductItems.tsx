@@ -1,6 +1,6 @@
 "use client";
 
-import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
+import { getThumbnailUrl, formatPrice } from "@/app/util";
 import Image from "next/image";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCart } from "../../context/CartContext";
@@ -8,6 +8,7 @@ import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "../../hooks/useUserCountry";
 import { get_products } from "@/app/api/product";
+import ProductCardShimmer from "../ui/ProductCardShimmer";
 
 const ProductItems = ({ data }: { data: any }) => {
   const { country } = useUserCountry();
@@ -46,6 +47,8 @@ const ProductItems = ({ data }: { data: any }) => {
         return;
       }
 
+      if (!country) return; // Wait for country to be determined
+      console.log('[ProductItems] Fetching products for country:', country, 'tag:', selectedTag);
       setIsLoading(true);
       try {
         const tagsToSend =
@@ -53,7 +56,7 @@ const ProductItems = ({ data }: { data: any }) => {
             ? ["sale", "latest_arrival", "top_seller", "best_reviewed"]
             : [selectedTag];
 
-        const { data: newData } = await get_products(1000, 0, tagsToSend);
+        const { data: newData } = await get_products(1000, 0, tagsToSend, country);
         setProductsData(newData);
       } catch (error) {
         console.error("Error fetching filtered products:", error);
@@ -63,7 +66,7 @@ const ProductItems = ({ data }: { data: any }) => {
     };
 
     fetchFilteredProducts();
-  }, [selectedTag]);
+  }, [selectedTag, country]);
 
   const getProductLink = (product: any) => {
     const productId = product.id || product.title;
@@ -254,7 +257,16 @@ const ProductItems = ({ data }: { data: any }) => {
         )}
 
         {/* Products Grid */}
-        {filteredProducts && filteredProducts.length > 0 ? (
+        {!country || isLoading ? (
+          // Show shimmer until country is determined and data is loaded
+          <div className={`flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8`}>
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="w-[calc(50%-8px)] md:w-[calc(50%-12px)] lg:w-[calc(33.33%-21.33px)] xl:w-[calc(25%-24px)]">
+                <ProductCardShimmer />
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts && filteredProducts.length > 0 ? (
           <div className={`flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8 ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
             {filteredProducts.map((product: any, index: number) => {
               const imageUrl = getThumbnailUrl(product);
@@ -328,7 +340,7 @@ const ProductItems = ({ data }: { data: any }) => {
 
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent">
-                        {formatPriceWithCurrency(currentPrice, country)}
+                        {formatPrice(currentPrice, country)}
                       </span>
                     </div>
 

@@ -65,7 +65,7 @@ export async function get_app_details() {
       error: error.details,
     };
   }
-console.log('data insta',data);
+  console.log('data insta', data);
 
   return {
     data: data?.[0] || null,
@@ -114,12 +114,18 @@ export async function get_products_by_type(
 export async function get_products(
   limit: number = 10,
   offset: number = 0,
-  tags: string[] = []
+  tags: string[] = [],
+  country: string | null = null
 ) {
+  // Convert country to API format: 'np' for Nepal, null for others
+  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : null;
+  console.log('[get_products API] Received country:', country, '-> Sending to RPC:', countryCode);
+
   const { data, error } = await supabaseBrowserClient.rpc("get_products", {
     limit_value: limit,
     offset_value: offset,
     tags: tags.length > 0 ? tags : null,
+    country: countryCode,
   });
 
   if (error) {

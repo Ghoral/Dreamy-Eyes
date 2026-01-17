@@ -3,12 +3,13 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { get_products } from "@/app/api/product";
-import { getThumbnailUrl, formatPriceWithCurrency } from "@/app/util";
+import { getThumbnailUrl, formatPrice } from "@/app/util";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
 import { useCart } from "@/app/context/CartContext";
 import Link from "next/link";
 import Toast from "../ui/Toast";
+import ProductCardShimmer from "../ui/ProductCardShimmer";
 
 type Product = {
   id: string;
@@ -41,8 +42,10 @@ const SalesSection = () => {
   useEffect(() => {
     let mounted = true;
     const fetchData = async () => {
+      if (!country) return; // Wait for country to be determined
+      console.log('[SalesSection] Fetching products for country:', country);
       setLoading(true);
-      const res = await get_products(6, 0, ["sale"]);
+      const res = await get_products(6, 0, ["sale"], country);
       if (mounted && res?.status && res?.data) {
         let products = [];
         if (Array.isArray(res.data)) {
@@ -60,7 +63,7 @@ const SalesSection = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [country]);
 
   const handleProductClick = (product: Product) => {
     const productId = product.id || product.title;
@@ -125,7 +128,14 @@ const SalesSection = () => {
 
         {/* Sales Products Grid */}
         <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8">
-          {salesData.map((product, index) => {
+          {!country || loading ? (
+            // Show shimmer until country is determined and data is loaded
+            [...Array(6)].map((_, i) => (
+              <div key={i} className="w-[calc(100%-1rem)] sm:w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.67rem)] lg:w-[calc(25%-0.75rem)] max-w-sm">
+                <ProductCardShimmer />
+              </div>
+            ))
+          ) : salesData.map((product, index) => {
             const imageUrl = getThumbnailUrl(product);
             const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
 
@@ -206,7 +216,7 @@ const SalesSection = () => {
 
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-2xl font-bold text-primary-600">
-                        {formatPriceWithCurrency(currentPrice, country)}
+                        {formatPrice(currentPrice, country)}
                       </span>
                     </div>
 
