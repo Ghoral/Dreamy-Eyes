@@ -144,8 +144,7 @@ const ProductItems = ({ data }: { data: any }) => {
         }
         baseTags.push({ label: "Tools", scrollId: "applicators-section", icon: "🛠️", desc: "Kit", type: 'scroll' } as any);
 
-        // Add Rewards Chip
-        baseTags.push({ label: "REWARDS", value: "rewards", icon: "🎁", desc: "Exclusives", type: 'action' } as any);
+
 
         setAvailableTags(baseTags);
       } catch (e) {

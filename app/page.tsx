@@ -13,6 +13,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <GlobalSupabaseListenerWrapper />
       <BillboardCarousel />
+      <ItemListing />
       <ProductWrapper />
       <EyeLashesSection />
       <ApplicatorsSection />

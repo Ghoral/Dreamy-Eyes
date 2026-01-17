@@ -40,7 +40,7 @@ const BillboardCarousel = () => {
   if (images.length === 0) return null;
 
   return (
-    <section className="relative w-full h-[85vh] md:h-screen overflow-hidden bg-white">
+    <section className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden bg-white mt-16 md:mt-24">
       {images.map((src, index) => (
         <div
           key={index}

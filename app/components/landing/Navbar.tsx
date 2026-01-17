@@ -31,7 +31,8 @@ const Navbar = () => {
     "/profile",
     "/shipping-address"
   ].includes(pathname) || /^\/[^/]+$/.test(pathname); // Matches dynamic [id] product pages (single slug)
-  const shouldShowDarkNav = isScrolled || (pathname !== "/" && isWhitePage);
+  // const shouldShowDarkNav = isScrolled || (pathname !== "/" && isWhitePage);
+  const shouldShowDarkNav = true; // Force dark mode for visibility on light theme
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,7 +67,7 @@ const Navbar = () => {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-12 py-4 ${shouldShowDarkNav
-          ? "bg-white/80 backdrop-blur-2xl shadow-glow py-4"
+          ? "bg-white/80 backdrop-blur-2xl shadow-glow md:shadow-none py-4"
           : "bg-transparent py-6"
           }`}
       >

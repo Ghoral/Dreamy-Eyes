@@ -35,25 +35,24 @@ const OffersSlider = () => {
   }
 
   return (
-    <section id="offers-section" className="bg-secondary-900 py-6 md:py-12 relative overflow-hidden">
-      {/* Premium Cinematic Background */}
+    <section id="offers-section" className="bg-gradient-to-br from-white via-secondary-50 to-primary-50/20 py-8 md:py-16 relative overflow-hidden mx-auto w-[92%] md:w-[96%] max-w-[1600px] rounded-[5px] border border-secondary-100 shadow-none mt-4 md:mt-0 mb-8 md:mb-12">
+      {/* Soft Background Gradient */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[60%] bg-primary-500/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[60%] bg-accent-500/10 blur-[120px] rounded-full" />
+        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-primary-100/30 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[80%] bg-secondary-100/30 blur-[120px] rounded-full" />
       </div>
 
       <div className="max-w-[1400px] mx-auto relative z-10 px-6">
-        {/* Boutique Header */}
-        <div className="flex flex-col items-center text-center mb-8 md:mb-12">
-          <span className="text-primary-400 font-black tracking-[0.4em] uppercase text-[9px] mb-2 block">Member Exclusives</span>
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-2 tracking-tighter leading-none">
-            REWARD <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-300">VAULT</span>
+        {/* Header */}
+        <div className="flex flex-col items-center text-center mb-10">
+          <span className="text-secondary-400 font-bold tracking-[0.3em] uppercase text-[10px] mb-3 bg-white border border-secondary-100 px-3 py-1 rounded-full">Limited Access</span>
+          <h2 className="text-3xl md:text-5xl font-black text-secondary-900 tracking-tight mb-2">
+            EXCLUSIVE <span className="text-primary-500 font-serif italic font-normal">Privileges</span>
           </h2>
-          <p className="text-[10px] md:text-xs text-secondary-400 font-bold uppercase tracking-widest max-w-sm">Curated privileges for your collection.</p>
         </div>
 
-        {/* 2-Column Voucher Grid */}
-        <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-center justify-center gap-4 md:gap-6">
+        {/* Voucher Grid */}
+        <div className="flex flex-wrap justify-center gap-4 md:gap-6">
           {offers.map((offer, index) => {
             const isApplied = cartState.selectedOffer?.id === offer.id;
 
@@ -61,41 +60,34 @@ const OffersSlider = () => {
               <div
                 key={`offer-${offer.id}-${index}`}
                 onClick={() => !isApplied && handleApplyOffer(offer)}
-                className={`group relative flex flex-col items-center justify-between w-full lg:w-[280px] aspect-[4/5] lg:aspect-auto lg:h-[320px] p-6 md:p-8 rounded-[1.5rem] border transition-all duration-700 cursor-pointer overflow-hidden ${isApplied
-                  ? "bg-white border-white shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105"
-                  : "bg-white/5 border-white/10 hover:border-primary-500/30 hover:bg-white/10"
+                className={`group relative flex flex-col items-center justify-between p-4 md:p-8 rounded-[5px] border transition-all duration-300 cursor-pointer overflow-hidden w-[calc(50%-0.5rem)] md:w-auto md:min-w-[240px] ${isApplied
+                  ? "bg-green-50 border-green-500 shadow-none scale-[1.02]"
+                  : "bg-white border-secondary-100 hover:border-primary-200 hover:shadow-sm hover:-translate-y-1"
                   }`}
               >
-                {/* Background Decor */}
-                <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl rounded-full transition-opacity duration-700 ${isApplied ? 'bg-primary-500/10 opacity-100' : 'bg-primary-500/5 opacity-0 group-hover:opacity-100'}`} />
-
-                {/* Voucher Header: Icon */}
-                <div className={`text-4xl md:text-6xl mb-4 md:mb-6 transition-all duration-700 ${isApplied ? 'saturate-100 scale-110' : 'saturate-0 opacity-20 group-hover:opacity-100 group-hover:scale-110'}`}>
-                  {offer.discount_type === 'percentage' ? '🏷️' : '🎁'}
+                {/* Icon */}
+                <div className={`text-4xl md:text-5xl mb-4 transition-transform duration-300 ${isApplied ? 'scale-110' : 'group-hover:scale-110 group-hover:rotate-12'}`}>
+                  {offer.discount_type === 'percentage' ? '💎' : '🎁'}
                 </div>
 
                 {/* Content */}
-                <div className="text-center flex-1 flex flex-col justify-center gap-2 md:gap-4">
-                  <span className={`text-[8px] md:text-[10px] font-black tracking-[0.3em] uppercase ${isApplied ? 'text-primary-500' : 'text-primary-500/60'}`}>
-                    {isApplied ? "Privilege Applied" : "Redeem Privilege"}
-                  </span>
-                  <h3 className={`text-sm md:text-3xl font-black tracking-tighter leading-none uppercase ${isApplied ? 'text-secondary-900' : 'text-white'}`}>
+                <div className="text-center flex-1 flex flex-col justify-center gap-2 w-full">
+                  <h3 className={`text-xl md:text-2xl font-black leading-none uppercase ${isApplied ? 'text-green-900' : 'text-secondary-900'}`}>
                     {offer.title || offer.name}
                   </h3>
                   {offer.description && (
-                    <p className={`hidden md:block text-[11px] font-medium leading-tight opacity-40 line-clamp-2 ${isApplied ? 'text-secondary-900' : 'text-white'}`}>
+                    <p className={`text-[11px] font-medium leading-relaxed line-clamp-2 ${isApplied ? 'text-green-700/80' : 'text-secondary-500'}`}>
                       {offer.description}
                     </p>
                   )}
                 </div>
 
-                {/* Footer Checkmark (Applied Only) */}
-                <div className="mt-2 w-full flex justify-center items-center h-8">
-                  {isApplied && (
-                    <div className="bg-primary-500 text-white p-1.5 rounded-full shadow-lg">
-                      <svg className="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                    </div>
-                  )}
+                {/* Action Button Look */}
+                <div className={`mt-6 w-full py-2.5 rounded-full text-[10px] font-black tracking-widest uppercase text-center transition-colors ${isApplied
+                  ? "bg-green-600 text-white"
+                  : "bg-secondary-50 text-secondary-900 group-hover:bg-secondary-900 group-hover:text-white"
+                  }`}>
+                  {isApplied ? "Applied" : "Redeem"}
                 </div>
               </div>
             );
