@@ -44,9 +44,9 @@ export default function SolutionsSection() {
     }
 
     return (
-        <section id="solutions-section" className="py-32 bg-white relative">
+        <section id="solutions-section" className="py-12 bg-white relative">
             <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20 border-b border-secondary-100 pb-16">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-12 border-b border-secondary-100 pb-16">
                     <div className="max-w-3xl">
                         <span className="text-primary-500 font-bold tracking-[0.4em] uppercase text-xs mb-4 block">Care System</span>
                         <h2 className="text-7xl md:text-9xl font-extrabold text-secondary-900 tracking-tighter leading-none mb-6">
@@ -77,11 +77,11 @@ export default function SolutionsSection() {
 
                             <div className="flex flex-col gap-3 md:gap-4">
                                 <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">{solution.sub_title}</span>
-                                <div className="flex justify-between items-start gap-4">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-2 md:gap-4">
                                     <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase flex-1">
                                         {solution.title}
                                     </h3>
-                                    <div className="text-right shrink-0">
+                                    <div className="text-left md:text-right shrink-0">
                                         <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
                                         <div className="text-sm md:text-2xl font-black text-secondary-900 font-price">
                                             {formatPrice(solution.price, country)}

@@ -45,7 +45,7 @@ const TikTokCarousel = () => {
   }
 
   return (
-    <section className="relative py-32 bg-secondary-900 overflow-hidden">
+    <section className="relative py-12 bg-secondary-900 overflow-hidden">
       {/* Dynamic Background */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-[20%] left-[-10%] w-[60%] h-[60%] bg-primary-600 blur-[150px] rounded-full animate-pulse-slow"></div>
