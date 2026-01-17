@@ -115,7 +115,7 @@ const ModalCart = ({
         onKeyDown={handleKeyDown}
         tabIndex={-1}
       >
-        <div className="bg-white rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.2)] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative border border-secondary-100 animate-in fade-in zoom-in duration-500">
+        <div className="bg-white rounded shadow-[0_40px_100px_rgba(0,0,0,0.2)] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative border border-secondary-100 animate-in fade-in zoom-in duration-500">
 
           {/* Subtle Glows inside white modal */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary-100/30 blur-[100px] pointer-events-none" />
@@ -142,7 +142,7 @@ const ModalCart = ({
 
           {/* Offer Banner */}
           {isOfferApplied && selectedOffer && (
-            <div className="mx-8 mb-4 bg-primary-50/50 border border-primary-100 rounded-2xl p-4 flex items-start gap-3 animate-in slide-in-from-top duration-700">
+            <div className="mx-8 mb-4 bg-primary-50/50 border border-primary-100 rounded p-4 flex items-start gap-3 animate-in slide-in-from-top duration-700">
               <div className="w-8 h-8 rounded-full bg-primary-500 flex-shrink-0 flex items-center justify-center shadow-[0_0_15px_rgba(195,78,138,0.3)]">
                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -175,10 +175,10 @@ const ModalCart = ({
                 {cartItems.items.map((item, index) => (
                   <div
                     key={`${item.id}-${item.color}`}
-                    className="group relative bg-white border border-secondary-100 rounded-3xl p-4 flex gap-6 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] hover:border-primary-100 transition-all duration-500"
+                    className="group relative bg-white border border-secondary-100 rounded p-4 flex gap-6 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] hover:border-primary-100 transition-all duration-500"
                   >
                     {/* Item Image */}
-                    <div className="w-24 h-24 bg-secondary-50 border border-secondary-100 rounded-2xl overflow-hidden flex-shrink-0 relative">
+                    <div className="w-24 h-24 bg-secondary-50 border border-secondary-100 rounded overflow-hidden flex-shrink-0 relative">
                       {item.image || item.primary_thumbnail ? (
                         <img
                           src={item.primary_thumbnail ? getProductImageUrl(item.primary_thumbnail) : item.image}
@@ -212,7 +212,7 @@ const ModalCart = ({
                       </div>
 
                       <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center bg-secondary-50 border border-secondary-100 rounded-xl p-1 h-10">
+                        <div className="flex items-center bg-secondary-50 border border-secondary-100 rounded p-1 h-10">
                           <button
                             onClick={async () => {
                               if (typeof window !== "undefined") {
@@ -302,13 +302,13 @@ const ModalCart = ({
               <div className="flex flex-col md:flex-row gap-4">
                 <button
                   onClick={handleViewCart}
-                  className="flex-1 py-5 px-8 bg-white border border-secondary-200 text-secondary-900 font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl hover:bg-secondary-100 hover:border-secondary-300 transition-all duration-300"
+                  className="flex-1 py-5 px-8 bg-white border border-secondary-200 text-secondary-900 font-black text-[11px] uppercase tracking-[0.2em] rounded hover:bg-secondary-100 hover:border-secondary-300 transition-all duration-300"
                 >
                   Inspect Full Cart
                 </button>
                 <button
                   onClick={handleCheckout}
-                  className="flex-1 py-5 px-8 bg-primary-500 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl shadow-[0_15px_30px_rgba(195,78,138,0.2)] hover:shadow-[0_20px_40px_rgba(195,78,138,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 relative overflow-hidden group"
+                  className="flex-1 py-5 px-8 bg-primary-500 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded shadow-[0_15px_30px_rgba(195,78,138,0.2)] hover:shadow-[0_20px_40px_rgba(195,78,138,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 relative overflow-hidden group"
                 >
                   <span className="relative z-10">Confirm & Acquire</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
