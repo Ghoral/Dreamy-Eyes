@@ -65,7 +65,7 @@ export default function ModalAccessories({
     <>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="bg-white rounded shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
           <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-4 text-white flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
@@ -111,7 +111,7 @@ export default function ModalAccessories({
                   return (
                     <div
                       key={item.id}
-                      className="p-4 rounded-2xl border-2 transition-all duration-300 border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-300 hover:shadow-soft"
+                      className="p-4 rounded border-2 transition-all duration-300 border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-300 hover:shadow-soft"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="text-lg font-bold text-secondary-800">
@@ -126,7 +126,7 @@ export default function ModalAccessories({
                       </div>
 
                       {/* Accessory Image in Modal */}
-                      <div className="relative aspect-video mb-3 rounded-xl overflow-hidden bg-secondary-100">
+                      <div className="relative aspect-video mb-3 rounded overflow-hidden bg-secondary-100">
                         {item.image ? (
                           <img
                             src={getAccessoryImageUrl(item.image)}
@@ -152,7 +152,7 @@ export default function ModalAccessories({
                         )}
                       </div>
                       <div className="mt-3 flex items-center justify-between">
-                        <div className="inline-flex items-center rounded-xl border border-secondary-200 overflow-hidden">
+                        <div className="inline-flex items-center rounded border border-secondary-200 overflow-hidden">
                           <button
                             className="px-3 py-2 bg-secondary-50 hover:bg-secondary-100 text-secondary-700 disabled:opacity-50"
                             disabled={!inStock || selectedQty <= 1}
@@ -227,7 +227,7 @@ export default function ModalAccessories({
                               setPendingId(null);
                             }
                           }}
-                          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
