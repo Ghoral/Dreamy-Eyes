@@ -62,8 +62,8 @@ const OffersSlider = () => {
                 key={`offer-${offer.id}-${index}`}
                 onClick={() => !isApplied && handleApplyOffer(offer)}
                 className={`group relative flex flex-col items-center justify-between w-full lg:w-[320px] aspect-[4/5] lg:aspect-auto lg:h-[380px] p-6 md:p-10 rounded-[2rem] border transition-all duration-700 cursor-pointer overflow-hidden ${isApplied
-                    ? "bg-white border-white shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105"
-                    : "bg-white/5 border-white/10 hover:border-primary-500/30 hover:bg-white/10"
+                  ? "bg-white border-white shadow-[0_30px_60px_rgba(255,255,255,0.1)] scale-105"
+                  : "bg-white/5 border-white/10 hover:border-primary-500/30 hover:bg-white/10"
                   }`}
               >
                 {/* Background Decor */}
@@ -96,14 +96,11 @@ const OffersSlider = () => {
                   )}
                 </div>
 
-                {/* Footer Reference */}
-                <div className={`mt-4 pt-4 border-t w-full flex justify-between items-center ${isApplied ? 'border-secondary-100' : 'border-white/5'}`}>
-                  <span className={`text-[7px] md:text-[9px] font-mono tracking-widest ${isApplied ? 'text-secondary-300' : 'text-white/20'}`}>
-                    REF: {String(offer.id).slice(0, 6).toUpperCase()}
-                  </span>
+                {/* Footer Checkmark (Applied Only) */}
+                <div className="mt-4 pt-4 border-t w-full flex justify-center items-center h-8">
                   {isApplied && (
-                    <div className="bg-primary-500 text-white p-1 rounded-full">
-                      <svg className="w-2 h-2 md:w-3 md:h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    <div className="bg-primary-500 text-white p-1.5 rounded-full shadow-lg">
+                      <svg className="w-3 h-3 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     </div>
                   )}
                 </div>
