@@ -65,7 +65,7 @@ export default function EyeLashesSection() {
                             <div
                                 key={lash.id}
                                 className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
-                                onClick={() => router.push(`/eye-lashes/${lash.id}`)}
+                                onClick={() => router.push(`/${lash.id}`)}
                             >
                                 <div className="relative aspect-[4/5] mb-10 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
                                     {imageUrl ? (
