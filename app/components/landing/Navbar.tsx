@@ -57,49 +57,96 @@ const Navbar = () => {
           : "bg-transparent py-6"
           }`}
       >
-        <div className="max-w-[1800px] mx-auto flex justify-between items-center">
-          {/* Menu Button (Mobile) */}
-          <button
-            onClick={() => setIsMobileMenuOpen(true)}
-            className={`lg:hidden p-2 rounded-full transition-colors ${isScrolled ? "text-secondary-900" : "text-white"}`}
-          >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
-          </button>
+        <div className="max-w-[1800px] mx-auto">
+          <div className="flex justify-between items-center">
+            {/* Menu Button (Mobile) */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className={`lg:hidden p-2 rounded-full transition-colors ${isScrolled ? "text-secondary-900" : "text-white"}`}
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+            </button>
 
-          {/* Nav Links (Desktop Left) */}
-          <div className="hidden lg:flex items-center gap-10">
-            {["Home", "About"].map((item) => (
-              <Link
-                key={item}
-                href={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${isScrolled ? "text-secondary-900" : "text-white"
-                  }`}
+            {/* Nav Links (Desktop Left) */}
+            <div className="hidden lg:flex items-center gap-10">
+              {["Home", "About"].map((item) => (
+                <Link
+                  key={item}
+                  href={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                  className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${isScrolled ? "text-secondary-900" : "text-white"
+                    }`}
+                >
+                  {item}
+                </Link>
+              ))}
+            </div>
+
+            {/* Logo */}
+            <Link href="/" className="absolute left-1/2 -translate-x-1/2 transition-transform hover:scale-110 duration-500">
+              <div className={`flex flex-col items-center transition-all duration-500 ${isScrolled ? "scale-90" : "scale-100"}`}>
+                <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif drop-shadow-md ${isScrolled ? "text-secondary-900" : "text-white"
+                  }`}>
+                  Dreamy <span className="text-primary-500">Eyes</span>
+                </span>
+                <div className={`h-0.5 w-12 bg-primary-500 transition-all duration-500 ${isScrolled ? "opacity-100" : "opacity-0"}`} />
+              </div>
+            </Link>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-4 md:gap-8">
+              {/* Desktop Applied Offer Info */}
+              {cartState.selectedOffer && (
+                <div className={`hidden md:flex items-center gap-2 pl-3 md:pl-4 pr-2 py-1 md:py-1.5 rounded-full border transition-all duration-500 group/offer ${isScrolled ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
+                  }`}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-primary-500 rounded-full animate-pulse" />
+                    <span className={`text-[9px] md:text-[10px] font-black tracking-widest uppercase ${isScrolled ? "text-primary-600" : "text-white"
+                      }`}>
+                      {cartState.selectedOffer.name || cartState.selectedOffer.title || "OFFER ACTIVE"}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOffer(null, []);
+                    }}
+                    className={`p-1 rounded-full transition-all duration-300 ${isScrolled ? "hover:bg-primary-100 text-primary-400" : "hover:bg-white/20 text-white/50"}`}
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => setIsCartModalOpen(true)}
+                className={`relative group transition-transform hover:scale-110 ${isScrolled ? "text-secondary-900" : "text-white"}`}
               >
-                {item}
-              </Link>
-            ))}
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
+                    {cartItemCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className={`hidden md:block transition-transform hover:scale-110 ${isScrolled ? "text-secondary-900" : "text-white"}`}
+              >
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              </button>
+            </div>
           </div>
 
-          {/* Logo */}
-          <Link href="/" className="absolute left-1/2 -translate-x-1/2 transition-transform hover:scale-110 duration-500">
-            <div className={`flex flex-col items-center transition-all duration-500 ${isScrolled ? "scale-90" : "scale-100"}`}>
-              <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif drop-shadow-md ${isScrolled ? "text-secondary-900" : "text-white"
-                }`}>
-                Dreamy <span className="text-primary-500">Eyes</span>
-              </span>
-              <div className={`h-0.5 w-12 bg-primary-500 transition-all duration-500 ${isScrolled ? "opacity-100" : "opacity-0"}`} />
-            </div>
-          </Link>
-
-          {/* Right Actions */}
-          <div className="flex items-center gap-4 md:gap-8">
-            {/* Minimal Applied Offer Info */}
-            {cartState.selectedOffer && (
-              <div className={`flex items-center gap-2 pl-3 md:pl-4 pr-2 py-1 md:py-1.5 rounded-full border transition-all duration-500 group/offer ${isScrolled ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
+          {/* Mobile Offer Badge - Dedicated centered row */}
+          {cartState.selectedOffer && (
+            <div className="md:hidden mt-4 flex justify-center animate-in fade-in slide-in-from-top-2 duration-500">
+              <div className={`flex items-center gap-3 pl-4 pr-2 py-1.5 rounded-full border ${isScrolled ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
                 }`}>
                 <div className="flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-primary-500 rounded-full animate-pulse" />
-                  <span className={`text-[9px] md:text-[10px] font-black tracking-widest uppercase ${isScrolled ? "text-primary-600" : "text-white"
+                  <div className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-pulse" />
+                  <span className={`text-[9px] font-black tracking-widest uppercase ${isScrolled ? "text-primary-600" : "text-white"
                     }`}>
                     {cartState.selectedOffer.name || cartState.selectedOffer.title || "OFFER ACTIVE"}
                   </span>
@@ -112,30 +159,11 @@ const Navbar = () => {
                   }}
                   className={`p-1 rounded-full transition-all duration-300 ${isScrolled ? "hover:bg-primary-100 text-primary-400" : "hover:bg-white/20 text-white/50"}`}
                 >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
-            )}
-
-            <button
-              onClick={() => setIsCartModalOpen(true)}
-              className={`relative group transition-transform hover:scale-110 ${isScrolled ? "text-secondary-900" : "text-white"}`}
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-              {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
-                  {cartItemCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-              className={`hidden md:block transition-transform hover:scale-110 ${isScrolled ? "text-secondary-900" : "text-white"}`}
-            >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </nav>
 

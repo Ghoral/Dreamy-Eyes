@@ -195,17 +195,22 @@ const ProductItems = ({ data }: { data: any }) => {
                 </button>
               );
             })}
-
-            <div className="h-10 w-px bg-secondary-200 mx-2 hidden lg:block"></div>
-
-            <button
-              onClick={() => setIsFilterDrawerOpen(true)}
-              className="flex items-center gap-3 px-6 py-4 bg-white border-2 border-dashed border-secondary-200 rounded-xl hover:border-primary-500 hover:text-primary-500 group transition-all"
-            >
-              <svg className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-              <span className="font-black text-xs tracking-widest">REFINE</span>
-            </button>
           </div>
+        </div>
+
+        {/* Filter Action Row */}
+        <div className="flex justify-end mb-12">
+          <button
+            onClick={() => setIsFilterDrawerOpen(true)}
+            className="group relative flex items-center gap-4 px-6 md:px-8 py-3 md:py-4 bg-secondary-900 rounded-2xl hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
+          >
+            <div className="relative">
+              <svg className="w-4 h-4 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </div>
+            <span className="text-[10px] md:text-xs font-black tracking-[0.2em] md:tracking-[0.3em] text-white uppercase">Refine Search</span>
+          </button>
         </div>
 
         {/* Products Grid */}
