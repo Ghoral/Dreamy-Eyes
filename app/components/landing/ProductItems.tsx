@@ -142,9 +142,10 @@ const ProductItems = ({ data }: { data: any }) => {
         if (solutions.total > 0) {
           baseTags.push({ label: "Solutions", scrollId: "solutions-section", icon: "💧", desc: "Pure", type: 'scroll' } as any);
         }
-        if (applicators.total > 0) {
-          baseTags.push({ label: "Tools", scrollId: "applicators-section", icon: "🛠️", desc: "Kit", type: 'scroll' } as any);
-        }
+        baseTags.push({ label: "Tools", scrollId: "applicators-section", icon: "🛠️", desc: "Kit", type: 'scroll' } as any);
+
+        // Add Rewards Chip
+        baseTags.push({ label: "REWARDS", value: "rewards", icon: "🎁", desc: "Exclusives", type: 'action' } as any);
 
         setAvailableTags(baseTags);
       } catch (e) {
@@ -197,16 +198,21 @@ const ProductItems = ({ data }: { data: any }) => {
           <div className="grid grid-cols-2 md:flex md:flex-wrap items-center justify-between gap-3 md:gap-4">
             <div className="contents md:flex md:flex-wrap md:items-center gap-3">
               {availableTags.map((tag) => {
+                const isRewards = tag.value === 'rewards';
                 const isActive = tag.type === 'filter' ? selectedTag === tag.value : false;
+
+                // Custom styles for Rewards/Action chips
+                const baseClasses = isRewards
+                  ? "bg-green-100 border-green-200 text-green-800 hover:bg-green-200 hover:border-green-300 hover:shadow-md"
+                  : isActive
+                    ? "bg-secondary-900 border-secondary-900 shadow-lg text-white"
+                    : "bg-white border-secondary-200 text-secondary-900 hover:border-primary-500 hover:shadow-md";
 
                 return (
                   <button
                     key={tag.label}
                     onClick={() => handleTagClick(tag)}
-                    className={`flex items-center gap-3 px-4 md:px-5 py-2.5 md:py-3 rounded-full border transition-all duration-500 group relative w-full md:w-auto h-full ${isActive
-                      ? "bg-secondary-900 border-secondary-900 shadow-lg text-white"
-                      : "bg-white border-secondary-200 text-secondary-900 hover:border-primary-500 hover:shadow-md"
-                      }`}
+                    className={`flex items-center gap-3 px-4 md:px-5 py-2.5 md:py-3 rounded-full border transition-all duration-500 group relative w-full md:w-auto h-full ${baseClasses}`}
                   >
                     <span className={`text-lg md:text-xl transition-transform duration-500 group-hover:scale-110 shrink-0 ${isActive ? 'saturate-100' : 'saturate-0 opacity-60'}`}>
                       {tag.icon}

@@ -74,7 +74,7 @@ const ApplicatorsSection = () => {
   if (!loading && items.length === 0) return null;
 
   return (
-    <section id="applicators-section" className="py-12 bg-white relative">
+    <section id="applicators-section" className="py-6 bg-white relative">
       <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-12 border-b border-secondary-100 pb-16">
           <div className="max-w-3xl">
@@ -86,7 +86,7 @@ const ApplicatorsSection = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+        <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-6 md:gap-y-12">
           {items.map((item) => {
             const rawPrice = typeof item.price === "string" ? parseFloat(item.price) : (item.price as number | null);
             const qty = typeof item.quantity === "string" ? parseInt(item.quantity) : (item.quantity as number | null);
@@ -94,7 +94,7 @@ const ApplicatorsSection = () => {
             const selectedQty = quantityMap[item.id] ?? 1;
 
             return (
-              <div key={item.id} className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(33.33%-1rem)] lg:w-[calc(25%-1.5rem)] xl:w-[calc(20%-1.5rem)] max-w-[280px]">
+              <div key={item.id} className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(33.33%-1rem)] lg:w-[calc(20%-1.5rem)] xl:w-[calc(16.666%-1.5rem)] max-w-[220px]">
                 <div className="relative aspect-[4/5] mb-6 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
                   {item.image ? (
                     <img

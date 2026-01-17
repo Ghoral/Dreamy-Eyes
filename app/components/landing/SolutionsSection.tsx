@@ -53,9 +53,9 @@ export default function SolutionsSection() {
     if (!loading && solutions.length === 0) return null;
 
     return (
-        <section id="solutions-section" className="py-12 bg-white relative">
+        <section id="solutions-section" className="py-6 bg-white relative">
             <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-12 border-b border-secondary-100 pb-16">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-6 border-b border-secondary-100 pb-6">
                     <div className="max-w-3xl">
                         <span className="text-primary-500 font-bold tracking-[0.4em] uppercase text-xs mb-4 block">Care System</span>
                         <h2 className="text-7xl md:text-9xl font-extrabold text-secondary-900 tracking-tighter leading-none mb-6">
@@ -65,7 +65,7 @@ export default function SolutionsSection() {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+                <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-6 md:gap-y-12">
                     {solutions.map((solution) => {
                         const maxQty = solution.quantity;
                         const inStock = (maxQty === null || maxQty === undefined || maxQty > 0);
@@ -74,7 +74,7 @@ export default function SolutionsSection() {
                         return (
                             <div
                                 key={solution.id}
-                                className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(33.33%-1rem)] lg:w-[calc(25%-1.5rem)] xl:w-[calc(20%-1.5rem)] max-w-[280px]"
+                                className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(33.33%-1rem)] lg:w-[calc(20%-1.5rem)] xl:w-[calc(16.666%-1.5rem)] max-w-[220px]"
                             >
                                 <div className="relative aspect-[4/5] mb-6 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring border border-secondary-100" onClick={() => router.push(`/solutions/${solution.id}`)}>
                                     {solution.image ? (

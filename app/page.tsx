@@ -13,12 +13,11 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <GlobalSupabaseListenerWrapper />
       <BillboardCarousel />
-      <ItemListing />
       <ProductWrapper />
       <EyeLashesSection />
       <ApplicatorsSection />
       <SolutionsSection />
-      <div className="w-full h-px bg-secondary-200 opacity-60 max-w-7xl mx-auto my-12 md:my-24" />
+      <div className="w-full h-px bg-secondary-200 opacity-60 max-w-7xl mx-auto my-4 md:my-8" />
       <TikTokCarousel />
       <Footer />
     </div>
