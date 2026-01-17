@@ -115,13 +115,45 @@ const ProductItems = ({ data }: { data: any }) => {
     return Array.from(colorSet).sort();
   }, [normalizedData]);
 
-  const availableTags = [
+  const [availableTags, setAvailableTags] = useState<any[]>([
     { label: "Lenses", value: "all", icon: "👁️", desc: "Core", type: 'filter' },
     { label: "Sale", value: "sale", icon: "🏷️", desc: "Value", type: 'filter' },
-    { label: "Eye Lashes", scrollId: "eyelashes-section", icon: "✨", desc: "Style", type: 'scroll' },
-    { label: "Solutions", scrollId: "solutions-section", icon: "💧", desc: "Pure", type: 'scroll' },
-    { label: "Tools", scrollId: "applicators-section", icon: "🛠️", desc: "Kit", type: 'scroll' },
-  ];
+  ]);
+
+  useEffect(() => {
+    // Check for other sections data availability
+    const checkAvailability = async () => {
+      try {
+        const { get_eye_lashes, get_solutions, get_applicators } = await import("@/app/api/product");
+        const [lashes, solutions, applicators] = await Promise.all([
+          get_eye_lashes(1, 0, country),
+          get_solutions(1, 0, country),
+          get_applicators(1, 0, country)
+        ]);
+
+        const baseTags = [
+          { label: "Lenses", value: "all", icon: "👁️", desc: "Core", type: 'filter' },
+          { label: "Sale", value: "sale", icon: "🏷️", desc: "Value", type: 'filter' },
+        ];
+
+        if (lashes.total > 0) {
+          baseTags.push({ label: "Eye Lashes", scrollId: "eyelashes-section", icon: "✨", desc: "Style", type: 'scroll' } as any);
+        }
+        if (solutions.total > 0) {
+          baseTags.push({ label: "Solutions", scrollId: "solutions-section", icon: "💧", desc: "Pure", type: 'scroll' } as any);
+        }
+        if (applicators.total > 0) {
+          baseTags.push({ label: "Tools", scrollId: "applicators-section", icon: "🛠️", desc: "Kit", type: 'scroll' } as any);
+        }
+
+        setAvailableTags(baseTags);
+      } catch (e) {
+        console.error("Error checking section availability", e);
+      }
+    };
+
+    checkAvailability();
+  }, [country]);
 
   const filteredProducts = useMemo(() => {
     if (!normalizedData) return [];

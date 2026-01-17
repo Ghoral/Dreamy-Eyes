@@ -146,3 +146,57 @@ export async function get_products(
     error: null,
   };
 }
+
+export async function get_eye_lashes(
+  limit: number = 10,
+  offset: number = 0,
+  country: string | null = null
+) {
+  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
+  const { data, error } = await supabaseBrowserClient.rpc("get_eye_lashes", {
+    limit_value: limit,
+    offset_value: offset,
+    country: countryCode,
+  });
+
+  if (error) {
+    return { data: null, total: 0, error: error.details };
+  }
+  return { data: data.data, total: data.total, error: null };
+}
+
+export async function get_solutions(
+  limit: number = 10,
+  offset: number = 0,
+  country: string | null = null
+) {
+  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
+  const { data, error } = await supabaseBrowserClient.rpc("get_solutions", {
+    limit_value: limit,
+    offset_value: offset,
+    country: countryCode,
+  });
+
+  if (error) {
+    return { data: null, total: 0, error: error.details };
+  }
+  return { data: data.data, total: data.total, error: null };
+}
+
+export async function get_applicators(
+  limit: number = 10,
+  offset: number = 0,
+  country: string | null = null
+) {
+  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
+  const { data, error } = await supabaseBrowserClient.rpc("get_applicators", {
+    limit_value: limit,
+    offset_value: offset,
+    country: countryCode,
+  });
+
+  if (error) {
+    return { data: null, total: 0, error: error.details };
+  }
+  return { data: data.data, total: data.total, error: null };
+}

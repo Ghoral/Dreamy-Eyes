@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { createSupabaseClient } from "@/app/services/supabase/client/supabaseBrowserClient";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
-import { formatPriceWithCurrency, getAccessoryImageUrl } from "@/app/util";
+import { formatPrice, getAccessoryImageUrl } from "@/app/util";
 import { useCart } from "@/app/context/CartContext";
 import Toast from "@/app/components/ui/Toast";
+import { get_applicators } from "@/app/api/product";
 
 type Accessory = {
   id: number;
@@ -21,7 +22,6 @@ const ApplicatorsSection = () => {
   const { country } = useUserCountry();
   const [items, setItems] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
   const { addAccessoryItem } = useCart();
   const [toastConfig, setToastConfig] = useState<{ message: string; isVisible: boolean }>({
     message: "",
@@ -35,20 +35,12 @@ const ApplicatorsSection = () => {
     const fetchAccessories = async () => {
       try {
         setLoading(true);
-        const supabase = createSupabaseClient();
-        const { data, error } = await supabase
-          .from("accessories")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(12);
-
-        if (error) throw new Error(error.message || "Failed to fetch accessories");
+        const { data } = await get_applicators(12, 0, country);
 
         if (!mounted) return;
         setItems(Array.isArray(data) ? data : []);
       } catch (err: any) {
-        if (!mounted) return;
-        setError(err.message || "Failed to load accessories");
+        console.error("Failed to load accessories", err);
       } finally {
         if (!mounted) return;
         setLoading(false);
@@ -57,7 +49,7 @@ const ApplicatorsSection = () => {
 
     fetchAccessories();
     return () => { mounted = false; };
-  }, []);
+  }, [country]);
 
   const handleQuantityCheck = async (item: Accessory, nextQty: number) => {
     if (nextQty < 1) return;
@@ -79,7 +71,7 @@ const ApplicatorsSection = () => {
     }
   };
 
-  if (loading || error || items.length === 0) return null;
+  if (!loading && items.length === 0) return null;
 
   return (
     <section id="applicators-section" className="py-12 bg-white relative">
@@ -106,7 +98,7 @@ const ApplicatorsSection = () => {
                 <div className="relative aspect-[4/5] mb-10 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
                   {item.image ? (
                     <img
-                      src={getAccessoryImageUrl(item.image)}
+                      src={getAccessoryImageUrl(item.image, "applicators")}
                       alt={item.name || "Accessory"}
                       className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
                     />
@@ -178,7 +170,7 @@ const ApplicatorsSection = () => {
                     <div className="text-left md:text-right shrink-0">
                       <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
                       <div className="text-sm md:text-2xl font-black text-secondary-900 font-price">
-                        {rawPrice != null ? formatPriceWithCurrency(rawPrice, country) : "—"}
+                        {rawPrice != null ? formatPrice(rawPrice, country) : "—"}
                       </div>
                     </div>
                   </div>
