@@ -257,7 +257,7 @@ const ProductItems = ({ data }: { data: any }) => {
                     </div>
 
                     {product.tags && (
-                      <div className="absolute bottom-3 left-3 md:top-8 md:left-8 md:bottom-auto">
+                      <div className="absolute bottom-3 left-3 md:bottom-8 md:left-8">
                         <span className="px-2 md:px-5 py-1 md:py-2 bg-white/80 md:bg-white/90 backdrop-blur-md rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest text-secondary-900 shadow-sm uppercase">
                           {Array.isArray(product.tags) ? product.tags[0] : String(product.tags)}
                         </span>

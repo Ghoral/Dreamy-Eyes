@@ -75,7 +75,7 @@ export default function SolutionsSection() {
                                     </div>
                                 </div>
 
-                                <div className="absolute bottom-3 left-3 md:top-8 md:left-8 md:bottom-auto">
+                                <div className="absolute bottom-3 left-3 md:bottom-8 md:left-8">
                                     <span className="px-2 md:px-5 py-1 md:py-2 bg-secondary-900 text-white rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest shadow-sm uppercase">
                                         ESSENTIAL
                                     </span>
