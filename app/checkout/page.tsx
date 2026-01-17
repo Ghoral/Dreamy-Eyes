@@ -193,6 +193,7 @@ export default function CheckoutPage() {
       }
     } catch { }
   }, [cartState.items.length]);
+
   const loadDeliveryCharge = async () => {
     try {
       const supabase = createSupabaseClient();
@@ -208,12 +209,10 @@ export default function CheckoutPage() {
         setDeliveryCharge(charge);
       } else {
         console.error("Error loading delivery charge:", error);
-        // Default to 250 if not found
         setDeliveryCharge(250);
       }
     } catch (error) {
       console.error("Error loading delivery charge:", error);
-      // Default to 250 on error
       setDeliveryCharge(250);
     }
   };
@@ -262,34 +261,26 @@ export default function CheckoutPage() {
   };
 
   const handleOfferSelect = (offer: Offer, selectedProducts: any[]) => {
-    // If there's already an offer applied and user is changing it, show confirmation
     const currentOffer = cartState.selectedOffer || zustandOffer;
     if (currentOffer && currentOffer.id !== offer.id) {
-      // User is changing the offer, show confirmation dialog
       setPendingOffer(offer);
       setPendingSelectedProducts(selectedProducts);
       setShowConfirmDialog(true);
       setIsOffersModalOpen(false);
       return;
     }
-
-    // No existing offer or same offer, proceed directly
     setOffer(offer, selectedProducts);
-    // Navigate to home after selecting/changing offer
     router.push("/");
   };
 
   const confirmOfferChange = () => {
     if (pendingOffer) {
-      // User confirmed, clear the cart and apply new offer
       clearCart();
       clearOffer();
-      // Set offer with empty array since cart is cleared
       setOffer(pendingOffer, []);
       setShowConfirmDialog(false);
       setPendingOffer(null);
       setPendingSelectedProducts([]);
-      // Navigate to home after changing offer
       router.push("/");
     }
   };
@@ -306,7 +297,6 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Load only primary addresses
       const { data: addressesData } = await (supabase as any)
         .from("address")
         .select("*")
@@ -315,10 +305,8 @@ export default function CheckoutPage() {
 
       if (addressesData && addressesData.length > 0) {
         setAddresses(addressesData as Address[]);
-        // Select the primary address
         setSelectedAddressId(addressesData[0].id);
       } else {
-        // If no primary address found, load all addresses as fallback
         const { data: allAddressesData } = await (supabase as any)
           .from("address")
           .select("*")
@@ -351,7 +339,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Validate pre-payment requirements
     if (paymentMethod === "pre_payment") {
       if (!transactionId.trim()) {
         setError("Transaction ID is required for pre-payment");
@@ -368,8 +355,6 @@ export default function CheckoutPage() {
 
     try {
       const supabase = createSupabaseClient();
-
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -381,7 +366,6 @@ export default function CheckoutPage() {
 
       const order_number = generateUniqueCode();
 
-      // Upload screenshot if provided
       let paymentUrl: string | null = null;
       if (paymentMethod === "pre_payment" && paymentScreenshot) {
         paymentUrl = await uploadScreenshotToStorage(paymentScreenshot);
@@ -390,13 +374,10 @@ export default function CheckoutPage() {
         }
       }
 
-      // Prepare offer data (ready for backend support)
       const offerId = cartState.selectedOffer?.id || null;
       const offerProducts =
         cartState.offerItems || cartState.offerSelectedProducts || [];
 
-      // Create order
-      // TODO: When backend supports offers, uncomment p_offer_id and p_offer_products
       const countryParam = (country || "nepal").toLowerCase();
       const conversionRate =
         countryParam === "india" ? await fetchExchangeRate() : 1;
@@ -438,27 +419,19 @@ export default function CheckoutPage() {
         p_accessories:
           accessoryPayload.length > 0 ? accessoryPayload : null,
       };
-      console.log("Order RPC payload:", payload);
+
       const { data: orderData, error: orderError } =
         await supabaseBrowserClient.rpc("create_orders_and_update_stock", payload);
 
       if (orderError) {
-        const errorMessage =
-          orderError.message ||
-          orderError.details ||
-          orderError.hint ||
-          "Failed to create order";
-        throw new Error(errorMessage);
+        throw new Error(orderError.message || "Failed to create order");
       }
 
-      // Clear cart and offer (reset after order completion)
-      clearOffer(); // Clear offer first
+      clearOffer();
       clearCart();
-      // Set flag to clear offer on any quantity change after checkout
       if (typeof window !== "undefined") {
         localStorage.setItem("checkout_completed", "true");
       }
-      // Redirect to success page
       router.push(`/checkout/success?order=${order_number}`);
     } catch (error: any) {
       console.error("Checkout error:", error);
@@ -470,239 +443,95 @@ export default function CheckoutPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-secondary-600 text-lg">Loading checkout...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (cartState.items.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-24 h-24 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg
-              className="w-12 h-12 text-secondary-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-              />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-secondary-800 mb-4">
-            Your cart is empty
-          </h1>
-          <p className="text-secondary-600 mb-8">
-            Add some products to your cart before proceeding to checkout.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
-          >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-            Continue Shopping
-          </Link>
+          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4 shadow-[0_0_20px_rgba(195,78,138,0.2)]"></div>
+          <p className="text-secondary-400 font-black uppercase tracking-widest text-[10px]">Synchronizing Vault...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-4">
-            Checkout
+    <div className="min-h-screen bg-secondary-50 pt-28 pb-20 relative overflow-hidden">
+      {/* Background Cinematic Decor */}
+      <div className="absolute inset-0 pointer-events-none opacity-60">
+        <div className="absolute top-0 right-0 w-[50%] h-[70%] bg-primary-200/40 blur-[150px] rounded-full translate-x-1/2 translate-y-[-10%]" />
+        <div className="absolute bottom-0 left-0 w-[50%] h-[70%] bg-accent-200/40 blur-[150px] rounded-full translate-x-[-1/2] translate-y-10" />
+      </div>
+
+      <div className="max-w-[1500px] mx-auto px-6 relative z-10">
+
+        {/* Header Section */}
+        <div className="flex flex-col items-center mb-16 text-center">
+          <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-3">Order</span>
+          <h1 className="text-5xl md:text-8xl font-black text-secondary-900 tracking-tighter leading-none mb-4">
+            CHECK<span className="text-secondary-400 font-serif italic font-normal">OUT</span>
           </h1>
-          <p className="text-xl text-secondary-600 max-w-2xl mx-auto">
-            Complete your order and get ready for amazing contact lenses
-          </p>
+          <p className="text-secondary-500 font-serif italic text-xl">Complete your purchase below.</p>
         </div>
 
-        {/* Accessories Prompt */}
-        {cartState.items.length > 0 && (
-          <div className="mb-8 rounded-3xl border-2 border-primary-200 bg-gradient-to-r from-primary-50 via-white to-secondary-50 p-6 shadow-soft">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.1 0-2 .9-2 2m0 0c0 1.1.9 2 2 2m0-4c1.1 0 2 .9 2 2m-2 8a8 8 0 110-16 8 8 0 010 16z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-secondary-800">Enhance Your Look</h3>
-                  <p className="text-secondary-600">Must-have accessories to complete your style</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsAccessoriesModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg"
-              >
-                Browse Accessories
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5-5 5M6 7l5 5-5 5" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
-        {/* Error Display */}
+        {/* Error Stage */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8">
-            <div className="flex items-center space-x-3 text-red-700">
-              <svg
-                className="w-6 h-6 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span className="font-medium">{error}</span>
+          <div className="max-w-4xl mx-auto mb-12 bg-red-50 border border-red-100 rounded-[2rem] p-6 animate-in slide-in-from-top duration-700">
+            <div className="flex items-center gap-4 text-red-600">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 font-bold">!</div>
+              <span className="font-black uppercase tracking-widest text-[11px]">{error}</span>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left Column - Checkout Form */}
-          <div className="space-y-8">
-            {/* Address Selection */}
-            <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-primary-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+
+          {/* Left Column - User Directives */}
+          <div className="lg:col-span-7 space-y-12">
+
+            {/* Shipping Module */}
+            <div className="bg-white border border-secondary-100 rounded-[3rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-col">
+                  <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1">Destinations</span>
+                  <h2 className="text-3xl font-black text-secondary-900 tracking-tighter">SHIPPING <span className="text-secondary-400 font-serif italic font-normal">ADDRESS</span></h2>
                 </div>
-                <h2 className="text-2xl font-bold text-secondary-800">
-                  Shipping Address
-                </h2>
+                <Link href="/shipping-address" className="text-[10px] font-black text-secondary-400 hover:text-primary-500 uppercase tracking-widest transition-colors">+ New Address</Link>
               </div>
 
               {addresses.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg
-                      className="w-8 h-8 text-secondary-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-secondary-600 mb-4">
-                    No shipping addresses found
-                  </p>
-                  <Link
-                    href="/shipping-address"
-                    className="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors duration-300"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
-                    Add New Address
-                  </Link>
+                <div className="py-12 border-2 border-dashed border-secondary-100 rounded-[2.5rem] text-center">
+                  <p className="text-secondary-400 font-black uppercase tracking-widest text-[10px] mb-6">No logistics data found</p>
+                  <Link href="/shipping-address" className="px-8 py-4 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-500 transition-all">Define Destination</Link>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {addresses.map((address) => (
-                    <div key={address.id} className="relative">
+                    <div key={address.id} className="relative group">
                       <input
                         type="radio"
                         id={`address-${address.id}`}
                         name="addressSelection"
                         value={address.id}
                         checked={selectedAddressId === address.id}
-                        onChange={(e) =>
-                          setSelectedAddressId(Number(e.target.value))
-                        }
+                        onChange={(e) => setSelectedAddressId(Number(e.target.value))}
                         className="sr-only"
                       />
                       <label
                         htmlFor={`address-${address.id}`}
-                        className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${selectedAddressId === address.id
-                          ? "border-primary-500 bg-primary-50 shadow-glow"
-                          : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
+                        className={`block p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-500 ${selectedAddressId === address.id
+                          ? "border-primary-500 bg-primary-50 shadow-[0_15px_30px_rgba(195,78,138,0.1)]"
+                          : "border-secondary-50 bg-white hover:border-secondary-200"
                           }`}
                       >
                         <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-primary-500"></div>
-                              <span className="font-semibold text-secondary-800">
-                                {address.street}
-                              </span>
+                          <div>
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className={`w-3 h-3 rounded-full ${selectedAddressId === address.id ? "bg-primary-500 animate-pulse shadow-[0_0_10px_rgba(195,78,138,0.5)]" : "bg-secondary-200"}`} />
+                              <span className="font-black text-secondary-900 uppercase tracking-tight text-lg">{address.street}</span>
                             </div>
-                            <p className="text-secondary-600 mb-1">
-                              {address.city}, {address.state} {address.zip}
-                            </p>
-                            <p className="text-secondary-500">
-                              {address.country}
-                            </p>
+                            <p className="text-secondary-500 font-medium text-sm ml-6">{address.city}, {address.state} {address.zip}</p>
+                            <p className="text-secondary-400 uppercase tracking-widest text-[9px] ml-6 mt-1">{address.country}</p>
                           </div>
                           {address.is_primary && (
-                            <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-                              Primary
-                            </span>
+                            <span className="text-[9px] font-black text-primary-500 border border-primary-200 px-3 py-1 rounded-full uppercase tracking-widest">Primary</span>
                           )}
                         </div>
                       </label>
@@ -710,833 +539,207 @@ export default function CheckoutPage() {
                   ))}
                 </div>
               )}
-
-              {/* Add New Address Link */}
-              <div className="text-center mt-6 pt-6 border-t border-secondary-100">
-                <Link
-                  href="/shipping-address"
-                  className="inline-flex items-center px-6 py-3 bg-white border-2 border-primary-300 text-primary-600 hover:bg-primary-50 hover:border-primary-400 font-semibold rounded-xl transition-all duration-300"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Add New Address
-                </Link>
-              </div>
             </div>
 
-            {/* Payment Method Selection */}
-            <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-primary-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-secondary-800">
-                  Payment Method
-                </h2>
+            {/* Payment Module */}
+            <div className="bg-white border border-secondary-100 rounded-[3rem] p-10 shadow-[0_30px_60px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.06)] transition-all duration-700">
+              <div className="flex flex-col mb-8">
+                <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1">Payments</span>
+                <h2 className="text-3xl font-black text-secondary-900 tracking-tighter">PAYMENT <span className="text-secondary-400 font-serif italic font-normal">METHOD</span></h2>
               </div>
 
-              <div className="space-y-4">
-                {/* Cash on Delivery */}
-                <div className="relative">
-                  <input
-                    type="radio"
-                    id="cash_on_delivery"
-                    name="paymentMethod"
-                    value="cash_on_delivery"
-                    checked={paymentMethod === "cash_on_delivery"}
-                    onChange={(e) =>
-                      setPaymentMethod(e.target.value as "cash_on_delivery")
-                    }
-                    className="sr-only"
-                  />
-                  <label
-                    htmlFor="cash_on_delivery"
-                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "cash_on_delivery"
-                      ? "border-primary-500 bg-primary-50 shadow-glow"
-                      : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
-                      }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-primary-500"></div>
-                          <span className="font-semibold text-secondary-800">
-                            Cash on Delivery
-                          </span>
-                        </div>
-                        <p className="text-secondary-600 text-sm">
-                          Pay with cash when your order is delivered. Delivery
-                          charge of{" "}
-                          {formatPrice(
-                            calculatePriceSync(deliveryCharge, country),
-                            country
-                          )}{" "}
-                          will be included.
-                        </p>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-
-                {/* Pre Payment */}
-                <div className="relative">
-                  <input
-                    type="radio"
-                    id="pre_payment"
-                    name="paymentMethod"
-                    value="pre_payment"
-                    checked={paymentMethod === "pre_payment"}
-                    onChange={(e) =>
-                      setPaymentMethod(e.target.value as "pre_payment")
-                    }
-                    className="sr-only"
-                  />
-                  <label
-                    htmlFor="pre_payment"
-                    className={`block p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${paymentMethod === "pre_payment"
-                      ? "border-primary-500 bg-primary-50 shadow-glow"
-                      : "border-secondary-200 bg-white hover:border-primary-300 hover:shadow-soft"
-                      }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <div className="w-4 h-4 rounded-full border-2 border-white shadow-sm bg-primary-500"></div>
-                          <span className="font-semibold text-secondary-800">
-                            Pre Payment
-                          </span>
-                        </div>
-                        <p className="text-secondary-600 text-sm mb-4">
-                          Pay in advance. Delivery charge of
-                          {formatPrice(
-                            calculatePriceSync(deliveryCharge, country),
-                            country
-                          )}{" "}
-                          will be included.
-                        </p>
-
-                        {paymentMethod === "pre_payment" && (
-                          <div className="space-y-4 mt-4 pt-4 border-t border-secondary-200">
-                            {/* Transaction ID */}
-                            <div>
-                              <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                                Transaction ID{" "}
-                                <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={transactionId}
-                                onChange={(e) =>
-                                  setTransactionId(e.target.value)
-                                }
-                                placeholder="Enter your transaction ID"
-                                className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors"
-                                required
-                              />
-                            </div>
-
-                            {/* Screenshot Upload */}
-                            <div>
-                              <label className="block text-sm font-semibold text-secondary-700 mb-2">
-                                Payment Screenshot{" "}
-                                <span className="text-red-500">*</span>
-                              </label>
-                              <div className="space-y-3">
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={handleScreenshotChange}
-                                  className="w-full px-4 py-3 border-2 border-secondary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors"
-                                  required
-                                />
-                                {screenshotPreview && (
-                                  <div className="mt-3">
-                                    <img
-                                      src={screenshotPreview}
-                                      alt="Payment screenshot preview"
-                                      className="max-w-full h-48 object-contain border-2 border-secondary-200 rounded-xl"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[
+                  { id: "cash_on_delivery", label: "Cash on Delivery", desc: "Settle on arrival" },
+                  { id: "pre_payment", label: "Online Payment", desc: "Prior clearing" }
+                ].map((method) => (
+                  <div key={method.id} className="relative">
+                    <input
+                      type="radio"
+                      id={method.id}
+                      name="paymentMethod"
+                      value={method.id}
+                      checked={paymentMethod === method.id}
+                      onChange={(e) => setPaymentMethod(e.target.value as any)}
+                      className="sr-only"
+                    />
+                    <label
+                      htmlFor={method.id}
+                      className={`block p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-500 ${paymentMethod === method.id
+                        ? "border-primary-500 bg-primary-50 shadow-[0_15px_30px_rgba(195,78,138,0.1)]"
+                        : "border-secondary-50 bg-white hover:border-secondary-200 outline-none"
+                        }`}
+                    >
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 ${paymentMethod === method.id ? "bg-primary-500 text-white shadow-glow" : "bg-secondary-50 text-secondary-400"}`}>
+                        {method.id === "cash_on_delivery" ? (
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                         )}
                       </div>
-                    </div>
-                  </label>
-                </div>
+                      <span className={`block font-black uppercase tracking-tight text-lg mb-1 ${paymentMethod === method.id ? "text-secondary-900" : "text-secondary-400"}`}>{method.label}</span>
+                      <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">{method.desc}</p>
+                    </label>
+                  </div>
+                ))}
               </div>
+
+              {/* Prepayment Fields */}
+              {paymentMethod === "pre_payment" && (
+                <div className="mt-8 space-y-6 pt-8 border-t border-secondary-50 animate-in slide-in-from-right duration-700">
+                  <div>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Transaction ID <span className="text-primary-500">*</span></label>
+                    <input
+                      type="text"
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                      placeholder="e.g. TXN-998877"
+                      className="w-full bg-secondary-50 border border-secondary-100 rounded-2xl px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Settlement Evidence <span className="text-primary-500">*</span></label>
+                    <div className="flex flex-col gap-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleScreenshotChange}
+                        className="block w-full text-xs text-secondary-400 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-secondary-900 file:text-white hover:file:bg-primary-500 transition-all"
+                      />
+                      {screenshotPreview && (
+                        <div className="relative rounded-[2rem] overflow-hidden border border-secondary-100 aspect-video bg-white">
+                          <img src={screenshotPreview} alt="payment proof" className="w-full h-full object-contain" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="space-y-8">
-            <div className="bg-white rounded-3xl shadow-soft p-8 border border-secondary-100">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-secondary-100 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-secondary-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-secondary-800">
-                  Order Summary
-                </h2>
+          {/* Right Column - Secure Ledger */}
+          <div className="lg:col-span-5 space-y-12">
+            <div className="bg-secondary-900 rounded-[3rem] p-10 text-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+              <div className="flex flex-col mb-10 relative z-10">
+                <span className="text-primary-400 font-black tracking-[0.4em] uppercase text-[10px] mb-1">Summary</span>
+                <h2 className="text-3xl font-black text-white tracking-tighter">ORDER <span className="text-primary-400 font-serif italic font-normal">SUMMARY</span></h2>
               </div>
 
-
-
-              {/* Offer Items Section */}
-              {(() => {
-                const offer = cartState.selectedOffer || zustandOffer;
-                // Use offerItems directly from cartState (new format)
-                const offerItems = cartState.offerItems || [];
-
-                if (!offer || offerItems.length === 0) {
-                  return null;
-                }
-
-                return (
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-secondary-800">
-                        Items with Offer
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={() => setIsOffersModalOpen(true)}
-                        className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-semibold rounded-lg transition-colors"
-                      >
-                        Change Offer
-                      </button>
+              {/* Items List */}
+              <div className="space-y-6 mb-10 relative z-10 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                {[...(cartState.normalItems || []), ...(cartState.offerItems || []), ...(cartState.accessoryItems || [])].map((item, idx) => (
+                  <div key={idx} className="flex gap-4 border-b border-white/5 pb-4 last:border-0">
+                    <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden flex-shrink-0 bg-white/5">
+                      {item.image ? <img src={item.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] opacity-20">DE</div>}
                     </div>
-                    {offerItems.map((item, index) => {
-                      if (!item) return null;
-                      const offerPrice = calculateOfferPrice(item.price, offer);
-
-                      return (
-                        <div
-                          key={`offer-${index}`}
-                          className="flex items-start space-x-4 p-4 bg-green-50 rounded-xl border-2 border-green-200"
-                        >
-                          {/* Item Image */}
-                          <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-primary-100 rounded-xl overflow-hidden flex-shrink-0">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.title}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <svg
-                                  className="w-8 h-8 text-secondary-300"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Item Details */}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-secondary-800 text-lg mb-1 truncate">
-                              {item.title}
-                            </h4>
-                            {item.color && (
-                              <div className="flex items-center space-x-2 mb-2">
-                                <div
-                                  className="w-4 h-4 rounded-full border border-white shadow-sm"
-                                  style={{
-                                    backgroundColor: item.colorHex || "#ccc",
-                                  }}
-                                />
-                                <span className="text-sm text-secondary-600">
-                                  {item.color}
-                                </span>
-                              </div>
-                            )}
-                            <div className="text-sm text-secondary-500 mb-1">
-                              Qty: {item.quantity} ×{" "}
-                              {formatPriceWithCurrency(item.price, country)}
-                            </div>
-                            <div className="text-xs text-green-600 font-semibold mt-1">
-                              Offer Applied
-                            </div>
-                          </div>
-
-                          {/* Item Total */}
-                          <div className="text-right">
-                            <div className="flex flex-col items-end">
-                              <span className="text-xs text-secondary-500 line-through">
-                                {formatPrice(
-                                  calculatePriceSync(
-                                    item.price * item.quantity,
-                                    country
-                                  ),
-                                  country
-                                )}
-                              </span>
-                              <span className="text-lg font-bold text-green-600">
-                                {formatPrice(
-                                  calculatePriceSync(
-                                    offerPrice * item.quantity,
-                                    country
-                                  ),
-                                  country
-                                )}
-                              </span>
-                              <span className="text-xs text-green-600 font-semibold">
-                                Save:{" "}
-                                {formatPrice(
-                                  calculatePriceSync(
-                                    (item.price - offerPrice) * item.quantity,
-                                    country
-                                  ),
-                                  country
-                                )}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Offers Modal */}
-                          <ModalOffers
-                            isOpen={isOffersModalOpen}
-                            onClose={() => setIsOffersModalOpen(false)}
-                            onSelectOffer={handleOfferSelect}
-                          />
-                        </div>
-                      );
-                    })}
+                    <div className="flex-1">
+                      <h4 className="text-[10px] font-black uppercase tracking-tight text-white mb-1 leading-tight">{item.title}</h4>
+                      <div className="flex justify-between items-end">
+                        <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Qty: {item.quantity}</span>
+                        <span className="text-xs font-black text-primary-400 tracking-tighter">{formatPrice(calculatePriceSync(item.price * item.quantity, country), country)}</span>
+                      </div>
+                    </div>
                   </div>
-                );
-              })()}
-
-              {/* Regular Cart Items */}
-              <div className="space-y-4 mb-6">
-                {(() => {
-                  // Use normalItems directly (new format)
-                  const regularItems = cartState.normalItems || [];
-
-                  if (regularItems.length === 0) return null;
-
-                  return (
-                    <>
-                      <h3 className="text-xl font-bold text-secondary-800 mb-4">
-                        Regular Items
-                      </h3>
-                      {regularItems.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start space-x-4 p-4 bg-secondary-50 rounded-xl"
-                        >
-                          {/* Item Image */}
-                          <div className="w-16 h-16 bg-gradient-to-br from-secondary-100 to-primary-100 rounded-xl overflow-hidden flex-shrink-0">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.title}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <svg
-                                  className="w-8 h-8 text-secondary-300"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Item Details */}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-secondary-800 text-lg mb-1 truncate">
-                              {item.title}
-                            </h4>
-                            {item.color && (
-                              <div className="flex items-center space-x-2 mb-2">
-                                <div
-                                  className="w-4 h-4 rounded-full border border-white shadow-sm"
-                                  style={{
-                                    backgroundColor: item.colorHex || "#ccc",
-                                  }}
-                                />
-                                <span className="text-sm text-secondary-600">
-                                  {item.color}
-                                </span>
-                              </div>
-                            )}
-                            <div className="text-sm text-secondary-500 mb-1">
-                              Qty: {item.quantity} ×{" "}
-                              {formatPriceWithCurrency(item.price, country)}
-                            </div>
-                            {item.maxQuantity && (
-                              <div className="text-sm text-secondary-500">
-                                Stock: {item.maxQuantity} available
-                                {item.quantity >= item.maxQuantity && (
-                                  <span className="text-amber-600 ml-2 font-medium">
-                                    Max quantity reached
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Item Total */}
-                          <div className="text-right">
-                            <span className="text-lg font-bold text-primary-600">
-                              {formatPrice(
-                                calculatePriceSync(
-                                  item.price * item.quantity,
-                                  country
-                                ),
-                                country
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  );
-                })()}
+                ))}
               </div>
 
-              {/* Accessories Items */}
-              <div className="space-y-4 mb-6">
+              {/* Pricing Math */}
+              <div className="space-y-4 pt-6 relative z-10">
                 {(() => {
-                  const accessories = cartState.accessoryItems || [];
-                  if (accessories.length === 0) return null;
-                  return (
-                    <>
-                      <h3 className="text-xl font-bold text-secondary-800 mb-4">
-                        Accessories
-                      </h3>
-                      {accessories.map((item, index) => (
-                        <div
-                          key={`acc-${index}`}
-                          className="flex items-start space-x-4 p-4 bg-secondary-50 rounded-xl"
-                        >
-                          <div className="w-16 h-16 bg-gradient-to-br from-secondary-50 to-primary-50 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
-                            {item.image ? (
-                              <img
-                                src={item.image}
-                                alt={item.title || "Accessory"}
-                                className="w-full h-full object-contain"
-                              />
-                            ) : (
-                              <svg
-                                className="w-8 h-8 text-secondary-300"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-secondary-800 text-lg mb-1 truncate">
-                              {item.title || "Accessory"}
-                            </h4>
-                            <div className="text-sm text-secondary-500 mb-1">
-                              Qty: {item.quantity} ×{" "}
-                              {formatPriceWithCurrency(item.price, country)}
-                            </div>
-                            {item.maxQuantity && (
-                              <div className="text-sm text-secondary-500">
-                                Stock: {item.maxQuantity} available
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <span className="text-lg font-bold text-primary-600">
-                              {formatPrice(
-                                calculatePriceSync(
-                                  item.price * item.quantity,
-                                  country
-                                ),
-                                country
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Order Totals */}
-              <div className="border-t border-secondary-100 pt-6 space-y-3">
-                {(() => {
-                  // Calculate original total (without offer discounts)
-                  const originalTotal = cartState.items.reduce(
-                    (sum, item) => sum + item.price * item.quantity,
-                    0
-                  );
-
-                  // Check if offer criteria is still met
-                  const offer = cartState.selectedOffer || zustandOffer;
-                  // Only show offer if there are items in offerItems
+                  const originalTotal = cartState.items.reduce((s, i) => s + (i.price * i.quantity), 0);
                   const offerItems = cartState.offerItems || [];
-                  let hasOffer = false;
-
+                  const offer = cartState.selectedOffer || zustandOffer;
+                  let savings = 0;
                   if (offer && offerItems.length > 0) {
-                    hasOffer = true;
-                  }
-
-                  // Calculate offer savings: only if there are items in offerItems
-                  // So we subtract the full original price of those items
-                  let offerSavings = 0;
-                  let totalOfferPriceToSubtract = 0;
-
-                  if (hasOffer && offer && offerItems.length > 0) {
-                    offerItems.forEach((offerItem) => {
-                      const offerPrice = calculateOfferPrice(
-                        offerItem.price,
-                        offer
-                      );
-                      const savingsPerItem = offerItem.price - offerPrice;
-                      offerSavings += savingsPerItem * offerItem.quantity;
-                      // Total to subtract = difference between original and offer price
-                      totalOfferPriceToSubtract +=
-                        (offerItem.price - offerPrice) * offerItem.quantity;
+                    offerItems.forEach(oi => {
+                      savings += (oi.price - calculateOfferPrice(oi.price, offer)) * oi.quantity;
                     });
                   }
-
-                  // Final total = Original total - (original price of offer items) + delivery
-                  // Since offer items are free, we subtract their full original price
-                  const finalTotal =
-                    originalTotal - totalOfferPriceToSubtract + deliveryCharge;
-
-                  // Only show offer details if there are items in offerItems
-                  const hasOfferItems = offerItems.length > 0;
-
+                  const final = originalTotal - savings + deliveryCharge;
                   return (
                     <>
-                      {hasOffer && hasOfferItems && offerSavings > 0 && (
-                        <div className="bg-green-50 rounded-lg p-4 border border-green-200 mb-3">
-                          <div className="flex justify-between items-center">
-                            <span className="text-green-700 font-semibold">
-                              Offer Savings:
-                            </span>
-                            <span className="font-bold text-green-600 text-lg">
-                              -
-                              {formatPrice(
-                                calculatePriceSync(offerSavings, country),
-                                country
-                              )}
-                            </span>
-                          </div>
-                          <div className="text-xs text-green-600 mt-1">
-                            Offer applied to selected items
-                          </div>
+                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                        <span>Subsurface total</span>
+                        <span className="text-white">{formatPrice(calculatePriceSync(originalTotal, country), country)}</span>
+                      </div>
+                      {savings > 0 && (
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-green-400">
+                          <span>Vault Discount</span>
+                          <span>-{formatPrice(calculatePriceSync(savings, country), country)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-secondary-600">Subtotal:</span>
-                        <span className="font-semibold text-secondary-800">
-                          {formatPrice(
-                            calculatePriceSync(originalTotal, country),
-                            country
-                          )}
-                        </span>
+                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                        <span>Logistics Fee</span>
+                        <span className="text-white">{formatPrice(calculatePriceSync(deliveryCharge, country), country)}</span>
                       </div>
-                      {hasOffer && hasOfferItems && offerSavings > 0 && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-secondary-600">
-                            Offer Discount:
-                          </span>
-                          <span className="font-semibold text-green-600">
-                            -
-                            {formatPrice(
-                              calculatePriceSync(offerSavings, country),
-                              country
-                            )}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between items-center">
-                        <span className="text-secondary-600">
-                          Delivery Charge:
-                        </span>
-                        <span className="font-semibold text-secondary-800">
-                          {formatPrice(
-                            calculatePriceSync(deliveryCharge, country),
-                            country
-                          )}
-                        </span>
+                      <div className="h-[1px] w-full bg-white/10 my-6" />
+                      <div className="flex justify-between items-end">
+                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">Full Commitment</span>
+                        <span className="text-4xl font-black text-primary-400 tracking-tighter leading-none">{formatPrice(calculatePriceSync(final, country), country)}</span>
                       </div>
-                      <div className="border-t border-secondary-100 pt-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xl font-bold text-secondary-800">
-                            Total:
-                          </span>
-                          <span className="text-2xl font-bold text-primary-600">
-                            {formatPrice(
-                              calculatePriceSync(finalTotal, country),
-                              country
-                            )}
-                          </span>
-                        </div>
-                        {hasOffer && hasOfferItems && offerSavings > 0 && (
-                          <div className="mt-2 text-right">
-                            <span className="text-sm text-green-600 font-semibold">
-                              You saved{" "}
-                              {formatPrice(
-                                calculatePriceSync(offerSavings, country),
-                                country
-                              )}{" "}
-                              with this offer!
-                            </span>
+
+                      <form onSubmit={handleSubmit} className="mt-10">
+                        <button
+                          type="submit"
+                          disabled={isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))}
+                          className={`w-full h-20 rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))
+                            ? "bg-white/5 text-white/20 cursor-not-allowed"
+                            : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.3)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.5)] active:scale-[0.98]"
+                            }`}
+                        >
+                          <div className="relative z-10">
+                            {isProcessing ? "Processing Order..." : "Place Order"}
                           </div>
-                        )}
-                      </div>
+                          {!isProcessing && selectedAddressId && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                          )}
+                        </button>
+                      </form>
                     </>
                   );
                 })()}
               </div>
+            </div>
 
-              {/* Complete Order Button */}
-              <form onSubmit={handleSubmit} className="mt-8">
-                <button
-                  type="submit"
-                  disabled={
-                    isProcessing ||
-                    !selectedAddressId ||
-                    !(
-                      (cartState.normalItems &&
-                        cartState.normalItems.length > 0) ||
-                      (cartState.offerItems && cartState.offerItems.length > 0)
-                    )
-                  }
-                  className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${isProcessing ||
-                    !selectedAddressId ||
-                    !(
-                      (cartState.normalItems &&
-                        cartState.normalItems.length > 0) ||
-                      (cartState.offerItems && cartState.offerItems.length > 0)
-                    )
-                    ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
-                    : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
-                    }`}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Processing Order...</span>
-                    </div>
-                  ) : (
-                    (() => {
-                      const originalTotal = cartState.items.reduce(
-                        (sum, item) => sum + item.price * item.quantity,
-                        0
-                      );
-
-                      // Calculate total offer price to subtract: (offer price * quantity) for offer items
-                      // Only calculate if there are items in offerItems
-                      let totalOfferPrice = 0;
-                      const offerItems = cartState.offerItems || [];
-                      const offer = cartState.selectedOffer;
-
-                      if (offer && offerItems.length > 0) {
-                        offerItems.forEach((offerItem) => {
-                          const offerPrice = calculateOfferPrice(
-                            offerItem.price,
-                            offer
-                          );
-                          const savingsPerItem = offerItem.price - offerPrice;
-                          // Total offer savings = difference between original and offer price
-                          totalOfferPrice +=
-                            savingsPerItem * offerItem.quantity;
-                        });
-                      }
-
-                      // Final total = Original total - (offer savings) + delivery
-                      const finalTotal =
-                        originalTotal - totalOfferPrice + deliveryCharge;
-                      return `Complete Order - ${formatPrice(
-                        calculatePriceSync(finalTotal, country),
-                        country
-                      )}`;
-                    })()
-                  )}
-                </button>
-              </form>
-
-              {/* Security Info */}
-              <div className="mt-6 text-center">
-                <div className="flex items-center justify-center space-x-6 text-secondary-500">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                      />
-                    </svg>
-                    <span className="text-sm">Secure Order</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                      />
-                    </svg>
-                    <span className="text-sm">SSL Encrypted</span>
-                  </div>
-                </div>
+            {/* Accessories Prompt */}
+            <div className="bg-white border border-secondary-100 rounded-[3rem] p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group">
+              <div className="flex-1">
+                <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
+                <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
+                <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
               </div>
+              <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Offers Modal */}
       <ModalOffers
         isOpen={isOffersModalOpen}
         onClose={() => setIsOffersModalOpen(false)}
         onSelectOffer={handleOfferSelect}
       />
-
-      {/* Accessories Modal */}
       <ModalAccessories
         isOpen={isAccessoriesModalOpen}
         onClose={() => setIsAccessoriesModalOpen(false)}
       />
 
-      {/* Confirmation Dialog for changing offer */}
+      {/* Confirmation Dialog */}
       {showConfirmDialog && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
-            onClick={() => {
-              setShowConfirmDialog(false);
-              setPendingOffer(null);
-              setPendingSelectedProducts([]);
-            }}
-          />
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-yellow-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-secondary-800 mb-2">
-                    Change Offer?
-                  </h3>
-                  <p className="text-secondary-600 mb-4">
-                    You already have an offer applied. Changing to a new offer
-                    will <strong>clear your entire cart</strong>. Are you sure
-                    you want to continue?
-                  </p>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => {
-                        setShowConfirmDialog(false);
-                        setPendingOffer(null);
-                        setPendingSelectedProducts([]);
-                      }}
-                      className="flex-1 px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded-lg font-semibold transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={confirmOfferChange}
-                      className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors"
-                    >
-                      Yes, Clear Cart
-                    </button>
-                  </div>
-                </div>
-              </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-secondary-900/60 backdrop-blur-xl animate-in fade-in duration-500">
+          <div className="bg-white rounded-[3rem] p-12 max-w-lg w-full shadow-2xl border border-secondary-100 text-center flex flex-col items-center">
+            <div className="w-20 h-20 bg-primary-100 text-primary-500 rounded-full flex items-center justify-center mb-8 font-black text-2xl animate-bounce">!</div>
+            <h3 className="text-2xl font-black text-secondary-900 uppercase tracking-tight mb-4">Reset Collection?</h3>
+            <p className="text-secondary-500 font-medium mb-10 leading-relaxed italic">Synchronizing a new offer requires clearing the current vault. Proceed with reset?</p>
+            <div className="flex gap-4 w-full">
+              <button onClick={() => setShowConfirmDialog(false)} className="flex-1 py-5 bg-secondary-50 text-secondary-900 font-black text-[10px] uppercase tracking-widest rounded-2xl hover:bg-secondary-100 transition-all">Cancel</button>
+              <button onClick={confirmOfferChange} className="flex-1 py-5 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-xl hover:bg-red-600 transition-all">Yes, Reset</button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

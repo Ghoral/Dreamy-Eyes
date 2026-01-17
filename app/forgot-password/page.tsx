@@ -37,116 +37,94 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
-      <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-secondary-800 mb-2">
-              Forgot Password
+    <div className="min-h-screen bg-secondary-50 pt-28 pb-20 relative overflow-hidden">
+      {/* Background Soft Decor */}
+      <div className="absolute inset-0 pointer-events-none opacity-60">
+        <div className="absolute top-0 right-0 w-[50%] h-[70%] bg-primary-200/40 blur-[150px] rounded-full translate-x-1/2 translate-y-[-10%]" />
+        <div className="absolute bottom-0 left-0 w-[50%] h-[70%] bg-accent-200/40 blur-[150px] rounded-full translate-x-[-1/2] translate-y-10" />
+      </div>
+
+      <div className="max-w-[1500px] mx-auto px-6 relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
+
+        {/* The Boutique Recovery Section */}
+        <div className="w-full max-w-xl bg-white border border-secondary-100 rounded-[3rem] p-8 md:p-16 shadow-[0_30px_80px_rgba(0,0,0,0.03)] overflow-hidden relative">
+
+          {/* Internal Glows */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-50/50 blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent-50/50 blur-[100px] pointer-events-none" />
+
+          {/* Heading Section */}
+          <div className="relative z-10 flex flex-col items-center text-center mb-12">
+            <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-3">Reset Password</span>
+            <h1 className="text-3xl md:text-5xl font-black text-secondary-900 tracking-tighter leading-none mb-4">
+              FORGOT <span className="text-secondary-400 font-serif italic font-normal">PASSWORD</span>
             </h1>
-            <p className="text-secondary-600">
-              Enter your email address and we'll send you a reset link.
+            <p className="text-secondary-500 font-serif italic text-lg leading-relaxed">
+              Enter your email to receive a reset link.
             </p>
           </div>
 
+          {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-              <div className="flex items-center space-x-3 text-red-700">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">{error}</span>
+            <div className="relative z-10 mb-8 bg-red-50 border border-red-100 rounded-2xl p-4 animate-in slide-in-from-top duration-500">
+              <div className="flex items-center gap-3 text-red-600">
+                <span className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-[10px] font-black">!</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">{error}</span>
               </div>
             </div>
           )}
 
+          {/* Success Message */}
           {success && (
-            <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
-              <div className="flex items-center space-x-3 text-green-700">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <span className="text-sm font-medium">{success}</span>
+            <div className="relative z-10 mb-8 bg-green-50 border border-green-100 rounded-2xl p-4 animate-in slide-in-from-top duration-500">
+              <div className="flex items-center gap-3 text-green-600">
+                <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center text-[10px] font-black">✓</span>
+                <span className="text-[11px] font-black uppercase tracking-widest leading-relaxed">{success}</span>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSendReset} className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-secondary-700 mb-3">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg
-                    className="w-5 h-5 text-secondary-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                    />
-                  </svg>
+          {!success && (
+            <form onSubmit={handleSendReset} className="relative z-10 space-y-8">
+              {/* Email Field */}
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em]">Email Address</label>
+                <div className="relative group">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    placeholder="name@example.com"
+                    className="w-full bg-secondary-50 border border-secondary-100 rounded-2xl px-6 py-5 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all duration-500"
+                  />
                 </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full pl-12 pr-4 py-4 border border-secondary-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                  placeholder="Enter your email"
-                />
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
-                isLoading
-                  ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
-                  : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
-              }`}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Sending link...</span>
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`h-20 w-full rounded-3xl font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${isLoading
+                  ? "bg-secondary-100 text-secondary-400 cursor-not-allowed"
+                  : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.2)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.4)] active:scale-[0.98]"
+                  }`}
+              >
+                <div className="relative z-10">
+                  {isLoading ? "Sending..." : "Send Reset Link"}
                 </div>
-              ) : (
-                "Send Reset Link"
-              )}
-            </button>
-          </form>
+                {!isLoading && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                )}
+              </button>
+            </form>
+          )}
 
-          <div className="text-center mt-6">
+          {/* Login Link */}
+          <div className="pt-8 text-center relative z-10">
             <Link
               href="/login"
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="inline-block py-4 px-10 border border-secondary-200 rounded-2xl font-black text-[10px] uppercase tracking-widest text-secondary-900 hover:bg-secondary-50 hover:border-secondary-300 transition-all duration-500"
             >
               Back to Login
             </Link>

@@ -56,11 +56,11 @@ export default function SolutionsSection() {
                     </div>
                 </div>
 
-                <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
                     {DUMMY_SOLUTIONS.map((solution) => (
                         <div
                             key={solution.id}
-                            className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
+                            className="group cursor-pointer w-full"
                             onClick={() => router.push(`/solutions/${solution.id}`)}
                         >
                             <div className="relative aspect-[4/5] mb-10 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring border border-secondary-100">
@@ -82,17 +82,17 @@ export default function SolutionsSection() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col gap-2 md:gap-4">
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2 md:gap-4">
-                                    <div className="flex-1">
-                                        <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block truncate">{solution.sub_title}</span>
-                                        <h3 className="text-lg md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight md:leading-none group-hover:text-primary-500 transition-colors uppercase truncate">
+                            <div className="flex flex-col gap-3 md:gap-4">
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex flex-col">
+                                        <span className="text-[8px] md:text-[10px] font-bold text-primary-500 tracking-[0.2em] md:tracking-[0.3em] uppercase mb-1 md:mb-2 block">{solution.sub_title}</span>
+                                        <h3 className="text-sm md:text-3xl font-black text-secondary-900 tracking-tighter leading-tight group-hover:text-primary-500 transition-colors uppercase">
                                             {solution.title}
                                         </h3>
                                     </div>
-                                    <div className="text-left md:text-right flex md:block items-baseline gap-2">
-                                        <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
-                                        <div className="text-lg md:text-2xl font-black text-secondary-900 font-price">
+                                    <div className="flex items-baseline gap-1 md:gap-2 pt-2 border-t border-secondary-50">
+                                        <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block">MSRP</span>
+                                        <div className="text-sm md:text-2xl font-black text-secondary-900 font-price">
                                             {formatPrice(solution.price, country)}
                                         </div>
                                     </div>

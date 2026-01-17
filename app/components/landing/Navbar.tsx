@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useCart } from "../../context/CartContext";
 import ModalCart from "../modals/ModalCart";
 import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
@@ -11,6 +11,7 @@ import { useUserCountry } from "../../hooks/useUserCountry";
 
 const Navbar = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
@@ -19,6 +20,10 @@ const Navbar = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { state: cartState, setOffer } = useCart();
   const { country } = useUserCountry();
+
+  // Certain pages should always have the "scrolled" (solid/dark) navbar style
+  const isWhitePage = ["/login", "/register", "/checkout", "/forgot-password", "/reset-password", "/profile", "/shipping-address"].includes(pathname);
+  const shouldShowDarkNav = isScrolled || isWhitePage;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,7 +57,7 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-12 py-4 ${isScrolled
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-12 py-4 ${shouldShowDarkNav
           ? "bg-white/80 backdrop-blur-2xl shadow-glow py-4"
           : "bg-transparent py-6"
           }`}
@@ -62,7 +67,7 @@ const Navbar = () => {
             {/* Menu Button (Mobile) */}
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className={`lg:hidden p-2 rounded-full transition-colors ${isScrolled ? "text-secondary-900" : "text-white"}`}
+              className={`lg:hidden p-2 rounded-full transition-colors ${shouldShowDarkNav ? "text-secondary-900" : "text-white"}`}
             >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
             </button>
@@ -73,7 +78,7 @@ const Navbar = () => {
                 <Link
                   key={item}
                   href={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
-                  className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${isScrolled ? "text-secondary-900" : "text-white"
+                  className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${shouldShowDarkNav ? "text-secondary-900" : "text-white"
                     }`}
                 >
                   {item}
@@ -83,12 +88,12 @@ const Navbar = () => {
 
             {/* Logo */}
             <Link href="/" className="absolute left-1/2 -translate-x-1/2 transition-transform hover:scale-110 duration-500">
-              <div className={`flex flex-col items-center transition-all duration-500 ${isScrolled ? "scale-90" : "scale-100"}`}>
-                <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif drop-shadow-md ${isScrolled ? "text-secondary-900" : "text-white"
+              <div className={`flex flex-col items-center transition-all duration-500 ${shouldShowDarkNav ? "scale-90" : "scale-100"}`}>
+                <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif drop-shadow-md ${shouldShowDarkNav ? "text-secondary-900" : "text-white"
                   }`}>
                   Dreamy <span className="text-primary-500">Eyes</span>
                 </span>
-                <div className={`h-0.5 w-12 bg-primary-500 transition-all duration-500 ${isScrolled ? "opacity-100" : "opacity-0"}`} />
+                <div className={`h-0.5 w-12 bg-primary-500 transition-all duration-500 ${shouldShowDarkNav ? "opacity-100" : "opacity-0"}`} />
               </div>
             </Link>
 
@@ -96,11 +101,11 @@ const Navbar = () => {
             <div className="flex items-center gap-4 md:gap-8">
               {/* Desktop Applied Offer Info */}
               {cartState.selectedOffer && (
-                <div className={`hidden md:flex items-center gap-2 pl-3 md:pl-4 pr-2 py-1 md:py-1.5 rounded-full border transition-all duration-500 group/offer ${isScrolled ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
+                <div className={`hidden md:flex items-center gap-2 pl-3 md:pl-4 pr-2 py-1 md:py-1.5 rounded-full border transition-all duration-500 group/offer ${shouldShowDarkNav ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
                   }`}>
                   <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-primary-500 rounded-full animate-pulse" />
-                    <span className={`text-[9px] md:text-[10px] font-black tracking-widest uppercase ${isScrolled ? "text-primary-600" : "text-white"
+                    <span className={`text-[9px] md:text-[10px] font-black tracking-widest uppercase ${shouldShowDarkNav ? "text-primary-600" : "text-white"
                       }`}>
                       {cartState.selectedOffer.name || cartState.selectedOffer.title || "OFFER ACTIVE"}
                     </span>
@@ -111,7 +116,7 @@ const Navbar = () => {
                       e.stopPropagation();
                       setOffer(null, []);
                     }}
-                    className={`p-1 rounded-full transition-all duration-300 ${isScrolled ? "hover:bg-primary-100 text-primary-400" : "hover:bg-white/20 text-white/50"}`}
+                    className={`p-1 rounded-full transition-all duration-300 ${shouldShowDarkNav ? "hover:bg-primary-100 text-primary-400" : "hover:bg-white/20 text-white/50"}`}
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
@@ -120,7 +125,7 @@ const Navbar = () => {
 
               <button
                 onClick={() => setIsCartModalOpen(true)}
-                className={`relative group transition-transform hover:scale-110 ${isScrolled ? "text-secondary-900" : "text-white"}`}
+                className={`relative group transition-transform hover:scale-110 ${shouldShowDarkNav ? "text-secondary-900" : "text-white"}`}
               >
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                 {cartItemCount > 0 && (
@@ -132,7 +137,7 @@ const Navbar = () => {
 
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className={`hidden md:block transition-transform hover:scale-110 ${isScrolled ? "text-secondary-900" : "text-white"}`}
+                className={`hidden md:block transition-transform hover:scale-110 ${shouldShowDarkNav ? "text-secondary-900" : "text-white"}`}
               >
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
               </button>
@@ -142,11 +147,11 @@ const Navbar = () => {
           {/* Mobile Offer Badge - Dedicated centered row */}
           {cartState.selectedOffer && (
             <div className="md:hidden mt-4 flex justify-center animate-in fade-in slide-in-from-top-2 duration-500">
-              <div className={`flex items-center gap-3 pl-4 pr-2 py-1.5 rounded-full border ${isScrolled ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
+              <div className={`flex items-center gap-3 pl-4 pr-2 py-1.5 rounded-full border ${shouldShowDarkNav ? "bg-primary-50 border-primary-100 shadow-sm" : "bg-white/10 border-white/20 backdrop-blur-md"
                 }`}>
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-pulse" />
-                  <span className={`text-[9px] font-black tracking-widest uppercase ${isScrolled ? "text-primary-600" : "text-white"
+                  <span className={`text-[9px] font-black tracking-widest uppercase ${shouldShowDarkNav ? "text-primary-600" : "text-white"
                     }`}>
                     {cartState.selectedOffer.name || cartState.selectedOffer.title || "OFFER ACTIVE"}
                   </span>
@@ -157,7 +162,7 @@ const Navbar = () => {
                     e.stopPropagation();
                     setOffer(null, []);
                   }}
-                  className={`p-1 rounded-full transition-all duration-300 ${isScrolled ? "hover:bg-primary-100 text-primary-400" : "hover:bg-white/20 text-white/50"}`}
+                  className={`p-1 rounded-full transition-all duration-300 ${shouldShowDarkNav ? "hover:bg-primary-100 text-primary-400" : "hover:bg-white/20 text-white/50"}`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -215,7 +220,7 @@ const Navbar = () => {
                   <svg className="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   PROFILE
                 </Link>
-                <button onClick={async () => { await createSupabaseClient().auth.signOut(); setIsAuthenticated(false); setIsProfileMenuOpen(false); }} className="w-full flex items-center px-6 py-4 hover:bg-red-50 text-red-500 transition-colors font-black">
+                <button onClick={async () => { await createSupabaseClient().auth.signOut(); setIsAuthenticated(false); setIsProfileMenuOpen(false); router.push('/login'); }} className="w-full flex items-center px-6 py-4 hover:bg-red-50 text-red-500 transition-colors font-black">
                   <svg className="w-5 h-5 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                   LOGOUT
                 </button>
