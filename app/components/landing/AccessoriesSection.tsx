@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createSupabaseClient } from "@/app/services/supabase/client/supabaseBrowserClient";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
 import { formatPrice, getAccessoryImageUrl } from "@/app/util";
 import { useCart } from "@/app/context/CartContext";
-import Toast from "@/app/components/ui/Toast";
 import { get_applicators, get_solutions } from "@/app/api/product";
 
 type AccessoryItem = {
@@ -24,10 +22,6 @@ const AccessoriesSection = () => {
   const [items, setItems] = useState<AccessoryItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const { addAccessoryItem, state: cartState, updateAccessoryQuantity, removeAccessoryItem } = useCart();
-  const [toastConfig, setToastConfig] = useState<{ message: string; isVisible: boolean }>({
-    message: "",
-    isVisible: false,
-  });
 
   useEffect(() => {
     let mounted = true;
@@ -105,7 +99,7 @@ const AccessoriesSection = () => {
 
                   <div className="absolute bottom-3 left-3 md:bottom-8 md:left-8">
                     <span className="px-2 md:px-5 py-1 md:py-2 bg-white/80 md:bg-white/90 backdrop-blur-md rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest text-primary-500 shadow-sm uppercase">
-                      {item.type === "solution" ? "ESSENTIAL" : "PRO TOOL"}
+                      {item.type === "solution" ? "SOLUTIONS" : "APPLICATOR"}
                     </span>
                   </div>
                 </div>
@@ -190,13 +184,6 @@ const AccessoriesSection = () => {
           })}
         </div>
       </div>
-      <Toast
-        message={toastConfig.message}
-        type="success"
-        isVisible={toastConfig.isVisible}
-        onClose={() => setToastConfig({ message: "", isVisible: false })}
-        duration={1500}
-      />
     </section>
   );
 };
