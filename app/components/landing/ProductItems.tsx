@@ -225,13 +225,14 @@ const ProductItems = ({ data }: { data: any }) => {
 
         {/* Filter Button */}
         {filteredProducts && filteredProducts.length > 0 && (
-          <div className="mb-8 flex justify-center">
+          <div className="mb-8 flex justify-start">
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
-              className="inline-flex items-center px-5 py-2.5 bg-white border-2 border-primary-200 text-primary-600 font-semibold rounded-xl hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 shadow-sm hover:shadow-md"
+              className="relative p-3 bg-white border-2 border-primary-200 text-primary-600 rounded-xl hover:bg-primary-50 hover:border-primary-300 transition-all duration-200 shadow-sm hover:shadow-md"
+              title="Filters"
             >
               <svg
-                className="w-5 h-5 mr-2"
+                className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -243,9 +244,8 @@ const ProductItems = ({ data }: { data: any }) => {
                   d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
                 />
               </svg>
-              Filters
               {(selectedColor !== "all" || priceMin || priceMax || powerMin || powerMax || selectedTag !== "all") && (
-                <span className="ml-2 px-2 py-0.5 bg-primary-500 text-white text-xs rounded-full">
+                <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-primary-500 text-white text-[10px] font-bold rounded-full shadow-sm">
                   Active
                 </span>
               )}
