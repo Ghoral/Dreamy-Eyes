@@ -19,7 +19,7 @@ const ProductDetail = ({
   // Early return if no product
   if (!product) {
     return (
-      <div className="min-h-screen bg-secondary-900 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-white flex items-center justify-center text-secondary-900">
         <h2 className="text-2xl font-black">PRODUCT NOT FOUND</h2>
       </div>
     );
@@ -194,28 +194,28 @@ const ProductDetail = ({
   };
 
   return (
-    <div className="min-h-screen bg-secondary-900 pt-32 pb-20 relative overflow-hidden">
-      {/* Background Cinematic Decor */}
-      <div className="absolute inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-0 right-0 w-[50%] h-[70%] bg-primary-500 blur-[150px] rounded-full translate-x-1/2 translate-y-[-20%]" />
-        <div className="absolute bottom-0 left-0 w-[50%] h-[70%] bg-accent-500 blur-[150px] rounded-full translate-x-[-1/2] translate-y-20" />
+    <div className="min-h-screen bg-white pt-32 pb-20 relative overflow-hidden">
+      {/* Background Soft Decor */}
+      <div className="absolute inset-0 pointer-events-none opacity-40">
+        <div className="absolute top-0 right-0 w-[40%] h-[60%] bg-primary-100 blur-[120px] rounded-full translate-x-1/2 translate-y-[-10%]" />
+        <div className="absolute bottom-0 left-0 w-[40%] h-[60%] bg-accent-100 blur-[120px] rounded-full translate-x-[-1/2] translate-y-10" />
       </div>
 
       <div className="max-w-[1500px] mx-auto px-6 relative z-10">
 
-        {/* The Boutique Product Card */}
-        <div className="bg-secondary-800/40 backdrop-blur-xl border border-white/5 rounded-[3rem] p-6 md:p-12 shadow-2xl overflow-hidden">
+        {/* The Boutique Product Section */}
+        <div className="bg-white border border-secondary-100 rounded-[3rem] p-6 md:p-12 shadow-[0_20px_80px_rgba(0,0,0,0.03)] overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
 
             {/* Left Col: Master Gallery */}
             <div className="lg:col-span-7 flex flex-col gap-8">
-              <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-white/5 border border-white/10 group">
+              <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden bg-secondary-50 border border-secondary-100 group">
                 <img
                   src={mainImage}
                   alt={product.title}
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-secondary-900/60 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               </div>
 
               {/* Thumbnails Showcase */}
@@ -229,7 +229,7 @@ const ProductDetail = ({
                         <button
                           key={i}
                           onClick={() => setMainImage(imageUrl)}
-                          className={`w-20 md:w-28 aspect-square rounded-2xl overflow-hidden transition-all duration-500 border-2 ${isActive ? "border-primary-500 shadow-[0_0_20px_rgba(195,78,138,0.4)] scale-110" : "border-white/10 hover:border-white/30"
+                          className={`w-20 md:w-28 aspect-square rounded-2xl overflow-hidden transition-all duration-500 border-2 ${isActive ? "border-primary-500 shadow-[0_0_20px_rgba(195,78,138,0.2)] scale-110" : "border-secondary-100 hover:border-secondary-300"
                             }`}
                         >
                           <img src={imageUrl} alt="thumbnail" className="w-full h-full object-cover" />
@@ -242,7 +242,7 @@ const ProductDetail = ({
                         <button
                           key={i}
                           onClick={() => setMainImage(img)}
-                          className={`w-20 md:w-28 aspect-square rounded-2xl overflow-hidden transition-all duration-500 border-2 ${isActive ? "border-primary-500 shadow-[0_0_20px_rgba(195,78,138,0.4)] scale-110" : "border-white/10 hover:border-white/30"
+                          className={`w-20 md:w-28 aspect-square rounded-2xl overflow-hidden transition-all duration-500 border-2 ${isActive ? "border-primary-500 shadow-[0_0_20px_rgba(195,78,138,0.2)] scale-110" : "border-secondary-100 hover:border-secondary-300"
                             }`}
                         >
                           <img src={img} alt="thumbnail" className="w-full h-full object-cover" />
@@ -260,40 +260,40 @@ const ProductDetail = ({
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col">
                   <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-2 block">Premium Collection</span>
-                  <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-none mb-2">
+                  <h1 className="text-4xl md:text-7xl font-black text-secondary-900 tracking-tighter leading-none mb-2">
                     {product.title?.toUpperCase()}
                   </h1>
                 </div>
                 {product.sub_title && (
-                  <p className="text-secondary-400 font-serif italic text-xl md:text-2xl">
+                  <p className="text-secondary-500 font-serif italic text-xl md:text-2xl">
                     {product.sub_title}
                   </p>
                 )}
 
                 <div className="flex items-center gap-6 mt-2">
-                  <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">AUTHENTIC</span>
+                  <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">AUTHENTIC</span>
                 </div>
               </div>
 
               {/* Perforated Divider */}
               <div className="w-full flex items-center gap-4">
-                <div className="h-[1px] flex-1 bg-white/10" />
-                <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_10px_rgba(195,78,138,1)]" />
-                <div className="h-[1px] flex-1 bg-white/10" />
+                <div className="h-[1px] flex-1 bg-secondary-100" />
+                <div className="w-2 h-2 rounded-full bg-primary-500 shadow-[0_0_10px_rgba(195,78,138,0.5)]" />
+                <div className="h-[1px] flex-1 bg-secondary-100" />
               </div>
 
               {/* Pricing Stage */}
               <div className="flex items-end gap-3">
-                <span className="text-5xl md:text-7xl font-black text-white tracking-tighter font-price">
+                <span className="text-5xl md:text-7xl font-black text-secondary-900 tracking-tighter font-price">
                   {formatPriceWithCurrency(product.price, country)}
                 </span>
               </div>
 
               {/* Description Reveal */}
-              <div className="bg-white/5 border border-white/5 rounded-3xl p-6">
+              <div className="bg-secondary-50 border border-secondary-100 rounded-3xl p-6">
                 <h4 className="text-[10px] font-black tracking-[0.3em] uppercase text-primary-500 mb-3">The Gaze</h4>
                 <div
-                  className="text-sm md:text-base text-white/60 leading-relaxed font-medium line-clamp-4 hover:line-clamp-none transition-all duration-500 cursor-pointer"
+                  className="text-sm md:text-base text-secondary-600 leading-relaxed font-medium line-clamp-4 hover:line-clamp-none transition-all duration-500 cursor-pointer"
                   dangerouslySetInnerHTML={{ __html: product.description }}
                 />
               </div>
@@ -305,7 +305,7 @@ const ProductDetail = ({
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-center">
                     <span className="text-[9px] font-black tracking-[0.4em] uppercase text-secondary-400">Select Pigment</span>
-                    {selectedColor && <span className="text-[11px] font-black text-white uppercase tracking-widest">{selectedColor.label}</span>}
+                    {selectedColor && <span className="text-[11px] font-bold text-secondary-900 uppercase tracking-widest">{selectedColor.label}</span>}
                   </div>
                   <div className="flex flex-wrap gap-4">
                     {product?.color_quantity.map((colorOption: any, index: number) => {
@@ -316,7 +316,7 @@ const ProductDetail = ({
                         <button
                           key={index}
                           onClick={() => handleColorSelect(colorOption)}
-                          className={`relative group w-12 h-12 rounded-full transition-all duration-500 p-1 border-2 ${isSelected ? "border-primary-500 scale-110" : "border-white/10 hover:border-white/40"
+                          className={`relative group w-12 h-12 rounded-full transition-all duration-500 p-1 border-2 ${isSelected ? "border-primary-500 scale-110" : "border-secondary-100 hover:border-secondary-300"
                             }`}
                         >
                           <div
@@ -334,25 +334,25 @@ const ProductDetail = ({
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-center">
                     <span className="text-[9px] font-black tracking-[0.4em] uppercase text-secondary-400">Quantity</span>
-                    <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest">{getMaxQuantityForThisSession()} available for you</span>
+                    <span className="text-[9px] font-bold text-secondary-400 uppercase tracking-widest">{getMaxQuantityForThisSession()} available for you</span>
                   </div>
                   <div className="flex items-center gap-6">
-                    <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl p-2 h-16">
+                    <div className="flex items-center bg-secondary-50 border border-secondary-100 rounded-2xl p-2 h-16">
                       <button
                         onClick={() => handleQuantityChange(quantity - 1)}
                         disabled={quantity <= 1}
-                        className="w-12 h-full flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                        className="w-12 h-full flex items-center justify-center text-secondary-400 hover:text-secondary-900 transition-colors"
                       >—</button>
                       <input
                         type="number"
-                        className="w-16 bg-transparent border-none text-center font-black text-xl text-white focus:ring-0"
+                        className="w-16 bg-transparent border-none text-center font-black text-xl text-secondary-900 focus:ring-0"
                         value={quantity}
                         readOnly
                       />
                       <button
                         onClick={() => handleQuantityChange(quantity + 1)}
                         disabled={quantity >= getMaxQuantityForThisSession()}
-                        className="w-12 h-full flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                        className="w-12 h-full flex items-center justify-center text-secondary-400 hover:text-secondary-900 transition-colors"
                       >+</button>
                     </div>
                   </div>
@@ -364,8 +364,8 @@ const ProductDetail = ({
                     onClick={handleAddToCart}
                     disabled={!selectedColor || getMaxQuantityForThisSession() === 0}
                     className={`h-20 w-full rounded-3xl font-black text-lg uppercase tracking-widest transition-all duration-700 relative overflow-hidden group ${!selectedColor || getMaxQuantityForThisSession() === 0
-                      ? "bg-white/5 text-white/20 cursor-not-allowed"
-                      : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.3)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.5)] active:scale-[0.98]"
+                      ? "bg-secondary-100 text-secondary-400 cursor-not-allowed"
+                      : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.2)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.4)] active:scale-[0.98]"
                       }`}
                   >
                     <div className="relative z-10 flex items-center justify-center gap-4">
@@ -386,7 +386,7 @@ const ProductDetail = ({
                   {getCurrentCartQuantity() > 0 && (
                     <button
                       onClick={handleRemoveFromCart}
-                      className="text-[10px] font-black text-white/20 hover:text-red-500 uppercase tracking-[0.3em] transition-colors duration-500 py-2"
+                      className="text-[10px] font-black text-secondary-400 hover:text-red-500 uppercase tracking-[0.3em] transition-colors duration-500 py-2"
                     >
                       Release from Collection ({getCurrentCartQuantity()})
                     </button>
@@ -403,22 +403,22 @@ const ProductDetail = ({
           <div className="mt-24">
             <div className="flex flex-col items-center mb-12">
               <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-3">The Craft</span>
-              <h3 className="text-3xl md:text-5xl font-black text-white tracking-tighter">MASTER <span className="text-secondary-400 font-serif italic font-normal">DETAILS</span></h3>
+              <h3 className="text-3xl md:text-5xl font-black text-secondary-900 tracking-tighter">MASTER <span className="text-secondary-400 font-serif italic font-normal">DETAILS</span></h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {isSpecsArray ? (
                 parsedSpecs.map((item: any, idx: number) => (
-                  <div key={idx} className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col gap-2 hover:bg-white/10 transition-colors group">
-                    <span className="text-[10px] font-black text-secondary-500 uppercase tracking-widest transition-colors group-hover:text-primary-400">{item.label}</span>
-                    <span className="text-xl font-black text-white tracking-tight uppercase leading-none">{item.value}</span>
+                  <div key={idx} className="bg-white border border-secondary-100 rounded-3xl p-8 flex flex-col gap-2 hover:border-primary-200 hover:bg-secondary-50 transition-all group">
+                    <span className="text-[10px] font-black text-secondary-400 uppercase tracking-widest transition-colors group-hover:text-primary-500">{item.label}</span>
+                    <span className="text-xl font-black text-secondary-900 tracking-tight uppercase leading-none">{item.value}</span>
                   </div>
                 ))
               ) : (
                 Object.entries(parsedSpecs).map(([key, value]) => (
-                  <div key={key} className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col gap-2 hover:bg-white/10 transition-colors group">
-                    <span className="text-[10px] font-black text-secondary-500 uppercase tracking-widest transition-colors group-hover:text-primary-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                    <span className="text-xl font-black text-white tracking-tight uppercase leading-none">{String(value)}</span>
+                  <div key={key} className="bg-white border border-secondary-100 rounded-3xl p-8 flex flex-col gap-2 hover:border-primary-200 hover:bg-secondary-50 transition-all group">
+                    <span className="text-[10px] font-black text-secondary-400 uppercase tracking-widest transition-colors group-hover:text-primary-500 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                    <span className="text-xl font-black text-secondary-900 tracking-tight uppercase leading-none">{String(value)}</span>
                   </div>
                 ))
               )}
