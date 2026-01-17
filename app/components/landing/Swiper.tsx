@@ -48,7 +48,7 @@ const BillboardCarousel = () => {
   };
 
   return (
-    <section className="relative pt-20 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
+    <section className="relative pt-32 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
       {/* Background Animated Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
@@ -68,9 +68,8 @@ const BillboardCarousel = () => {
           {images.map((src, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentSlide ? "opacity-100" : "opacity-0"
-              }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"
+                }`}
             >
               <div className="relative w-full h-full">
                 <Image
@@ -130,11 +129,10 @@ const BillboardCarousel = () => {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide
                   ? "bg-white scale-125 shadow-lg"
                   : "bg-white/50 hover:bg-white/75"
-              }`}
+                }`}
             />
           ))}
         </div>

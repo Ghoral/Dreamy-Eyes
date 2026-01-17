@@ -17,7 +17,7 @@ type Accessory = {
   image: string | null;
 };
 
-const AccessoriesSection = () => {
+const ApplicatorsSection = () => {
   const { country } = useUserCountry();
   const [items, setItems] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -72,7 +72,7 @@ const AccessoriesSection = () => {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-br from-primary-50 via-white to-secondary-50 relative overflow-hidden">
+    <section id="applicators-section" className="py-20 bg-gradient-to-br from-primary-50 via-white to-secondary-50 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-primary-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-float" />
         <div
@@ -97,13 +97,13 @@ const AccessoriesSection = () => {
                 d="M12 8c-1.1 0-2 .9-2 2m0 0c0 1.1.9 2 2 2m0-4c1.1 0 2 .9 2 2m-2 8a8 8 0 110-16 8 8 0 010 16z"
               />
             </svg>
-            Accessories
+            Applicators
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-secondary-900 mb-3 tracking-tight">
-            Complete Your Look
+            Complete Your Application
           </h2>
           <p className="text-base md:text-lg text-secondary-600 max-w-2xl mx-auto leading-relaxed font-medium">
-            Explore our curated accessories to pair with your lenses — priced in your local currency.
+            Essential applicators and tools for perfect lens application every time.
           </p>
         </div>
 
@@ -286,4 +286,4 @@ const AccessoriesSection = () => {
   );
 };
 
-export default AccessoriesSection;
+export default ApplicatorsSection;

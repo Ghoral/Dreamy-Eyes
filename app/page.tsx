@@ -3,9 +3,10 @@ import ItemListing from "./components/landing/ItemListing";
 import BillboardCarousel from "./components/landing/Swiper";
 import Footer from "./components/landing/Footer";
 import ProductWrapper from "./components/product/ProductWrapper";
-import SalesSection from "./components/landing/SalesSection";
+import SolutionsSection from "./components/landing/SolutionsSection";
+import EyeLashesSection from "./components/landing/EyeLashesSection";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
-import AccessoriesSection from "./components/accessories/AccessoriesSection";
+import ApplicatorsSection from "./components/applicators/ApplicatorsSection";
 
 export default function Home() {
   return (
@@ -13,9 +14,10 @@ export default function Home() {
       <GlobalSupabaseListenerWrapper />
       <BillboardCarousel />
       <ItemListing />
-      <SalesSection />
       <ProductWrapper />
-      <AccessoriesSection />
+      <ApplicatorsSection />
+      <SolutionsSection />
+      <EyeLashesSection />
       <TikTokCarousel />
       <Footer />
     </div>

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "../../context/CartContext";
 import ModalCart from "../modals/ModalCart";
 import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
+import { useUserCountry } from "../../hooks/useUserCountry";
 
 const Navbar = () => {
   const router = useRouter();
@@ -17,6 +18,17 @@ const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { state: cartState } = useCart();
+  const { country } = useUserCountry();
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,7 +54,7 @@ const Navbar = () => {
         setIsLoading(false);
       }
     };
-    
+
     checkAuthStatus();
 
     // Set up auth state change listener
@@ -104,11 +116,10 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
-          isScrolled
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${isScrolled
             ? "bg-white/95 backdrop-blur-md shadow-soft"
             : "bg-white/98 backdrop-blur-sm shadow-sm"
-        }`}
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
@@ -350,9 +361,8 @@ const Navbar = () => {
                 aria-label="Toggle mobile menu"
               >
                 <svg
-                  className={`w-6 h-6 text-secondary-600 transition-transform duration-300 ${
-                    isMobileMenuOpen ? "rotate-90" : ""
-                  }`}
+                  className={`w-6 h-6 text-secondary-600 transition-transform duration-300 ${isMobileMenuOpen ? "rotate-90" : ""
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -380,11 +390,10 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen
+          className={`lg:hidden transition-all duration-300 ease-in-out ${isMobileMenuOpen
               ? "max-h-96 opacity-100"
               : "max-h-0 opacity-0 pointer-events-none"
-          }`}
+            }`}
         >
           <div className="bg-white border-t border-secondary-100 shadow-lg">
             <div className="px-4 py-6 space-y-4">
@@ -470,6 +479,42 @@ const Navbar = () => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Category Sub-Navigation */}
+        <div className="border-t border-gray-100">
+          <div className="flex items-center justify-center gap-2 py-3 overflow-x-auto">
+            {country === "nepal" && (
+              <button
+                onClick={() => scrollToSection("solutions-section")}
+                className="px-4 py-1.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-semibold rounded-full hover:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-1.5"
+              >
+                <span>💧</span>
+                <span>Solutions</span>
+              </button>
+            )}
+            <button
+              onClick={() => scrollToSection("eyelashes-section")}
+              className="px-4 py-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs font-semibold rounded-full hover:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-1.5"
+            >
+              <span>👁️</span>
+              <span>Eye Lashes</span>
+            </button>
+            <button
+              onClick={() => scrollToSection("applicators-section")}
+              className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-semibold rounded-full hover:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-1.5"
+            >
+              <span>🔧</span>
+              <span>Applicators</span>
+            </button>
+            <button
+              onClick={() => scrollToSection("products-section")}
+              className="px-4 py-1.5 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-xs font-semibold rounded-full hover:shadow-md transition-all duration-300 whitespace-nowrap flex items-center gap-1.5"
+            >
+              <span>🏷️</span>
+              <span>Sale</span>
+            </button>
           </div>
         </div>
       </nav>
