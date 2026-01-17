@@ -63,6 +63,26 @@ const Navbar = () => {
 
   const cartItemCount = cartState.items.reduce((total, item) => total + item.quantity, 0);
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("/#")) {
+      if (pathname === "/") {
+        e.preventDefault();
+        const id = href.replace("/#", "");
+        const element = document.getElementById(id);
+        if (element) {
+          const offset = 100;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.scrollY - offset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth"
+          });
+        }
+      }
+    }
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <>
       <nav
@@ -83,14 +103,19 @@ const Navbar = () => {
 
             {/* Nav Links (Desktop Left) */}
             <div className="hidden lg:flex items-center gap-10">
-              {["Home", "About"].map((item) => (
+              {[
+                { label: "Home", href: "/" },
+                { label: "Solutions & Tools", href: "/#accessories-section" },
+                { label: "About", href: "/about" }
+              ].map((item) => (
                 <Link
-                  key={item}
-                  href={item === "Home" ? "/" : `/${item.toLowerCase().replace(" ", "-")}`}
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${shouldShowDarkNav ? "text-secondary-900" : "text-white"
                     }`}
                 >
-                  {item}
+                  {item.label}
                 </Link>
               ))}
             </div>
@@ -193,14 +218,19 @@ const Navbar = () => {
               </button>
             </div>
             <div className="flex flex-col gap-8">
-              {["Home", "About", "Contact"].map((item) => (
+              {[
+                { label: "Home", href: "/" },
+                { label: "Solutions & Tools", href: "/#accessories-section" },
+                { label: "About", href: "/about" },
+                { label: "Contact", href: "/contact" }
+              ].map((item) => (
                 <Link
-                  key={item}
-                  href="/"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className="text-4xl font-black text-secondary-900 hover:text-primary-500 transition-colors"
                 >
-                  {item}
+                  {item.label}
                 </Link>
               ))}
             </div>

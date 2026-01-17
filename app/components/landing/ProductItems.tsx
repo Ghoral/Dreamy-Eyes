@@ -83,7 +83,7 @@ const ProductItems = ({ data }: { data: any }) => {
     if (element) {
       const offset = 100;
       const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      const offsetPosition = elementPosition + window.scrollY - offset;
 
       window.scrollTo({
         top: offsetPosition,
@@ -139,12 +139,13 @@ const ProductItems = ({ data }: { data: any }) => {
         if (lashes.total > 0) {
           baseTags.push({ label: "Eye Lashes", scrollId: "eyelashes-section", icon: "✨", desc: "Style", type: 'scroll' } as any);
         }
+
         if (solutions.total > 0) {
-          baseTags.push({ label: "Solutions", scrollId: "solutions-section", icon: "💧", desc: "Pure", type: 'scroll' } as any);
+          baseTags.push({ label: "Solutions", scrollId: "accessories-section", icon: "💧", desc: "Pure", type: 'scroll' } as any);
         }
-        baseTags.push({ label: "Tools", scrollId: "applicators-section", icon: "🛠️", desc: "Kit", type: 'scroll' } as any);
-
-
+        if (applicators.total > 0) {
+          baseTags.push({ label: "Tools", scrollId: "accessories-section", icon: "🛠️", desc: "Kit", type: 'scroll' } as any);
+        }
 
         setAvailableTags(baseTags);
       } catch (e) {
