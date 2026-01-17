@@ -7,11 +7,15 @@ import AccessoriesSection from "./components/landing/AccessoriesSection";
 import EyeLashesSection from "./components/landing/EyeLashesSection";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 
-export default function Home() {
+import { get_banners } from "@/app/api/product";
+
+export default async function Home() {
+  const banners = await get_banners();
+
   return (
     <div className="min-h-screen bg-white">
       <GlobalSupabaseListenerWrapper />
-      <BillboardCarousel />
+      <BillboardCarousel banners={banners} />
       <ItemListing />
       <ProductWrapper />
       <EyeLashesSection />

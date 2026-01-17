@@ -2,31 +2,18 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
 
-const BillboardCarousel = () => {
+const BillboardCarousel = ({ banners = [] }: { banners?: string[] }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [images, setImages] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [images, setImages] = useState<string[]>(banners);
+  const [isLoaded, setIsLoaded] = useState(true);
 
+  // Sync props to state if needed (though usually initial is enough for banners)
   useEffect(() => {
-    const supabase = createSupabaseClient();
-    const loadBanners = async () => {
-      const { data, error } = await supabase.storage.from("banner").list("", {
-        limit: 50,
-        sortBy: { column: "name", order: "asc" },
-      });
-      if (!error && Array.isArray(data)) {
-        const baseUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/banner`;
-        const urls = data
-          .filter((f) => !f.name.startsWith(".") && f.id)
-          .map((file) => `${baseUrl}/${encodeURIComponent(file.name)}`);
-        setImages(urls);
-      }
-    };
-    loadBanners();
-    setIsLoaded(true);
-  }, []);
+    if (banners.length > 0) {
+      setImages(banners);
+    }
+  }, [banners]);
 
   useEffect(() => {
     if (images.length === 0) return;

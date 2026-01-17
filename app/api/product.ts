@@ -200,3 +200,22 @@ export async function get_applicators(
   }
   return { data: data.data, total: data.total, error: null };
 }
+
+export async function get_banners() {
+  const { data, error } = await supabaseBrowserClient.storage.from("banner").list("", {
+    limit: 50,
+    sortBy: { column: "name", order: "asc" },
+  });
+
+  if (error || !data) {
+    console.error("Error fetching banners:", error);
+    return [];
+  }
+
+  const baseUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/banner`;
+  const urls = data
+    .filter((f) => !f.name.startsWith(".") && f.id)
+    .map((file) => `${baseUrl}/${encodeURIComponent(file.name)}`);
+
+  return urls;
+}
