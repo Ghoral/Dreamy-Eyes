@@ -116,8 +116,8 @@ const ProductItems = ({ data }: { data: any }) => {
   }, [normalizedData]);
 
   const [availableTags, setAvailableTags] = useState<any[]>([
-    { label: "Lenses", value: "all", icon: "👁️", desc: "Core", type: 'filter' },
-    { label: "Sale", value: "sale", icon: "🏷️", desc: "Value", type: 'filter' },
+    { label: "Lenses", value: "all", type: 'filter' },
+    { label: "Sale", value: "sale", type: 'filter' },
   ]);
 
   useEffect(() => {
@@ -132,19 +132,19 @@ const ProductItems = ({ data }: { data: any }) => {
         ]);
 
         const baseTags = [
-          { label: "Lenses", value: "all", icon: "👁️", desc: "Core", type: 'filter' },
-          { label: "Sale", value: "sale", icon: "🏷️", desc: "Value", type: 'filter' },
+          { label: "Lenses", value: "all", type: 'filter' },
+          { label: "Sale", value: "sale", type: 'filter' },
         ];
 
         if (lashes.total > 0) {
-          baseTags.push({ label: "Eye Lashes", scrollId: "eyelashes-section", icon: "✨", desc: "Style", type: 'scroll' } as any);
+          baseTags.push({ label: "Lashes", scrollId: "eyelashes-section", type: 'scroll' } as any);
         }
 
         if (solutions.total > 0) {
-          baseTags.push({ label: "Solutions", scrollId: "accessories-section", icon: "💧", desc: "Pure", type: 'scroll' } as any);
+          baseTags.push({ label: "Solutions", scrollId: "accessories-section", type: 'scroll' } as any);
         }
         if (applicators.total > 0) {
-          baseTags.push({ label: "Tools", scrollId: "accessories-section", icon: "🛠️", desc: "Kit", type: 'scroll' } as any);
+          baseTags.push({ label: "Tools", scrollId: "accessories-section", type: 'scroll' } as any);
         }
 
         setAvailableTags(baseTags);
@@ -193,46 +193,12 @@ const ProductItems = ({ data }: { data: any }) => {
       <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
 
 
-        {/* Navigation & Filter Chip Row */}
+        {/* Filter Button Row */}
         <div className="mb-16 pt-8 border-t border-secondary-100">
-          <div className="grid grid-cols-2 md:flex md:flex-wrap items-center justify-between gap-3 md:gap-4">
-            <div className="contents md:flex md:flex-wrap md:items-center gap-3">
-              {availableTags.map((tag) => {
-                const isRewards = tag.value === 'rewards';
-                const isActive = tag.type === 'filter' ? selectedTag === tag.value : false;
-
-                // Custom styles for Rewards/Action chips
-                const baseClasses = isRewards
-                  ? "bg-green-100 border-green-200 text-green-800 hover:bg-green-200 hover:border-green-300 hover:shadow-md"
-                  : isActive
-                    ? "bg-secondary-900 border-secondary-900 shadow-lg text-white"
-                    : "bg-white border-secondary-200 text-secondary-900 hover:border-primary-500 hover:shadow-md";
-
-                return (
-                  <button
-                    key={tag.label}
-                    onClick={() => handleTagClick(tag)}
-                    className={`flex items-center gap-3 px-4 md:px-5 py-2.5 md:py-3 rounded-full border transition-all duration-500 group relative w-full md:w-auto h-full ${baseClasses}`}
-                  >
-                    <span className={`text-lg md:text-xl transition-transform duration-500 group-hover:scale-110 shrink-0 ${isActive ? 'saturate-100' : 'saturate-0 opacity-60'}`}>
-                      {tag.icon}
-                    </span>
-                    <div className="flex flex-col items-start leading-none pr-1 overflow-hidden">
-                      <span className={`text-[7px] md:text-[8px] font-black tracking-widest uppercase mb-0.5 truncate w-full ${isActive ? 'text-primary-400' : 'text-secondary-400'}`}>
-                        {tag.desc}
-                      </span>
-                      <h4 className="font-black text-[10px] md:text-xs tracking-tight uppercase truncate w-full">
-                        {tag.label}
-                      </h4>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
+          <div className="flex justify-end">
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
-              className="group relative flex items-center justify-center gap-3 px-6 py-3 md:py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-[1.02] md:hover:scale-105 w-full md:w-auto shrink-0 h-full"
+              className="group relative flex items-center justify-center gap-3 px-6 py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
             >
               <svg className="w-3.5 h-3.5 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />

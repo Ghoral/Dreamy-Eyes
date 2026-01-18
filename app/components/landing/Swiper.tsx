@@ -27,7 +27,7 @@ const BillboardCarousel = ({ banners = [] }: { banners?: string[] }) => {
   if (images.length === 0) return null;
 
   return (
-    <section className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden bg-white mt-16 md:mt-24">
+    <section className="relative w-full h-screen overflow-hidden bg-white">
       {images.map((src, index) => (
         <div
           key={index}
@@ -42,6 +42,8 @@ const BillboardCarousel = ({ banners = [] }: { banners?: string[] }) => {
               fill
               className="object-cover"
               priority={index === 0}
+              quality={100}
+              unoptimized
             />
           </div>
         </div>

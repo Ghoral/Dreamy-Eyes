@@ -31,8 +31,8 @@ const Navbar = () => {
     "/profile",
     "/shipping-address"
   ].includes(pathname) || /^\/[^/]+$/.test(pathname); // Matches dynamic [id] product pages (single slug)
-  // const shouldShowDarkNav = isScrolled || (pathname !== "/" && isWhitePage);
-  const shouldShowDarkNav = true; // Force dark mode for visibility on light theme
+  // On homepage, show transparent navbar until scroll. On other pages, always show solid navbar
+  const shouldShowDarkNav = pathname === "/" ? isScrolled : true;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,7 +87,7 @@ const Navbar = () => {
     <>
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out px-4 md:px-12 py-4 ${shouldShowDarkNav
-          ? "bg-white/80 backdrop-blur-2xl shadow-glow md:shadow-none py-4"
+          ? "bg-white/95 backdrop-blur-md shadow-glow md:shadow-none py-4"
           : "bg-transparent py-6"
           }`}
       >
@@ -101,24 +101,8 @@ const Navbar = () => {
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
             </button>
 
-            {/* Nav Links (Desktop Left) */}
-            <div className="hidden lg:flex items-center gap-10">
-              {[
-                { label: "Home", href: "/" },
-                { label: "Solutions & Tools", href: "/#accessories-section" },
-                { label: "About", href: "/about" }
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleNavClick(e, item.href)}
-                  className={`text-sm font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 ${shouldShowDarkNav ? "text-secondary-900" : "text-white"
-                    }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+            {/* Empty space for symmetry */}
+            <div className="hidden lg:block w-32"></div>
 
             {/* Logo */}
             <Link href="/" className="absolute left-1/2 -translate-x-1/2 transition-transform hover:scale-110 duration-500">
@@ -204,7 +188,33 @@ const Navbar = () => {
             </div>
           )}
         </div>
+
+        {/* Sub-Navbar for Categories - Inside main nav */}
+        <div className={`transition-all duration-500 border-t border-secondary-100/30 ${shouldShowDarkNav ? "opacity-100 max-h-20" : "opacity-0 max-h-0 overflow-hidden"}`}>
+          <div className="max-w-[1800px] mx-auto px-4 md:px-12">
+            <div className="hidden lg:flex items-center justify-center gap-8 py-3">
+              {[
+                { label: "Lenses", href: "/" },
+                { label: "Sale", href: "/#sale-section" },
+                { label: "Lashes", href: "/#eyelashes-section" },
+                { label: "Solutions", href: "/#accessories-section" },
+                { label: "Tools", href: "/#accessories-section" }
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="text-xs font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 text-secondary-700"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
       </nav>
+
+
 
       {/* Mobile Sidebar Navigation */}
       <div className={`fixed inset-0 z-[60] transition-opacity duration-500 ${isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
@@ -217,22 +227,8 @@ const Navbar = () => {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <div className="flex flex-col gap-8">
-              {[
-                { label: "Home", href: "/" },
-                { label: "Solutions & Tools", href: "/#accessories-section" },
-                { label: "About", href: "/about" },
-                { label: "Contact", href: "/contact" }
-              ].map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleNavClick(e, item.href)}
-                  className="text-4xl font-black text-secondary-900 hover:text-primary-500 transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <div className="flex flex-col gap-6">
+              {/* Mobile menu can be used for other links if needed */}
             </div>
             <div className="mt-auto pt-12 border-t border-secondary-100 flex gap-6">
             </div>
