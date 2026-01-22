@@ -105,5 +105,3 @@ export function GET(req: NextRequest) {
   return response;
 }
 
-// Export decrypt function for use in verify endpoint
-export { decryptValue };
