@@ -8,7 +8,6 @@ export async function get_all_products() {
   );
 
   if (error) {
-    console.error('[get_all_products] RPC Error:', error);
     return {
       data: null,
       message: "Failed to fetch",
@@ -18,7 +17,6 @@ export async function get_all_products() {
     };
   }
 
-  console.log('[get_all_products] Items found:', data?.length);
   return {
     data: data,
     message: "Products fetched successfully.", // Fixed message
@@ -67,7 +65,6 @@ export async function get_app_details() {
       error: error.details,
     };
   }
-  console.log('data insta', data);
 
   return {
     data: data?.[0] || null,
@@ -95,7 +92,6 @@ export async function get_products_by_type(
   );
 
   if (error) {
-    console.error('[get_products_by_type RPC Error]:', error);
     return {
       data: null,
       message: "Failed to fetch products",
@@ -105,7 +101,6 @@ export async function get_products_by_type(
     };
   }
 
-  console.log('[get_products_by_type API Success] Type:', p_type, 'Items found:', data?.length);
 
   return {
     data: data,
@@ -124,7 +119,6 @@ export async function get_products(
 ) {
   // Convert country to API format: 'np' for Nepal, null for others
   const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : null;
-  console.log('[get_products API] Received country:', country, '-> Sending to RPC:', countryCode);
 
   const { data, error } = await supabaseBrowserClient.rpc("get_products", {
     limit_value: limit,
@@ -132,8 +126,8 @@ export async function get_products(
     tags: tags.length > 0 ? tags : null,
   });
 
+
   if (error) {
-    console.error('[get_products] RPC Error:', error);
     return {
       data: null,
       message: "Failed to fetch products",
@@ -141,11 +135,6 @@ export async function get_products(
       statusCode: 400,
       error: error.details,
     };
-  }
-
-  console.log('[get_products] Data returned:', data?.length, 'items');
-  if (data?.length === 0) {
-    console.log('[get_products] No products returned for country:', countryCode);
   }
 
   return {
