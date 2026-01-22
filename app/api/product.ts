@@ -8,6 +8,7 @@ export async function get_all_products() {
   );
 
   if (error) {
+    console.error('[get_all_products] RPC Error:', error);
     return {
       data: null,
       message: "Failed to fetch",
@@ -17,6 +18,7 @@ export async function get_all_products() {
     };
   }
 
+  console.log('[get_all_products] Items found:', data?.length);
   return {
     data: data,
     message: "Products fetched successfully.", // Fixed message
@@ -128,7 +130,6 @@ export async function get_products(
     limit_value: limit,
     offset_value: offset,
     tags: tags.length > 0 ? tags : null,
-    country: countryCode,
   });
 
   if (error) {

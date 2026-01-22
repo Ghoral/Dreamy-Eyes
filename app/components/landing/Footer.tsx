@@ -31,7 +31,7 @@ const Footer = () => {
             </div>
 
             <div className="flex gap-6">
-              {['Instagram', 'Facebook', 'TikTok', 'Pinterest'].map((platform) => (
+              {['Instagram', 'Facebook', 'TikTok'].map((platform) => (
                 <a
                   key={platform}
                   href="#"
@@ -69,8 +69,8 @@ const Footer = () => {
                 </div>
                 <div>
                   <p className="text-xs font-black text-secondary-400 uppercase tracking-widest mb-2">Direct Inquiry</p>
-                  <a href="mailto:art@dreamyeyes.com" className="text-xl font-bold text-white hover:text-primary-500 transition-colors border-b border-primary-500 pb-1">
-                    art@dreamyeyes.com
+                  <a href="mailto:dreamyeyesinfo@gmail.com" className="text-xl font-bold text-white hover:text-primary-500 transition-colors border-b border-primary-500 pb-1">
+                    dreamyeyesinfo@gmail.com
                   </a>
                 </div>
               </div>
