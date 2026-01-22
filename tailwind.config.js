@@ -47,9 +47,10 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["Raleway", "sans-serif"],
-        serif: ["Cinzel", "serif"],
-        script: ["Dancing Script", "cursive"],
+        sans: ['"Quattrocento Sans"', "sans-serif"],
+        serif: ['"Quattrocento Sans"', "serif"],
+        script: ['"Quattrocento Sans"', "sans-serif"],
+        price: ["Outfit", "sans-serif"],
       },
       animation: {
         "fade-in": "fadeIn 0.5s ease-in-out",

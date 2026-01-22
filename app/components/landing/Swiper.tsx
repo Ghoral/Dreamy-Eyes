@@ -2,143 +2,86 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { createSupabaseClient } from "../../services/supabase/client/supabaseBrowserClient";
 
-const BillboardCarousel = () => {
+const BillboardCarousel = ({ banners = [] }: { banners?: string[] }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>(banners);
+  const [isLoaded, setIsLoaded] = useState(true);
 
+  // Sync props to state if needed (though usually initial is enough for banners)
   useEffect(() => {
-    const supabase = createSupabaseClient();
-    const loadBanners = async () => {
-      const { data, error } = await supabase.storage.from("banner").list("", {
-        limit: 50,
-        sortBy: { column: "name", order: "asc" },
-      });
-      if (!error && Array.isArray(data)) {
-        const baseUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/banner`;
-        const urls = data
-          .filter((f) => !f.name.startsWith(".") && f.id)
-          .map((file) => `${baseUrl}/${encodeURIComponent(file.name)}`);
-        setImages(urls);
-      }
-    };
-    loadBanners();
-  }, []);
+    if (banners.length > 0) {
+      setImages(banners);
+    }
+  }, [banners]);
 
   useEffect(() => {
     if (images.length === 0) return;
-
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % images.length);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(timer);
   }, [images.length]);
 
-  const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-  };
 
-  const goToPrevious = () => {
-    setCurrentSlide((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  const goToNext = () => {
-    setCurrentSlide((prev) => (prev + 1) % images.length);
-  };
+  if (images.length === 0) return null;
 
   return (
-    <section className="relative pt-20 bg-gradient-to-br from-secondary-50 via-white to-primary-50 overflow-hidden">
-      {/* Background Animated Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
+    <section className="relative w-full h-screen overflow-hidden bg-white">
+      {images.map((src, index) => (
         <div
-          className="absolute bottom-20 right-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
-
-      <div className="relative">
-        {/* Carousel Container */}
-        <div className="relative h-[320px] sm:h-[380px] md:h-[440px] lg:h-[500px] overflow-hidden">
-          {images.map((src, index) => (
-            <div
-              key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ${
-                index === currentSlide ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              <div className="relative w-full h-full">
-                <Image
-                  src={src}
-                  alt={`Fashion Lens Banner ${index + 1}`}
-                  fill
-                  className="object-cover"
-                  priority={index === 0}
-                />
-              </div>
-            </div>
-          ))}
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+        >
+          {/* Main Background Image */}
+          <div className="relative w-full h-full transform scale-105 active:scale-100 transition-transform duration-[10000ms] ease-linear">
+            <Image
+              src={src}
+              alt={`Lens Banner ${index + 1}`}
+              fill
+              className="object-cover"
+              priority={index === 0}
+              quality={100}
+              unoptimized
+            />
+          </div>
         </div>
+      ))}
 
-        {/* Navigation Arrows */}
-        <button
-          onClick={goToPrevious}
-          className="absolute left-8 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-secondary-600 hover:text-primary-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 z-10"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-
-        <button
-          onClick={goToNext}
-          className="absolute right-8 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-secondary-600 hover:text-primary-600 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 z-10"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
-
-        {/* Pagination Dots */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-3 z-10">
+      {/* Floating Bottom Navigation */}
+      <div className="absolute bottom-12 left-0 right-0 z-30 flex items-center justify-between px-8 md:px-16">
+        <div className="flex gap-4">
           {images.map((_, index) => (
             <button
               key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide
-                  ? "bg-white scale-125 shadow-lg"
-                  : "bg-white/50 hover:bg-white/75"
-              }`}
-            />
+              onClick={() => setCurrentSlide(index)}
+              className="group relative w-16 h-1 bg-white/30 overflow-hidden rounded-full"
+            >
+              <div
+                className={`absolute inset-0 bg-white transition-all duration-[8000ms] linear ${index === currentSlide ? "w-full" : "w-0"
+                  }`}
+              />
+            </button>
           ))}
         </div>
+
+        <div className="hidden md:flex gap-4">
+          <button
+            onClick={() => setCurrentSlide((prev) => (prev - 1 + images.length) % images.length)}
+            className="w-16 h-16 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-secondary-900 transition-all duration-300 backdrop-blur-md group"
+          >
+            <svg className="w-8 h-8 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <button
+            onClick={() => setCurrentSlide((prev) => (prev + 1) % images.length)}
+            className="w-16 h-16 rounded-full border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-secondary-900 transition-all duration-300 backdrop-blur-md group"
+          >
+            <svg className="w-8 h-8 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
       </div>
+
     </section>
   );
 };

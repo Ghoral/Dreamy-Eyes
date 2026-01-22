@@ -47,7 +47,6 @@ export default function ProfilePage() {
       });
       setIsLoading(false);
     } catch (error) {
-      console.error("Error loading user profile:", error);
       router.push("/login");
     }
   };
@@ -62,7 +61,6 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     // Here you would typically save the form data to your database
-    console.log("Saving profile data:", formData);
     setIsEditing(false);
     // Add your save logic here
   };
@@ -73,7 +71,7 @@ export default function ProfilePage() {
       await supabase.auth.signOut();
       router.push("/");
     } catch (error) {
-      console.error("Error signing out:", error);
+      // Error signing out
     }
   };
 
@@ -390,7 +388,7 @@ export default function ProfilePage() {
                 </Link>
 
                 <Link
-                  href="/shop"
+                  href="/"
                   className="flex items-center p-3 bg-secondary-50 hover:bg-primary-50 text-secondary-700 hover:text-primary-600 rounded-xl transition-all duration-300 group"
                 >
                   <svg

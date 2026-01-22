@@ -145,8 +145,6 @@ export default function ShippingAddressPage() {
 
         setSuccess("Address updated successfully!");
       } else {
-        console.log("user.id", user.id);
-
         const { error: insertError } = await (supabaseBrowserClient as any)
           .from("address")
           .insert({
@@ -158,7 +156,6 @@ export default function ShippingAddressPage() {
             country: addressForm.country,
             is_primary: addressForm.isPrimary,
           });
-        console.log("insertError", insertError);
 
         if (insertError) {
           setError("Failed to add address");

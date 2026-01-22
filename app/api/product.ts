@@ -53,7 +53,7 @@ export async function get_all_products_with_types() {
 export async function get_app_details() {
   const { data, error } = await supabaseBrowserClient
     .from("app_detail")
-    .select("tiktok_link, follow_us_tiktok")
+    .select("instagram_link, instagram")
     .limit(1);
 
   if (error) {
@@ -65,6 +65,7 @@ export async function get_app_details() {
       error: error.details,
     };
   }
+  console.log('data insta', data);
 
   return {
     data: data?.[0] || null,
@@ -92,6 +93,7 @@ export async function get_products_by_type(
   );
 
   if (error) {
+    console.error('[get_products_by_type RPC Error]:', error);
     return {
       data: null,
       message: "Failed to fetch products",
@@ -101,6 +103,8 @@ export async function get_products_by_type(
     };
   }
 
+  console.log('[get_products_by_type API Success] Type:', p_type, 'Items found:', data?.length);
+
   return {
     data: data,
     message: "Products fetched successfully.",
@@ -108,4 +112,119 @@ export async function get_products_by_type(
     statusCode: 200,
     error: null,
   };
+}
+
+export async function get_products(
+  limit: number = 10,
+  offset: number = 0,
+  tags: string[] = [],
+  country: string | null = null
+) {
+  // Convert country to API format: 'np' for Nepal, null for others
+  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : null;
+  console.log('[get_products API] Received country:', country, '-> Sending to RPC:', countryCode);
+
+  const { data, error } = await supabaseBrowserClient.rpc("get_products", {
+    limit_value: limit,
+    offset_value: offset,
+    tags: tags.length > 0 ? tags : null,
+    country: countryCode,
+  });
+
+  if (error) {
+    console.error('[get_products] RPC Error:', error);
+    return {
+      data: null,
+      message: "Failed to fetch products",
+      status: false,
+      statusCode: 400,
+      error: error.details,
+    };
+  }
+
+  console.log('[get_products] Data returned:', data?.length, 'items');
+  if (data?.length === 0) {
+    console.log('[get_products] No products returned for country:', countryCode);
+  }
+
+  return {
+    data: data,
+    message: "Products fetched successfully.",
+    status: true,
+    statusCode: 200,
+    error: null,
+  };
+}
+
+export async function get_eye_lashes(
+  limit: number = 10,
+  offset: number = 0,
+  country: string | null = null
+) {
+  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
+  const { data, error } = await supabaseBrowserClient.rpc("get_eye_lashes", {
+    limit_value: limit,
+    offset_value: offset,
+    country: countryCode,
+  });
+
+  if (error) {
+    return { data: null, total: 0, error: error.details };
+  }
+  return { data: data.data, total: data.total, error: null };
+}
+
+export async function get_solutions(
+  limit: number = 10,
+  offset: number = 0,
+  country: string | null = null
+) {
+  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
+  const { data, error } = await supabaseBrowserClient.rpc("get_solutions", {
+    limit_value: limit,
+    offset_value: offset,
+    country: countryCode,
+  });
+
+  if (error) {
+    return { data: null, total: 0, error: error.details };
+  }
+  return { data: data.data, total: data.total, error: null };
+}
+
+export async function get_applicators(
+  limit: number = 10,
+  offset: number = 0,
+  country: string | null = null
+) {
+  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
+  const { data, error } = await supabaseBrowserClient.rpc("get_applicators", {
+    limit_value: limit,
+    offset_value: offset,
+    country: countryCode,
+  });
+
+  if (error) {
+    return { data: null, total: 0, error: error.details };
+  }
+  return { data: data.data, total: data.total, error: null };
+}
+
+export async function get_banners() {
+  const { data, error } = await supabaseBrowserClient.storage.from("banner").list("", {
+    limit: 50,
+    sortBy: { column: "name", order: "asc" },
+  });
+
+  if (error || !data) {
+    console.error("Error fetching banners:", error);
+    return [];
+  }
+
+  const baseUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/banner`;
+  const urls = data
+    .filter((f) => !f.name.startsWith(".") && f.id)
+    .map((file) => `${baseUrl}/${encodeURIComponent(file.name)}`);
+
+  return urls;
 }

@@ -1,24 +1,13 @@
 import type { Metadata } from "next";
-import { Raleway, Cinzel } from "next/font/google";
 import "./globals.css";
 import Header from "./components/landing/Header";
+import OfferBanner from "./components/landing/OfferBanner";
 import { GlobalSupabaseListenerWrapper } from "./hooks/GlobalSupabaseListener";
 import { AddressGuard } from "./hooks/AddressGuard";
 import { CartProvider } from "./context/CartContext";
+import { UserMetadataLogger } from "./components/UserMetadataLogger";
+import ExchangeRateLoader from "./components/ExchangeRateLoader";
 
-const raleway = Raleway({
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
-  variable: "--font-raleway",
-});
-
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  style: ["normal"],
-  variable: "--font-cinzel",
-});
 export const metadata: Metadata = {
   title: "Dreamy Eyes",
   description: "",
@@ -31,10 +20,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${raleway.variable} ${cinzel.variable} font-sans antialiased`}>
+      <body
+        className="font-sans antialiased"
+      >
         <CartProvider>
           <GlobalSupabaseListenerWrapper />
           <AddressGuard />
+          <UserMetadataLogger />
+          <ExchangeRateLoader />
           <Header />
           {children}
         </CartProvider>

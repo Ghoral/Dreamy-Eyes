@@ -81,17 +81,40 @@ export default function OrdersPage() {
     }
   };
 
+  const getProductImageUrl = (filename: string): string => {
+    if (!filename) return "";
+
+    // If it's already a full URL, return as is
+    if (filename.startsWith("http://") || filename.startsWith("https://")) {
+      return filename;
+    }
+
+    // Construct Supabase public bucket URL
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      return `${supabaseUrl}/storage/v1/object/public/product-image/${filename}`;
+    }
+
+    // Fallback to NEXT_PUBLIC_IMAGE_URL if available (for backward compatibility)
+    if (process.env.NEXT_PUBLIC_IMAGE_URL) {
+      return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${filename}`;
+    }
+
+    // Last resort fallback
+    return `/product-image/${filename}`;
+  };
+
   const getImageUrl = (images: string, color: string) => {
     try {
       const parsedImages = JSON.parse(images);
       const colorImages = parsedImages[color];
       if (colorImages && colorImages.length > 0) {
-        return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${colorImages[0]}`;
+        return getProductImageUrl(colorImages[0]);
       }
       // Fallback to first available image
       const firstColor = Object.keys(parsedImages)[0];
       if (firstColor && parsedImages[firstColor].length > 0) {
-        return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${parsedImages[firstColor][0]}`;
+        return getProductImageUrl(parsedImages[firstColor][0]);
       }
     } catch (error) {
       console.error("Error parsing images:", error);
@@ -195,7 +218,7 @@ export default function OrdersPage() {
               Start shopping to see your orders here
             </p>
             <button
-              onClick={() => router.push("/shop")}
+              onClick={() => router.push("/")}
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
             >
               <svg

@@ -1,14 +1,20 @@
 "use client";
 
-import { getThumbnailUrl } from "@/app/util";
+import { getThumbnailUrl, formatPrice } from "@/app/util";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
+import { useUserCountry } from "../../hooks/useUserCountry";
+import { get_products } from "@/app/api/product";
+import ProductCardShimmer from "../ui/ProductCardShimmer";
 
 const ProductItems = ({ data }: { data: any }) => {
-  const [hoveredItem, setHoveredItem] = useState<any>(null);
+  const { country } = useUserCountry();
+  const [productsData, setProductsData] = useState<any>(data);
+  const [isLoading, setIsLoading] = useState(false);
+  const isFirstRender = useRef(true);
   const [toastConfig, setToastConfig] = useState<{
     message: string;
     isVisible: boolean;
@@ -16,271 +22,316 @@ const ProductItems = ({ data }: { data: any }) => {
   const { addItem } = useCart();
   const router = useRouter();
 
-  const handleProductClick = (product: any) => {
+  const [selectedColor, setSelectedColor] = useState<string>("all");
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  const [powerMin, setPowerMin] = useState<string>("");
+  const [powerMax, setPowerMax] = useState<string>("");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
+  const normalizedData = useMemo(() => {
+    const targetData = productsData;
+    if (!targetData) return [];
+    if (Array.isArray(targetData)) return targetData;
+    if (targetData.products && Array.isArray(targetData.products)) return targetData.products;
+    if (targetData.data && Array.isArray(targetData.data)) return targetData.data;
+    return [];
+  }, [productsData]);
+
+  useEffect(() => {
+    const fetchFilteredProducts = async () => {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+      }
+      if (!country) return;
+      setIsLoading(true);
+      try {
+        const tagsToSend =
+          selectedTag === "all"
+            ? ["sale", "latest_arrival", "top_seller", "best_reviewed"]
+            : [selectedTag];
+        const { data: responseData } = await get_products(1000, 0, tagsToSend, country);
+        console.log('[ProductItems] Fetch result:', {
+          hasData: !!responseData,
+          count: Array.isArray(responseData) ? responseData.length : (responseData?.data?.length || 0),
+          tags: tagsToSend,
+          country
+        });
+        setProductsData(responseData);
+      } catch (error) {
+        console.error("Error fetching filtered products:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchFilteredProducts();
+  }, [selectedTag, country]);
+
+  const getProductLink = (product: any) => {
     const productId = product.id || product.title;
-    router.push(`/${encodeURIComponent(productId)}`);
+    const tags = product.tags;
+    let isSale = false;
+    if (Array.isArray(tags)) {
+      isSale = tags.some((t) => String(t).toLowerCase().includes("sale"));
+    }
+    return isSale
+      ? `/sale/${encodeURIComponent(productId)}`
+      : `/${encodeURIComponent(productId)}`;
   };
 
-  const handleAddToCart = (e: React.MouseEvent, product: any) => {
-    e.stopPropagation();
+  const handleProductClick = (product: any) => {
+    router.push(getProductLink(product));
+  };
 
-    let maxQuantity = 1;
-    if (product.colors) {
-      try {
-        const colorData = JSON.parse(product.colors);
-        if (colorData.length > 0) {
-          maxQuantity = parseInt(colorData[0].quantity) || 1;
-        }
-      } catch (error) {
-        console.error("Error parsing color data:", error);
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 100;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const handleTagClick = (tag: any) => {
+    if (tag.type === 'scroll') {
+      scrollToSection(tag.scrollId);
+    } else {
+      setSelectedTag(tag.value);
+      // Optional: scroll back to product top if changing filter
+      scrollToSection('products-section');
+    }
+  };
+
+  const availableColors = useMemo(() => {
+    const colorSet = new Set<string>();
+    if (!normalizedData) return [];
+    normalizedData.forEach((product: any) => {
+      if (product.color_quantity && Array.isArray(product.color_quantity)) {
+        product.color_quantity.forEach((cq: any) => {
+          if (cq?.label) colorSet.add(String(cq.label));
+        });
       }
+    });
+    return Array.from(colorSet).sort();
+  }, [normalizedData]);
+
+  const [availableTags, setAvailableTags] = useState<any[]>([
+    { label: "Lenses", value: "all", type: 'filter' },
+    { label: "Sale", value: "sale", type: 'filter' },
+  ]);
+
+  useEffect(() => {
+    // Check for other sections data availability
+    const checkAvailability = async () => {
+      try {
+        const { get_eye_lashes, get_solutions, get_applicators } = await import("@/app/api/product");
+        const [lashes, solutions, applicators] = await Promise.all([
+          get_eye_lashes(1, 0, country),
+          get_solutions(1, 0, country),
+          get_applicators(1, 0, country)
+        ]);
+
+        const baseTags = [
+          { label: "Lenses", value: "all", type: 'filter' },
+          { label: "Sale", value: "sale", type: 'filter' },
+        ];
+
+        if (lashes.total > 0) {
+          baseTags.push({ label: "Lashes", scrollId: "eyelashes-section", type: 'scroll' } as any);
+        }
+
+        if (solutions.total > 0) {
+          baseTags.push({ label: "Solutions", scrollId: "accessories-section", type: 'scroll' } as any);
+        }
+        if (applicators.total > 0) {
+          baseTags.push({ label: "Tools", scrollId: "accessories-section", type: 'scroll' } as any);
+        }
+
+        setAvailableTags(baseTags);
+      } catch (e) {
+        console.error("Error checking section availability", e);
+      }
+    };
+
+    checkAvailability();
+  }, [country]);
+
+  const filteredProducts = useMemo(() => {
+    if (!normalizedData) return [];
+    let filtered = [...normalizedData];
+
+    if (selectedColor !== "all") {
+      filtered = filtered.filter((product) => {
+        if (!product.color_quantity || !Array.isArray(product.color_quantity)) return false;
+        return product.color_quantity.some((cq: any) => String(cq.label) === selectedColor);
+      });
     }
 
-    addItem({
-      id: product.id || product.title,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      quantity: 1,
-      image: getThumbnailUrl(product) || undefined,
-      primary_thumbnail: product.primary_thumbnail || undefined,
-      maxQuantity: maxQuantity,
-    });
+    if (priceMin || priceMax) {
+      const min = priceMin ? parseFloat(priceMin) : -Infinity;
+      const max = priceMax ? parseFloat(priceMax) : Infinity;
+      filtered = filtered.filter((product) => {
+        const p = parseFloat(product.price);
+        return !isNaN(p) && p >= min && p <= max;
+      });
+    }
 
-    setToastConfig({
-      message: `${product.title} added to cart!`,
-      isVisible: true,
-    });
-  };
+    if (powerMin || powerMax) {
+      const min = powerMin ? parseFloat(powerMin) : -Infinity;
+      const max = powerMax ? parseFloat(powerMax) : Infinity;
+      filtered = filtered.filter((product) => {
+        const pw = parseFloat(product.power);
+        return !isNaN(pw) && pw >= min && pw <= max;
+      });
+    }
+
+    return filtered;
+  }, [normalizedData, selectedColor, priceMin, priceMax, powerMin, powerMax]);
 
   return (
-    <section className="w-full py-20 bg-gradient-to-b from-white to-secondary-50 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
-        <div
-          className="absolute bottom-20 left-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"
-          style={{ animationDelay: "1s" }}
-        ></div>
-      </div>
+    <section id="products-section" className="w-full py-12 bg-white relative">
+      <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mb-16 animate-slide-up">
-          <div className="inline-flex items-center px-4 py-2 bg-primary-100 text-primary-700 text-sm font-semibold rounded-full mb-4">
-            <svg
-              className="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+
+        {/* Filter Button Row */}
+        <div className="mb-16 pt-8 border-t border-secondary-100">
+          <div className="flex justify-end">
+            <button
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className="group relative flex items-center justify-center gap-3 px-6 py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-              />
-            </svg>
-            Premium Collection
+              <svg className="w-3.5 h-3.5 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              <span className="text-[10px] font-black tracking-[0.2em] text-white uppercase">Refine Search</span>
+            </button>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-bold text-secondary-800 mb-6 font-serif">
-            Our Products
-          </h2>
-          <p className="text-xl text-secondary-600 max-w-2xl mx-auto leading-relaxed">
-            Discover our premium selection of contact lenses designed for
-            comfort, clarity, and style
-          </p>
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
-          {data?.map((product: any, index: number) => {
-            const isHovered = hoveredItem === index;
-            const imageUrl = getThumbnailUrl(product);
+        {!country || isLoading ? (
+          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]">
+                <ProductCardShimmer />
+              </div>
+            ))}
+          </div>
+        ) : filteredProducts && filteredProducts.length > 0 ? (
+          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+            {filteredProducts.map((product: any, index: number) => {
+              const imageUrl = getThumbnailUrl(product);
+              const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
 
-            return (
-              <div
-                key={index}
-                className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2"
-                onMouseEnter={() => setHoveredItem(index)}
-                onMouseLeave={() => setHoveredItem(null)}
-                onClick={() => handleProductClick(product)}
-              >
-                {/* Discount Badge */}
-                {product.discount && (
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="inline-flex items-center px-2 py-1 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-xs font-bold rounded-full shadow-lg">
-                      {product.discount}
-                    </span>
-                  </div>
-                )}
-                
-                {/* HOT Badge for popular products */}
-                {product.order_count && product.order_count > 10 && (
-                  <div className="absolute top-3 left-3 z-10">
-                    <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
-                      HOT
-                    </span>
-                  </div>
-                )}
+              return (
+                <div
+                  key={index}
+                  className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
+                  onClick={() => handleProductClick(product)}
+                >
+                  <div className="relative aspect-[4/5] mb-10 overflow-hidden bg-secondary-50 rounded-2xl transition-all duration-700 ease-soft-spring">
+                    {imageUrl ? (
+                      <Image
+                        src={imageUrl}
+                        alt={product.title}
+                        fill
+                        className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-1"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 30vw, 25vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-secondary-200">
+                        <svg className="w-20 h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      </div>
+                    )}
 
-                {/* Product Image */}
-                <div className="relative h-64 bg-gradient-to-br from-secondary-50 to-primary-50 overflow-hidden">
-                  {imageUrl ? (
-                    <Image
-                      src={`${process.env.NEXT_PUBLIC_IMAGE_URL}${imageUrl}`}
-                      className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
-                      alt={product.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <svg
-                        className="w-16 h-16 text-secondary-300"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Hover Overlay */}
-                  {isHovered && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent flex items-center justify-center">
-                      <button 
-                        className="bg-white text-primary-600 font-medium py-2 px-4 rounded-full shadow-xl transform scale-100 animate-fade-in hover:bg-primary-50 transition-all duration-300"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleProductClick(product);
-                        }}
-                      >
-                        <span className="flex items-center">
-                          <svg
-                            className="w-5 h-5 mr-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                            />
-                          </svg>
-                          Quick View
+                    {product.tags && (
+                      <div className="absolute bottom-3 left-3 md:bottom-8 md:left-8">
+                        <span className="px-2 md:px-5 py-1 md:py-2 bg-white/90 backdrop-blur-md rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest text-primary-500 shadow-sm uppercase">
+                          {Array.isArray(product.tags) ? product.tags[0] : String(product.tags)}
                         </span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Product Info */}
-                <div className="p-5">
-                  {/* Category/Subtitle */}
-                  {product.sub_title && (
-                    <div className="text-xs text-primary-600 font-medium uppercase tracking-wider mb-1">
-                      {product.sub_title}
-                    </div>
-                  )}
-                  
-                  {/* Title */}
-                  <h3 className="text-lg font-bold text-secondary-800 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors duration-300 font-script">
-                    {product.title}
-                  </h3>
-
-                  {/* Description */}
-                  <div
-                    className="text-secondary-600 text-sm mb-3 line-clamp-2 leading-relaxed h-10 overflow-hidden"
-                    dangerouslySetInnerHTML={{ __html: product.description }}
-                  />
-
-                  {/* Rating */}
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className="w-4 h-4 text-yellow-400 fill-current"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <span className="text-xs text-secondary-500 ml-2">
-                      {product.review_count
-                        ? `4.9 (${product.review_count})`
-                        : "4.9 (120)"}
-                    </span>
-                    
-                    {/* Order Count Badge */}
-                    {product.order_count && product.order_count > 0 && (
-                      <span className="ml-auto text-xs bg-secondary-100 text-secondary-700 px-2 py-1 rounded-full">
-                        {product.order_count}+ sold
-                      </span>
+                      </div>
                     )}
                   </div>
 
-                  {/* Price */}
-                  <div className="mb-2">
-                    <span className="text-xl font-bold text-primary-600">
-                      ${typeof product.price === "number" ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}
-                    </span>
-                  </div>
-                  
-                  {/* Action Button - Moved to bottom */}
-                  <button
-                    onClick={(e) => handleAddToCart(e, product)}
-                    className="w-full flex items-center justify-center bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
-                  >
-                    <svg
-                      className="w-5 h-5 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                      />
-                    </svg>
-                    Add
-                  </button>
-                </div>
+                  <div className="flex flex-col gap-3 md:gap-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-2 md:gap-4">
+                      <h3 className="text-sm md:text-3xl font-black text-primary-500 tracking-tighter leading-tight group-hover:text-secondary-900 transition-colors uppercase flex-1">
+                        {product.title}
+                      </h3>
+                      <div className="text-left md:text-right shrink-0">
+                        <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
+                        <div className="text-sm md:text-2xl font-black text-secondary-900 font-price group-hover:text-primary-500 transition-colors">
+                          {formatPrice(currentPrice, country)}
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Hover Border Effect */}
-                <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary-200 transition-all duration-500"></div>
-              </div>
-            );
-          })}
-        </div>
+                    <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
+                      <div className="absolute inset-0 bg-primary-500 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          !isLoading && (
+            <div className="text-center py-60 bg-secondary-50 rounded-2xl">
+              <h3 className="text-6xl font-black text-secondary-900 mb-6 tracking-tighter">THE VAULT IS EMPTY</h3>
+              <p className="text-secondary-400 font-medium text-xl max-w-lg mx-auto leading-relaxed">We're currently curating new perspectives. Please check back as our collection evolves.</p>
+            </div>
+          )
+        )}
       </div>
 
-      {/* Toast Notification */}
-      <Toast
-        message={toastConfig.message}
-        type="success"
-        isVisible={toastConfig.isVisible}
-        onClose={() => setToastConfig({ message: "", isVisible: false })}
-        duration={2000}
-      />
+      {isFilterDrawerOpen && (
+        <>
+          <div className="fixed inset-0 bg-secondary-900/60 backdrop-blur-md z-[60]" onClick={() => setIsFilterDrawerOpen(false)} />
+          <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-[70] shadow-2xl p-12 overflow-y-auto">
+            <div className="flex justify-between items-center mb-16">
+              <h3 className="text-5xl font-black text-secondary-900 tracking-tighter">FILTERS</h3>
+              <button onClick={() => setIsFilterDrawerOpen(false)} className="p-4 bg-secondary-50 rounded-full hover:bg-secondary-100 transition-colors">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="space-y-12">
+              <div>
+                <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Color Spectrum</label>
+                <select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl focus:border-primary-500 appearance-none bg-transparent transition-colors font-price">
+                  <option value="all">ALL COLORS</option>
+                  {availableColors.map((c) => <option key={c} value={c}>{c.toUpperCase()}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Min Price</label>
+                  <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none font-price" placeholder="0" />
+                </div>
+                <div>
+                  <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Max Price</label>
+                  <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none font-price" placeholder="∞" />
+                </div>
+              </div>
+              <div className="pt-20 space-y-4">
+                <button onClick={() => setIsFilterDrawerOpen(false)} className="w-full py-6 bg-secondary-900 text-white font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-primary-500 transition-all shadow-2xl">
+                  APPLY FILTERS
+                </button>
+                <button onClick={() => { setSelectedColor("all"); setPriceMin(""); setPriceMax(""); setPowerMin(""); setPowerMax(""); setSelectedTag("all"); setIsFilterDrawerOpen(false); }} className="w-full py-6 bg-secondary-50 text-secondary-400 font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
+                  RESET ALL
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <Toast message={toastConfig.message} type="success" isVisible={toastConfig.isVisible} onClose={() => setToastConfig({ message: "", isVisible: false })} duration={2000} />
     </section>
   );
 };
