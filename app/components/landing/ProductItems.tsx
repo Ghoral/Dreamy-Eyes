@@ -51,8 +51,14 @@ const ProductItems = ({ data }: { data: any }) => {
           selectedTag === "all"
             ? ["sale", "latest_arrival", "top_seller", "best_reviewed"]
             : [selectedTag];
-        const { data: newData } = await get_products(1000, 0, tagsToSend, country);
-        setProductsData(newData);
+        const { data: responseData } = await get_products(1000, 0, tagsToSend, country);
+        console.log('[ProductItems] Fetch result:', {
+          hasData: !!responseData,
+          count: Array.isArray(responseData) ? responseData.length : (responseData?.data?.length || 0),
+          tags: tagsToSend,
+          country
+        });
+        setProductsData(responseData);
       } catch (error) {
         console.error("Error fetching filtered products:", error);
       } finally {

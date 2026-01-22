@@ -93,6 +93,7 @@ export async function get_products_by_type(
   );
 
   if (error) {
+    console.error('[get_products_by_type RPC Error]:', error);
     return {
       data: null,
       message: "Failed to fetch products",
@@ -101,6 +102,8 @@ export async function get_products_by_type(
       error: error.details,
     };
   }
+
+  console.log('[get_products_by_type API Success] Type:', p_type, 'Items found:', data?.length);
 
   return {
     data: data,
@@ -129,6 +132,7 @@ export async function get_products(
   });
 
   if (error) {
+    console.error('[get_products] RPC Error:', error);
     return {
       data: null,
       message: "Failed to fetch products",
@@ -136,6 +140,11 @@ export async function get_products(
       statusCode: 400,
       error: error.details,
     };
+  }
+
+  console.log('[get_products] Data returned:', data?.length, 'items');
+  if (data?.length === 0) {
+    console.log('[get_products] No products returned for country:', countryCode);
   }
 
   return {
