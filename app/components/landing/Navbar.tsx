@@ -227,10 +227,60 @@ const Navbar = () => {
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-            <div className="flex flex-col gap-6">
-              {/* Mobile menu can be used for other links if needed */}
+            <div className="flex flex-col gap-8">
+              {[
+                { label: "Lenses", href: "/" },
+                { label: "Sale", href: "/#sale-section" },
+                { label: "Lashes", href: "/#eyelashes-section" },
+                { label: "Solutions", href: "/#accessories-section" },
+                { label: "Tools", href: "/#accessories-section" }
+              ].map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="text-2xl font-black tracking-tighter text-secondary-900 hover:text-primary-500 transition-colors uppercase"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
-            <div className="mt-auto pt-12 border-t border-secondary-100 flex gap-6">
+
+            <div className="mt-auto pt-10 border-t border-secondary-100">
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-6">
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex justify-between items-center group"
+                  >
+                    <span className="text-sm font-black tracking-widest text-secondary-400 uppercase group-hover:text-primary-500 transition-colors">My Profile</span>
+                    <svg className="w-5 h-5 text-secondary-200 group-hover:text-primary-500 transition-all group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                  </Link>
+                  <button
+                    onClick={async () => {
+                      await createSupabaseClient().auth.signOut();
+                      setIsAuthenticated(false);
+                      setIsMobileMenuOpen(false);
+                      router.push('/login');
+                    }}
+                    className="flex justify-between items-center group text-left"
+                  >
+                    <span className="text-sm font-black tracking-widest text-red-400 uppercase">Logout</span>
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex justify-between items-center group"
+                >
+                  <span className="text-sm font-black tracking-widest text-primary-500 uppercase">Sign In</span>
+                  <div className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center group-hover:bg-primary-500 group-hover:text-white transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  </div>
+                </Link>
+              )}
             </div>
           </div>
         </div>
