@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-secondary-50 pt-28 pb-20 relative overflow-hidden">
+    <div className="min-h-screen bg-secondary-50 pt-44 pb-20 relative overflow-hidden">
       {/* Background Soft Decor */}
       <div className="absolute inset-0 pointer-events-none opacity-60">
         <div className="absolute top-0 right-0 w-[50%] h-[70%] bg-primary-200/40 blur-[150px] rounded-full translate-x-1/2 translate-y-[-10%]" />

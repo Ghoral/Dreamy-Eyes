@@ -134,7 +134,7 @@ export default function OrdersPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
+      <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-44 pb-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -147,7 +147,7 @@ export default function OrdersPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
+      <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-44 pb-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -182,7 +182,7 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
+    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-44 pb-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
