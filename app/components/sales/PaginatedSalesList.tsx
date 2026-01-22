@@ -67,11 +67,10 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 ${
-            currentPage === 1
+          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 ${currentPage === 1
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : "bg-white text-secondary-700 hover:bg-primary-50 hover:shadow-lg border border-secondary-200"
-          }`}
+            }`}
         >
           <svg
             className="w-4 h-4 mr-1"
@@ -108,11 +107,10 @@ const Pagination = ({
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`px-4 py-2 rounded-lg transition-all duration-300 border ${
-                currentPage === page
+              className={`px-4 py-2 rounded-lg transition-all duration-300 border ${currentPage === page
                   ? "bg-primary-500 text-white border-primary-500 shadow-lg"
                   : "bg-white text-secondary-700 hover:bg-primary-50 border-secondary-200 hover:shadow-lg"
-              }`}
+                }`}
             >
               {page}
             </button>
@@ -136,11 +134,10 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 ${
-            currentPage >= totalPages
+          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 ${currentPage >= totalPages
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : "bg-white text-secondary-700 hover:bg-primary-50 hover:shadow-lg border border-secondary-200"
-          }`}
+            }`}
         >
           Next
           <svg
@@ -238,7 +235,6 @@ export default function PaginatedSalesList() {
       image: thumbnailUrl || undefined,
       primary_thumbnail: product.primary_thumbnail || undefined,
       maxQuantity: Number(firstColor.quantity),
-      p_type: "sale" as const,
     });
 
     setToast({
@@ -353,11 +349,10 @@ export default function PaginatedSalesList() {
                       <button
                         onClick={() => handleAddToCart(product)}
                         disabled={!hasStock}
-                        className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${
-                          hasStock
+                        className={`w-full py-3 rounded-xl font-semibold transition-all duration-300 ${hasStock
                             ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow transform hover:scale-105"
                             : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        }`}
+                          }`}
                       >
                         {hasStock ? "Add to Cart" : "Out of Stock"}
                       </button>

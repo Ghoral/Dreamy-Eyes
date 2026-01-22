@@ -100,7 +100,7 @@ export default function ModalOffers({
         if (zustandOffer) {
           setLocalSelectedOffer(zustandOffer);
         } else if (response.data.length > 0 && !localSelectedOffer) {
-           setLocalSelectedOffer(response.data[0]);
+          setLocalSelectedOffer(response.data[0]);
         }
       }
     } catch (error) {
@@ -191,7 +191,7 @@ export default function ModalOffers({
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="bg-white rounded shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-4 text-white flex-shrink-0">
             <div className="flex items-center justify-between">
@@ -203,7 +203,7 @@ export default function ModalOffers({
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center transition-colors"
               >
                 <svg
                   className="w-5 h-5"
@@ -244,15 +244,14 @@ export default function ModalOffers({
                     <div
                       key={offer.id}
                       onClick={() => handleSelectOffer(offer)}
-                      className={`relative p-6 rounded-2xl border-2 cursor-pointer transition-all overflow-hidden transform hover:scale-[1.02] ${
-                        isSelected
-                          ? "border-primary-500 bg-gradient-to-br from-primary-50 via-primary-100 to-primary-50 shadow-xl ring-2 ring-primary-300"
-                          : "border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-400 hover:shadow-lg"
-                      }`}
+                      className={`relative p-6 rounded border-2 cursor-pointer transition-all overflow-hidden transform hover:scale-[1.02] ${isSelected
+                        ? "border-primary-500 bg-gradient-to-br from-primary-50 via-primary-100 to-primary-50 shadow-xl ring-2 ring-primary-300"
+                        : "border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-400 hover:shadow-lg"
+                        }`}
                     >
                       {/* Offer Badge/Sticker - Top Right */}
                       {isSelected && (
-                        <div className="absolute top-0 right-0 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 text-white px-5 py-2 rounded-bl-3xl rounded-tr-2xl shadow-xl transform rotate-3">
+                        <div className="absolute top-0 right-0 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 text-white px-5 py-2 rounded shadow-xl transform rotate-3">
                           <div className="flex items-center space-x-1.5">
                             <svg
                               className="w-4 h-4"
@@ -274,14 +273,14 @@ export default function ModalOffers({
                         </div>
                       )}
                       {!isSelected && (
-                        <div className="absolute top-0 right-0 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white px-5 py-2 rounded-bl-3xl rounded-tr-2xl shadow-lg transform rotate-3">
+                        <div className="absolute top-0 right-0 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white px-5 py-2 rounded shadow-lg transform rotate-3">
                           <span className="text-xs font-extrabold tracking-wide">
                             AVAILABLE
                           </span>
                         </div>
                       )}
                       {/* Offer Number Badge - Sticker Style */}
-                      <div className="absolute top-4 left-4 bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl font-extrabold text-xl border-4 border-white transform -rotate-12 z-10">
+                      <div className="absolute top-4 left-4 bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 text-white w-14 h-14 rounded flex items-center justify-center shadow-xl font-extrabold text-xl border-4 border-white transform -rotate-12 z-10">
                         #{offer.id}
                       </div>
 
@@ -299,7 +298,7 @@ export default function ModalOffers({
                             {/* Show value (buy X items) */}
                             {offer.value !== undefined &&
                               offer.value !== null && (
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-2">
+                                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
                                   <p className="text-secondary-700 font-medium text-sm">
                                     💰{" "}
                                     <strong>
@@ -307,7 +306,7 @@ export default function ModalOffers({
                                     </strong>{" "}
                                     (at normal price) to qualify
                                     {cartState.totalItems >=
-                                    Number(offer.value) ? (
+                                      Number(offer.value) ? (
                                       <span className="text-green-600 ml-2 font-bold">
                                         ✓ You qualify!
                                       </span>
@@ -319,7 +318,7 @@ export default function ModalOffers({
                                         more item
                                         {Number(offer.value) -
                                           cartState.totalItems >
-                                        1
+                                          1
                                           ? "s"
                                           : ""}
                                         )
@@ -331,7 +330,7 @@ export default function ModalOffers({
                             {/* Show quantity (get Y items with offer) */}
                             {offer.quantity !== undefined &&
                               offer.quantity !== null && (
-                                <div className="bg-primary-50 border border-primary-200 rounded-lg p-3 mb-2">
+                                <div className="bg-primary-50 border border-primary-200 rounded p-3 mb-2">
                                   <p className="text-primary-700 font-semibold text-sm mb-1">
                                     🎁{" "}
                                     <strong>
@@ -343,7 +342,7 @@ export default function ModalOffers({
                                     </strong>
                                   </p>
                                   {cartState.totalItems >
-                                  Number(offer.quantity) ? (
+                                    Number(offer.quantity) ? (
                                     <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
                                       <p className="text-xs text-amber-800">
                                         📊{" "}
@@ -394,7 +393,7 @@ export default function ModalOffers({
                               <p>
                                 Minimum quantity: {offer.minimum_quantity} items
                                 {cartState.totalItems >=
-                                offer.minimum_quantity ? (
+                                  offer.minimum_quantity ? (
                                   <span className="text-green-600 ml-2">✓</span>
                                 ) : (
                                   <span className="text-red-600 ml-2">
@@ -444,7 +443,7 @@ export default function ModalOffers({
           <div className="border-t border-secondary-100 p-6 bg-secondary-50">
             {/* Info Note */}
             {localSelectedOffer && (
-              <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <div className="mb-4 bg-amber-50 border border-amber-200 rounded p-3">
                 <p className="text-sm text-amber-800 font-medium mb-2">
                   📋 <strong>How this offer works:</strong>
                 </p>
@@ -468,17 +467,17 @@ export default function ModalOffers({
                       </p>
                       {cartState.totalItems >
                         Number(localSelectedOffer.quantity) && (
-                        <p>
-                          •{" "}
-                          <strong>
-                            Remaining{" "}
-                            {cartState.totalItems -
-                              Number(localSelectedOffer.quantity)}{" "}
-                            items
-                          </strong>{" "}
-                          → Normal price
-                        </p>
-                      )}
+                          <p>
+                            •{" "}
+                            <strong>
+                              Remaining{" "}
+                              {cartState.totalItems -
+                                Number(localSelectedOffer.quantity)}{" "}
+                              items
+                            </strong>{" "}
+                            → Normal price
+                          </p>
+                        )}
                       <p className="text-amber-600 mt-2 italic">
                         Example: Buy {Number(localSelectedOffer.value)} get{" "}
                         {Number(localSelectedOffer.quantity)} → You have{" "}
@@ -489,7 +488,7 @@ export default function ModalOffers({
                     </>
                   ) : localSelectedOffer.quantity &&
                     cartState.totalItems >
-                      Number(localSelectedOffer.quantity) ? (
+                    Number(localSelectedOffer.quantity) ? (
                     <>
                       <p>
                         •{" "}
@@ -517,7 +516,7 @@ export default function ModalOffers({
                         cartState.totalItems}{" "}
                       item
                       {Number(localSelectedOffer.quantity) > 1 ||
-                      cartState.totalItems > 1
+                        cartState.totalItems > 1
                         ? "s"
                         : ""}{" "}
                       in your cart will receive the offer benefit
@@ -533,114 +532,116 @@ export default function ModalOffers({
             <div className="flex items-center justify-between">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-white border-2 border-secondary-200 text-secondary-700 rounded-lg text-sm font-semibold hover:bg-secondary-50 transition-colors"
+                className="px-4 py-2 bg-white border-2 border-secondary-200 text-secondary-700 rounded text-sm font-semibold hover:bg-secondary-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleApplyOffer}
                 disabled={!localSelectedOffer}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  localSelectedOffer
-                    ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow"
-                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                }`}
+                className={`px-4 py-2 rounded text-sm font-semibold transition-all ${localSelectedOffer
+                  ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  }`}
               >
                 Apply Offer
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </div >
 
       {/* Warning Toast when offer is applied */}
-      <Toast
+      < Toast
         message="Offer applied! Note: If you remove or decrease any item quantity, your cart will be cleared."
         type="info"
         isVisible={showWarningToast}
-        onClose={() => setShowWarningToast(false)}
+        onClose={() => setShowWarningToast(false)
+        }
         duration={6000}
       />
 
       {/* Confirmation Dialog for changing offer */}
-      {showConfirmDialog && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
-            onClick={() => setShowConfirmDialog(false)}
-          />
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-6 h-6 text-yellow-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
+      {
+        showConfirmDialog && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+              onClick={() => setShowConfirmDialog(false)}
+            />
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <div className="bg-white rounded shadow-2xl max-w-md w-full p-6">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-yellow-100 rounded flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-yellow-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-secondary-800 mb-2">
-                    Change Offer?
-                  </h3>
-                  <p className="text-secondary-600 mb-4">
-                    You already have an offer applied. Changing to a new offer
-                    will <strong>clear your entire cart</strong>. Are you sure
-                    you want to continue?
-                  </p>
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={() => {
-                        setShowConfirmDialog(false);
-                        setPendingOffer(null);
-                      }}
-                      className="flex-1 px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded-lg font-semibold transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (pendingOffer) {
-                          // Clear cart and offer first
-                          clearCart();
-                          clearOffer();
-                          // Then apply the new offer (with empty selectedProducts since cart is cleared)
-                          setOfferStore(pendingOffer, []);
-                          onSelectOffer(pendingOffer, []);
-                          setHasAppliedOffer(true);
-                          justAppliedRef.current = true;
-                          // Show warning toast
-                          setShowWarningToast(true);
-                          // Close dialogs and navigate
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-secondary-800 mb-2">
+                      Change Offer?
+                    </h3>
+                    <p className="text-secondary-600 mb-4">
+                      You already have an offer applied. Changing to a new offer
+                      will <strong>clear your entire cart</strong>. Are you sure
+                      you want to continue?
+                    </p>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => {
                           setShowConfirmDialog(false);
                           setPendingOffer(null);
-                          onClose();
-                          setTimeout(() => {
-                            router.push("/");
-                          }, 100);
-                        }
-                      }}
-                      className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors"
-                    >
-                      Yes, Clear Cart
-                    </button>
+                        }}
+                        className="flex-1 px-4 py-2 bg-secondary-100 hover:bg-secondary-200 text-secondary-700 rounded font-semibold transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (pendingOffer) {
+                            // Clear cart and offer first
+                            clearCart();
+                            clearOffer();
+                            // Then apply the new offer (with empty selectedProducts since cart is cleared)
+                            setOfferStore(pendingOffer, []);
+                            onSelectOffer(pendingOffer, []);
+                            setHasAppliedOffer(true);
+                            justAppliedRef.current = true;
+                            // Show warning toast
+                            setShowWarningToast(true);
+                            // Close dialogs and navigate
+                            setShowConfirmDialog(false);
+                            setPendingOffer(null);
+                            onClose();
+                            setTimeout(() => {
+                              router.push("/");
+                            }, 100);
+                          }
+                        }}
+                        className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded font-semibold transition-colors"
+                      >
+                        Yes, Clear Cart
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )
+      }
     </>
   );
 }

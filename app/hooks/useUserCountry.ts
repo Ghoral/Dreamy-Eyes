@@ -8,10 +8,10 @@ const IP_COUNTRY_COOKIE_NAME = "dreamy-eyes-ip-country";
 // Helper function to get cookie value by name
 const getCookie = (name: string): string | null => {
   if (typeof document === "undefined") return null;
-  
+
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  
+
   if (parts.length === 2) {
     return parts.pop()?.split(";").shift() || null;
   }
@@ -25,14 +25,34 @@ const fetchCountryFromIP = async (): Promise<string | null> => {
       return "nepal"; // Default for SSR
     }
 
-    // Check cookie first
-    const cookieCountry = getCookie(IP_COUNTRY_COOKIE_NAME);
-    if (cookieCountry) {
-      console.log("Using cookie IP country:", cookieCountry);
-      return cookieCountry.toLowerCase();
+    // Check if encrypted cookie exists
+    const encryptedCookie = getCookie(IP_COUNTRY_COOKIE_NAME);
+    if (encryptedCookie) {
+      // Verify and decrypt cookie server-side
+      try {
+        const verifyResponse = await fetch("/api/verify-country", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (verifyResponse.ok) {
+          const verifyData = await verifyResponse.json();
+          if (verifyData.valid && verifyData.country) {
+            console.log("Using decrypted cookie IP country:", verifyData.country);
+            return verifyData.country.toLowerCase();
+          } else {
+            console.warn("Cookie decryption failed (may be tampered), re-fetching...");
+            // Cookie was tampered with or corrupted, clear it and re-fetch
+            document.cookie = `${IP_COUNTRY_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+          }
+        }
+      } catch (verifyError) {
+        console.error("Error verifying cookie:", verifyError);
+        // Continue to re-fetch if verification fails
+      }
     }
 
-    // Fetch from API (which will set the cookie)
+    // Fetch from API (which will set the encrypted cookie)
     const response = await fetch("/api/detect-country");
     if (!response.ok) {
       throw new Error("Failed to fetch country");
@@ -41,17 +61,13 @@ const fetchCountryFromIP = async (): Promise<string | null> => {
     const data = await response.json();
     const countryName = data.countryName || "nepal"; // Default to Nepal
 
-    // Cookie is automatically set by the API response
+    // Encrypted cookie is automatically set by the API response
     console.log("Fetched IP country:", countryName);
     return countryName.toLowerCase();
   } catch (error) {
     console.error("Error fetching country from IP:", error);
-    
-    // Fallback to cookie if available, or default to Nepal
-    if (typeof window !== "undefined") {
-      const cookieCountry = getCookie(IP_COUNTRY_COOKIE_NAME);
-      return cookieCountry ? cookieCountry.toLowerCase() : "nepal";
-    }
+
+    // Fallback to default if all else fails
     return "nepal";
   }
 };

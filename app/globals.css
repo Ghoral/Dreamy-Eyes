@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Quattrocento+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Quattrocento+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -58,6 +58,8 @@
   --primary-color: #c34e8a;
   --secondary-color: #374365;
   --accent-color: #0ea5e9;
+  --body-font: "Quattrocento Sans", sans-serif;
+  --heading-font: "Quattrocento Sans", sans-serif;
 }
 
 @media (min-width: 1850px) {
@@ -79,7 +81,7 @@
 /* 2.1 General Styles
 /*----------------------------------------------*/
 * {
-  font-family: var(--font-quattrocento-sans), sans-serif;
+  font-family: "Quattrocento Sans", sans-serif;
 }
 
 h1,
@@ -89,7 +91,7 @@ h4,
 h5,
 h6,
 .heading-font {
-  font-family: var(--font-quattrocento-sans), sans-serif;
+  font-family: "Quattrocento Sans", sans-serif;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
@@ -97,7 +99,7 @@ h6,
 .script-font,
 .product-title,
 .fancy-text {
-  font-family: "Dancing Script", cursive;
+  font-family: "Quattrocento Sans", sans-serif;
   font-weight: 700;
 }
 

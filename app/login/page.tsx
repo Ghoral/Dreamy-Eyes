@@ -22,7 +22,7 @@ export default function LoginPage() {
       ...prev,
       [name]: value,
     }));
-    setError(""); // Clear error when user types
+    setError("");
   };
 
   useEffect(() => {
@@ -31,16 +31,13 @@ export default function LoginPage() {
         const res = await fetch("/invalid-domains");
         if (!res.ok) return;
         const text = await res.text();
-        // Check if response is HTML (e.g. 404 page)
         if (text.trim().toLowerCase().startsWith("<!doctype html") || text.includes("<html")) {
-          console.warn("Invalid domains file returned HTML, ignoring.");
           return;
         }
         const list = text
           .split("\n")
           .map((d) => d.trim().toLowerCase())
           .filter((d) => d.length > 0 && !d.startsWith("#") && !d.includes(" ") && d.includes("."));
-        console.log(`Loaded ${list.length} invalid domains`);
         setInvalidDomains(list);
       } catch (e) {
         console.error("Failed to load invalid domains:", e);
@@ -52,14 +49,9 @@ export default function LoginPage() {
   const isEmailDomainAllowed = (email: string) => {
     const domain = email.trim().split("@")[1]?.toLowerCase() || "";
     if (!domain) return false;
-
-    // Explicitly allow common trusted domains to prevent false positives
     const whitelist = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com"];
     if (whitelist.includes(domain)) return true;
-
-    return !invalidDomains.some(
-      (bad) => domain === bad || domain.endsWith("." + bad)
-    );
+    return !invalidDomains.some((bad) => domain === bad || domain.endsWith("." + bad));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,10 +80,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if profile is complete
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
         const { data: profileData } = await supabase
@@ -100,15 +89,12 @@ export default function LoginPage() {
           .eq("id", user.id)
           .single();
 
-        // If profile is not complete, redirect to shipping address page
         if (!profileData || profileData.profile_completed !== true) {
           router.push("/shipping-address");
           return;
         }
       }
 
-      // Profile is complete, redirect to home
-      // Small delay to ensure auth state is updated in Navbar
       setTimeout(() => {
         router.push("/");
       }, 100);
@@ -120,250 +106,132 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary-50 via-white to-primary-50 pt-28 pb-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Column - Form */}
-          <div className="order-2 lg:order-1">
-            <div className="max-w-md mx-auto lg:mx-0">
-              {/* Header */}
-              <div className="text-center lg:text-left mb-8">
-                <h1 className="text-4xl font-bold text-secondary-800 mb-4">
-                  Welcome Back
-                </h1>
-                <p className="text-xl text-secondary-600">
-                  Sign in to your account to continue shopping
-                </p>
-              </div>
+    <div className="min-h-screen bg-secondary-50 pt-28 pb-20 relative overflow-hidden">
+      {/* Background Soft Decor */}
+      <div className="absolute inset-0 pointer-events-none opacity-60">
+        <div className="absolute top-0 right-0 w-[50%] h-[70%] bg-primary-200/40 blur-[150px] rounded-full translate-x-1/2 translate-y-[-10%]" />
+        <div className="absolute bottom-0 left-0 w-[50%] h-[70%] bg-accent-200/40 blur-[150px] rounded-full translate-x-[-1/2] translate-y-10" />
+      </div>
 
-              {/* Login Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {error && (
-                  <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
-                    <div className="flex items-center space-x-3 text-red-700">
-                      <svg
-                        className="w-5 h-5 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="text-sm font-medium">{error}</span>
-                    </div>
-                  </div>
-                )}
+      <div className="max-w-[1500px] mx-auto px-6 relative z-10 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
 
-                {/* Email Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-secondary-700 mb-3">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-secondary-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full pl-12 pr-4 py-4 border border-secondary-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-                </div>
+        {/* The Boutique Entry Section */}
+        <div className="w-full max-w-xl bg-white border border-secondary-100 rounded-[3rem] p-8 md:p-16 shadow-[0_30px_80px_rgba(0,0,0,0.03)] overflow-hidden relative">
 
-                {/* Password Field */}
-                <div>
-                  <label className="block text-sm font-semibold text-secondary-700 mb-3">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <svg
-                        className="w-5 h-5 text-secondary-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                      </svg>
-                    </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full pl-12 pr-12 py-4 border border-secondary-200 rounded-2xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-300 bg-white/80 backdrop-blur-sm"
-                      placeholder="Enter your password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-secondary-400 hover:text-secondary-600 transition-colors duration-200"
-                    >
-                      {showPassword ? (
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
+          {/* Internal Glows */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-50/50 blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent-50/50 blur-[100px] pointer-events-none" />
 
-                {/* Forgot Password Link */}
-                <div className="text-right">
-                  <Link
-                    href="/forgot-password"
-                    className="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200"
-                  >
-                    Forgot your password?
-                  </Link>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full py-4 px-6 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 ${
-                    isLoading
-                      ? "bg-secondary-300 text-secondary-500 cursor-not-allowed"
-                      : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-glow hover:shadow-glow-lg"
-                  }`}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Signing In...</span>
-                    </div>
-                  ) : (
-                    "Sign In"
-                  )}
-                </button>
-
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-secondary-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-gradient-to-br from-secondary-50 via-white to-primary-50 text-secondary-500">
-                      Don't have an account?
-                    </span>
-                  </div>
-                </div>
-
-                {/* Register Link */}
-                <Link
-                  href="/register"
-                  className="w-full py-4 px-6 bg-white border-2 border-primary-300 text-primary-600 hover:bg-primary-50 hover:border-primary-400 font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 text-center block"
-                >
-                  Create Account
-                </Link>
-              </form>
-            </div>
+          {/* Heading Section */}
+          <div className="relative z-10 flex flex-col items-center text-center mb-12">
+            <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-3">Welcome</span>
+            <h1 className="text-4xl md:text-6xl font-black text-secondary-900 tracking-tighter leading-none mb-4">
+              SIGN <span className="text-secondary-400 font-serif italic font-normal">IN</span>
+            </h1>
+            <p className="text-secondary-500 font-serif italic text-lg leading-relaxed">
+              Sign in to your account to continue shopping.
+            </p>
           </div>
 
-          {/* Right Column - Visual */}
-          <div className="order-1 lg:order-2">
-            <div className="relative">
-              {/* Background Elements */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 right-10 w-72 h-72 bg-primary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
-                <div
-                  className="absolute bottom-20 left-10 w-72 h-72 bg-secondary-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"
-                  style={{ animationDelay: "1s" }}
-                ></div>
-                <div
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-accent-100 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-float"
-                  style={{ animationDelay: "2s" }}
-                ></div>
-              </div>
-
-              {/* Main Visual */}
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-12 border border-white/20">
-                <div className="text-center">
-                  <div className="w-32 h-32 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-8">
-                    <svg
-                      className="w-16 h-16 text-primary-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-2xl font-bold text-secondary-800 mb-4">
-                    Welcome to Dreamy Eyes
-                  </h3>
-                  <p className="text-secondary-600 leading-relaxed">
-                    Discover the perfect contact lenses to express your unique
-                    style. Sign in to access your personalized shopping
-                    experience.
-                  </p>
-                </div>
+          {/* Error Message */}
+          {error && (
+            <div className="relative z-10 mb-8 bg-red-50 border border-red-100 rounded-2xl p-4 animate-in slide-in-from-top duration-500">
+              <div className="flex items-center gap-3 text-red-600">
+                <span className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-[10px] font-black">!</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">{error}</span>
               </div>
             </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
+            {/* Email Field */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em]">Email Address</label>
+              </div>
+              <div className="relative group">
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="name@example.com"
+                  className="w-full bg-secondary-50 border border-secondary-100 rounded-2xl px-6 py-5 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all duration-500 group-hover:border-secondary-300"
+                />
+              </div>
+            </div>
+
+            {/* Password Field */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em]">Password</label>
+                <Link href="/forgot-password" className="text-[9px] font-black text-secondary-400 hover:text-primary-500 uppercase tracking-widest transition-colors">Forgot Password?</Link>
+              </div>
+              <div className="relative group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="••••••••"
+                  className="w-full bg-secondary-50 border border-secondary-100 rounded-2xl px-6 py-5 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all duration-500 group-hover:border-secondary-300"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-secondary-300 hover:text-secondary-900 transition-colors"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" /></svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`h-20 w-full rounded-3xl font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${isLoading
+                ? "bg-secondary-100 text-secondary-400 cursor-not-allowed"
+                : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.2)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.4)] active:scale-[0.98]"
+                }`}
+            >
+              <div className="relative z-10">
+                {isLoading ? "Signing In..." : "Sign In"}
+              </div>
+              {!isLoading && (
+                <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+              )}
+            </button>
+
+            {/* Register Link */}
+            <div className="pt-8 text-center">
+              <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest mb-4">Don't have an account?</p>
+              <Link
+                href="/register"
+                className="inline-block py-4 px-10 border border-secondary-200 rounded-2xl font-black text-[10px] uppercase tracking-widest text-secondary-900 hover:bg-secondary-50 hover:border-secondary-300 transition-all duration-500"
+              >
+                Create Account
+              </Link>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer Info */}
+        <div className="mt-12 flex items-center gap-8 text-secondary-300">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            <span className="text-[9px] font-black uppercase tracking-widest">End-to-End Encryption</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            <span className="text-[9px] font-black uppercase tracking-widest">Secure Credentials Vault</span>
           </div>
         </div>
       </div>

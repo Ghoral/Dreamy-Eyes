@@ -21,6 +21,7 @@ export interface CartItem {
   maxQuantity?: number;
   primary_thumbnail?: string;
   productImages?: string; // Store full product images JSON
+  category?: "product" | "accessory";
   p_type?: "sale";
 }
 
@@ -58,23 +59,23 @@ type CartAction =
   | { type: "ADD_ACCESSORY_ITEM"; payload: CartItem }
   | { type: "REMOVE_ITEM"; payload: { id: string | number; color?: string } }
   | {
-      type: "REMOVE_ACCESSORY_ITEM";
-      payload: { id: string | number; color?: string };
-    }
+    type: "REMOVE_ACCESSORY_ITEM";
+    payload: { id: string | number; color?: string };
+  }
   | {
-      type: "UPDATE_QUANTITY";
-      payload: { id: string | number; color?: string; quantity: number };
-    }
+    type: "UPDATE_QUANTITY";
+    payload: { id: string | number; color?: string; quantity: number };
+  }
   | {
-      type: "UPDATE_ACCESSORY_QUANTITY";
-      payload: { id: string | number; color?: string; quantity: number };
-    }
+    type: "UPDATE_ACCESSORY_QUANTITY";
+    payload: { id: string | number; color?: string; quantity: number };
+  }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: CartState }
   | {
-      type: "SET_OFFER";
-      payload: { offer: Offer | null; selectedProducts: CartItem[] };
-    };
+    type: "SET_OFFER";
+    payload: { offer: Offer | null; selectedProducts: CartItem[] };
+  };
 
 const initialState: CartState = {
   items: [],
@@ -196,7 +197,7 @@ const getTotalCartItems = (
   return normalTotal + offerTotal + accessoryTotal;
 };
 
- 
+
 
 // Helper function to merge items arrays (for backward compatibility)
 const mergeItems = (
@@ -208,13 +209,13 @@ const mergeItems = (
 
   // Add normal items
   normalItems.forEach((item) => {
-    const key = `${item.id}-${item.color || ""}`;
+    const key = `${item.category || "product"}-${item.id}-${item.color || ""}`;
     itemMap.set(key, { ...item });
   });
 
   // Merge offer items (combine quantities if same item exists in both)
   offerItems.forEach((item) => {
-    const key = `${item.id}-${item.color || ""}`;
+    const key = `${item.category || "product"}-${item.id}-${item.color || ""}`;
     const existing = itemMap.get(key);
     if (existing) {
       existing.quantity += item.quantity;
@@ -225,7 +226,7 @@ const mergeItems = (
 
   // Merge accessory items
   accessoryItems.forEach((item) => {
-    const key = `${item.id}-${item.color || ""}`;
+    const key = `${item.category || "accessory"}-${item.id}-${item.color || ""}`;
     const existing = itemMap.get(key);
     if (existing) {
       existing.quantity += item.quantity;
@@ -299,7 +300,7 @@ const reorganizeCart = (
     offer.quantity !== undefined && offer.quantity !== null
       ? Number(offer.quantity)
       : 0;
-  
+
   const totalCartItems = allItems.reduce((sum, item) => sum + item.quantity, 0);
 
   // If offer is not active (threshold not met) or invalid, everything is normal
@@ -356,12 +357,12 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const newNormalItems = [...state.normalItems];
       const newOfferItems = [...state.offerItems];
       const newAccessoryItems = [...state.accessoryItems];
-      
+
       // Check if it exists in normal items
       const normalIndex = newNormalItems.findIndex(
         (item) => item.id === action.payload.id && item.color === action.payload.color
       );
-      
+
       if (normalIndex >= 0) {
         newNormalItems[normalIndex] = {
           ...newNormalItems[normalIndex],
@@ -370,21 +371,21 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       } else {
         // Check if it exists in offer items (to merge correctly before reorganize)
         const offerIndex = newOfferItems.findIndex(
-           (item) => item.id === action.payload.id && item.color === action.payload.color
+          (item) => item.id === action.payload.id && item.color === action.payload.color
         );
         if (offerIndex >= 0) {
-             newOfferItems[offerIndex] = {
-                 ...newOfferItems[offerIndex],
-                 quantity: newOfferItems[offerIndex].quantity + action.payload.quantity
-             };
+          newOfferItems[offerIndex] = {
+            ...newOfferItems[offerIndex],
+            quantity: newOfferItems[offerIndex].quantity + action.payload.quantity
+          };
         } else {
-             newNormalItems.push(action.payload);
+          newNormalItems.push(action.payload);
         }
       }
 
       // Reorganize based on offer
       const reorganized = reorganizeCart(newNormalItems, newOfferItems, newAccessoryItems, state.selectedOffer || null);
-      
+
       const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
@@ -453,7 +454,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       if (normalIndex >= 0) {
         newNormalItems = newNormalItems.filter((_, i) => i !== normalIndex);
       }
-      
+
       const offerIndex = newOfferItems.findIndex(
         (item) => item.id === action.payload.id && item.color === action.payload.color
       );
@@ -469,7 +470,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
       // Reorganize
       const reorganized = reorganizeCart(newNormalItems, newOfferItems, newAccessoryItems, state.selectedOffer || null);
-      
+
       const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
@@ -545,34 +546,34 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const normalIndex = newNormalItems.findIndex(
         (item) => item.id === id && item.color === color
       );
-      
+
       if (normalIndex >= 0) {
-          const item = newNormalItems[normalIndex];
-          const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
-          newNormalItems[normalIndex] = { ...item, quantity: finalQty };
+        const item = newNormalItems[normalIndex];
+        const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
+        newNormalItems[normalIndex] = { ...item, quantity: finalQty };
       } else {
-          const offerIndex = newOfferItems.findIndex(
+        const offerIndex = newOfferItems.findIndex(
+          (item) => item.id === id && item.color === color
+        );
+        if (offerIndex >= 0) {
+          const item = newOfferItems[offerIndex];
+          const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
+          newOfferItems[offerIndex] = { ...item, quantity: finalQty };
+        } else {
+          const accIndex = newAccessoryItems.findIndex(
             (item) => item.id === id && item.color === color
           );
-          if (offerIndex >= 0) {
-              const item = newOfferItems[offerIndex];
-              const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
-              newOfferItems[offerIndex] = { ...item, quantity: finalQty };
-           } else {
-               const accIndex = newAccessoryItems.findIndex(
-                 (item) => item.id === id && item.color === color
-               );
-               if (accIndex >= 0) {
-                 const item = newAccessoryItems[accIndex];
-                 const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
-                 newAccessoryItems[accIndex] = { ...item, quantity: finalQty };
-               }
-           }
+          if (accIndex >= 0) {
+            const item = newAccessoryItems[accIndex];
+            const finalQty = item.maxQuantity ? Math.min(newQty, item.maxQuantity) : newQty;
+            newAccessoryItems[accIndex] = { ...item, quantity: finalQty };
+          }
+        }
       }
 
       // Reorganize
       const reorganized = reorganizeCart(newNormalItems, newOfferItems, newAccessoryItems, state.selectedOffer || null);
-      
+
       const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
@@ -674,12 +675,12 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         const offerProducts = payload.offerSelectedProducts || [];
         const offerProductMap = new Map<string, number>();
         offerProducts.forEach((offerProduct: CartItem) => {
-          const key = `${offerProduct.id}-${offerProduct.color || ""}`;
+          const key = `${offerProduct.category || "product"}-${offerProduct.id}-${offerProduct.color || ""}`;
           offerProductMap.set(key, offerProduct.quantity);
         });
 
         payload.items.forEach((item: CartItem) => {
-          const key = `${item.id}-${item.color || ""}`;
+          const key = `${item.category || "product"}-${item.id}-${item.color || ""}`;
           const offerQuantity = offerProductMap.get(key) || 0;
 
           if (offerQuantity > 0) {
@@ -721,10 +722,10 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "SET_OFFER": {
       const offer = action.payload.offer;
       const offerProducts = action.payload.selectedProducts || [];
-      
+
       // Use reorganizeCart to handle everything
       const reorganized = reorganizeCart(state.normalItems, state.offerItems, state.accessoryItems, offer);
-      
+
       const mergedItems = mergeItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalItems = getTotalCartItems(reorganized.normalItems, reorganized.offerItems, reorganized.accessoryItems);
       const totalPrice = calculateTotalPriceWithOffer(
@@ -944,7 +945,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
             if (
               state.selectedOffer?.id !== offer.id ||
               JSON.stringify(state.offerSelectedProducts || []) !==
-                JSON.stringify(products)
+              JSON.stringify(products)
             ) {
               setOffer(offer as any, products);
             }
@@ -1112,7 +1113,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           }
         });
       }
-    } catch {}
+    } catch { }
   };
 
   return (

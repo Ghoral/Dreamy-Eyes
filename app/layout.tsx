@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Quattrocento_Sans } from "next/font/google";
 import "./globals.css";
 import Header from "./components/landing/Header";
 import OfferBanner from "./components/landing/OfferBanner";
@@ -8,13 +7,6 @@ import { AddressGuard } from "./hooks/AddressGuard";
 import { CartProvider } from "./context/CartContext";
 import { UserMetadataLogger } from "./components/UserMetadataLogger";
 import ExchangeRateLoader from "./components/ExchangeRateLoader";
-
-const quattrocentoSans = Quattrocento_Sans({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-quattrocento-sans",
-});
 
 export const metadata: Metadata = {
   title: "Dreamy Eyes",
@@ -29,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${quattrocentoSans.variable} font-sans antialiased`}
+        className="font-sans antialiased"
       >
         <CartProvider>
           <GlobalSupabaseListenerWrapper />
@@ -37,7 +29,6 @@ export default function RootLayout({
           <UserMetadataLogger />
           <ExchangeRateLoader />
           <Header />
-          <OfferBanner />
           {children}
         </CartProvider>
       </body>

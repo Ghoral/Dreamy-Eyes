@@ -83,23 +83,23 @@ export default function OrdersPage() {
 
   const getProductImageUrl = (filename: string): string => {
     if (!filename) return "";
-    
+
     // If it's already a full URL, return as is
     if (filename.startsWith("http://") || filename.startsWith("https://")) {
       return filename;
     }
-    
+
     // Construct Supabase public bucket URL
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (supabaseUrl) {
       return `${supabaseUrl}/storage/v1/object/public/product-image/${filename}`;
     }
-    
+
     // Fallback to NEXT_PUBLIC_IMAGE_URL if available (for backward compatibility)
     if (process.env.NEXT_PUBLIC_IMAGE_URL) {
       return `${process.env.NEXT_PUBLIC_IMAGE_URL}/product-image/${filename}`;
     }
-    
+
     // Last resort fallback
     return `/product-image/${filename}`;
   };
@@ -218,7 +218,7 @@ export default function OrdersPage() {
               Start shopping to see your orders here
             </p>
             <button
-              onClick={() => router.push("/shop")}
+              onClick={() => router.push("/")}
               className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
             >
               <svg

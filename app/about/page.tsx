@@ -148,7 +148,7 @@ const About = () => {
             Browse our collection of premium contact lenses and find your perfect match
           </p>
           <a
-            href="/shop"
+            href="/"
             className="inline-flex items-center justify-center px-6 py-3 bg-white text-primary-600 font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-glow hover:shadow-glow-lg"
           >
             Shop Now

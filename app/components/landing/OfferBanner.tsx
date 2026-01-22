@@ -51,87 +51,90 @@ const OfferBanner = () => {
       : selectedOffer.minimum_quantity || 0;
 
   return (
-    <div className="fixed top-20 left-0 right-0 z-[45] bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 text-white shadow-lg border-b-2 border-primary-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 flex-1">
-            {/* Offer Badge */}
-            <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/30">
-              <span className="text-xs font-bold tracking-wide">
-                OFFER APPLIED
-              </span>
-            </div>
+    <div className="fixed top-1/2 right-0 -translate-y-1/2 z-[45] bg-gradient-to-b from-primary-500 via-primary-600 to-primary-700 text-white shadow-2xl border-l-2 border-y-2 border-primary-400 rounded-l-3xl w-[300px] transition-transform duration-300">
+      <div className="p-6 relative">
+        {/* Close Button */}
+        <button
+          onClick={() => {
+            // Remove only offer items from cart
+            if (offerSelectedProducts && offerSelectedProducts.length > 0) {
+              offerSelectedProducts.forEach((offerItem) => {
+                const cartItem = cartState.items.find(
+                  (item) =>
+                    item.id === offerItem.id && item.color === offerItem.color
+                );
 
-            {/* Offer Name */}
-            <div className="flex-1">
-              <h3 className="font-bold text-lg">
-                {selectedOffer.name ||
-                  selectedOffer.title ||
-                  `Offer #${selectedOffer.id}`}
-              </h3>
-              <div className="flex items-center space-x-4 text-sm mt-1">
-                {offerValue > 0 && (
-                  <span className="flex items-center space-x-1">
-                    <span>💰</span>
-                    <span>Buy {offerValue} items</span>
-                  </span>
-                )}
-                {offerQuantity > 0 && (
-                  <span className="flex items-center space-x-1">
-                    <span>🎁</span>
-                    <span>Get {offerQuantity} with offer</span>
-                  </span>
-                )}
-                {offerAppliedCount > 0 && (
-                  <span className="text-white/90">
-                    • {offerAppliedCount} item{offerAppliedCount > 1 ? "s" : ""} selected
-                  </span>
-                )}
-                <span className="text-white/90">
-                  • {Math.max(cartState.totalItems - offerAppliedCount, 0)} at normal price
-                </span>
+                if (cartItem) {
+                  const offerQuantity = offerItem.quantity || 0;
+                  const newQuantity = cartItem.quantity - offerQuantity;
+
+                  if (newQuantity <= 0) {
+                    // Remove entire item if quantity becomes 0 or less
+                    removeItem(offerItem.id, offerItem.color);
+                  } else {
+                    // Reduce quantity by offer quantity
+                    updateQuantity(
+                      offerItem.id,
+                      newQuantity,
+                      offerItem.color
+                    );
+                  }
+                }
+              });
+            }
+
+            // Clear offer from CartContext
+            setOffer(null, []);
+          }}
+          className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/20 transition-colors"
+          aria-label="Remove offer"
+        >
+          <CloseIcon />
+        </button>
+
+        <div className="flex flex-col items-start gap-4 mt-2">
+          {/* Offer Badge */}
+          <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/30">
+            <span className="text-xs font-bold tracking-widest uppercase">
+              OFFER APPLIED
+            </span>
+          </div>
+
+          {/* Offer Name */}
+          <div className="w-full">
+            <h3 className="font-black text-2xl leading-tight mb-3">
+              {selectedOffer.name ||
+                selectedOffer.title ||
+                `Offer #${selectedOffer.id}`}
+            </h3>
+            <div className="flex flex-col gap-2 text-sm text-white/90">
+              {offerValue > 0 && (
+                <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg">
+                  <span className="text-lg">💰</span>
+                  <span className="font-bold">Buy {offerValue} items</span>
+                </div>
+              )}
+              {offerQuantity > 0 && (
+                <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg">
+                  <span className="text-lg">🎁</span>
+                  <span className="font-bold">Get {offerQuantity} Free</span>
+                </div>
+              )}
+
+              <div className="h-px bg-white/20 w-full my-2" />
+
+              {offerAppliedCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+                  <span>{offerAppliedCount} item{offerAppliedCount > 1 ? "s" : ""} selected</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+                <span>{Math.max(cartState.totalItems - offerAppliedCount, 0)} at normal price</span>
               </div>
             </div>
           </div>
-
-          {/* Close Button */}
-          <button
-            onClick={() => {
-              // Remove only offer items from cart
-              if (offerSelectedProducts && offerSelectedProducts.length > 0) {
-                offerSelectedProducts.forEach((offerItem) => {
-                  const cartItem = cartState.items.find(
-                    (item) =>
-                      item.id === offerItem.id && item.color === offerItem.color
-                  );
-
-                  if (cartItem) {
-                    const offerQuantity = offerItem.quantity || 0;
-                    const newQuantity = cartItem.quantity - offerQuantity;
-
-                    if (newQuantity <= 0) {
-                      // Remove entire item if quantity becomes 0 or less
-                      removeItem(offerItem.id, offerItem.color);
-                    } else {
-                      // Reduce quantity by offer quantity
-                      updateQuantity(
-                        offerItem.id,
-                        newQuantity,
-                        offerItem.color
-                      );
-                    }
-                  }
-                });
-              }
-
-              // Clear offer from CartContext
-              setOffer(null, []);
-            }}
-            className="ml-4 p-1.5 rounded-full hover:bg-white/20 transition-colors"
-            aria-label="Remove offer"
-          >
-            <CloseIcon />
-          </button>
         </div>
       </div>
     </div>

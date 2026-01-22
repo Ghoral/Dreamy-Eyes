@@ -5,15 +5,13 @@ import { createSupabaseServerClient } from "../services/supabase/server/supabase
 export async function check_product_quantity(
   p_product_id: string,
   p_color_hex: string,
-  p_requested_quantity: number,
-  p_type?: "sale"
+  p_requested_quantity: number
 ) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.rpc("check_product_quantity", {
     p_product_id,
     p_color_hex,
     p_requested_quantity,
-    ...(p_type ? { p_type } : {}),
   });
 
   if (error) {
@@ -39,8 +37,7 @@ export async function check_product_quantity(
 export async function update_product_quantity(
   p_product_id: string,
   p_color_hex: string,
-  p_requested_quantity: number,
-  p_type?: "sale"
+  p_requested_quantity: number
 ) {
   const supabase = await createSupabaseServerClient();
 
@@ -51,7 +48,6 @@ export async function update_product_quantity(
       p_product_id,
       p_color_hex,
       p_requested_quantity,
-      ...(p_type ? { p_type } : {}),
     }
   );
 
