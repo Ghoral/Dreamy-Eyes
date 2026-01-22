@@ -5,7 +5,7 @@ const About = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="pt-28 pb-16 bg-gradient-to-br from-secondary-50 via-white to-primary-50">
+      <div className="pt-44 pb-16 bg-gradient-to-br from-secondary-50 via-white to-primary-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-secondary-800 mb-6">About Dreamy Eyes</h1>
