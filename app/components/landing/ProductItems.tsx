@@ -1,20 +1,22 @@
 "use client";
 
-import { getThumbnailUrl, formatPrice } from "@/app/util";
+import { getThumbnailUrl, formatPrice } from "../../util";
 import Image from "next/image";
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "../../hooks/useUserCountry";
-import { get_products } from "@/app/api/product";
+import { get_products, get_eye_lashes, get_solutions, get_applicators } from "../../api/product";
 import ProductCardShimmer from "../ui/ProductCardShimmer";
 
-const ProductItems = ({ data }: { data: any }) => {
-  const { country } = useUserCountry();
+const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: string }) => {
+  const { country: clientCountry } = useUserCountry();
+  const activeCountry = clientCountry || initialCountry || null;
   const [productsData, setProductsData] = useState<any>(data);
   const [isLoading, setIsLoading] = useState(false);
   const isFirstRender = useRef(true);
+
   const [toastConfig, setToastConfig] = useState<{
     message: string;
     isVisible: boolean;
@@ -43,15 +45,21 @@ const ProductItems = ({ data }: { data: any }) => {
     const fetchFilteredProducts = async () => {
       if (isFirstRender.current) {
         isFirstRender.current = false;
+        // Skip fetch if current state matches server state
+        if (activeCountry?.toLowerCase() === initialCountry?.toLowerCase() && selectedTag === 'all') {
+          return;
+        }
       }
-      if (!country) return;
+
+      if (!activeCountry) return;
+
       setIsLoading(true);
       try {
         const tagsToSend =
           selectedTag === "all"
             ? ["sale", "latest_arrival", "top_seller", "best_reviewed"]
             : [selectedTag];
-        const { data: responseData } = await get_products(1000, 0, tagsToSend, country);
+        const { data: responseData } = await get_products(1000, 0, tagsToSend, activeCountry);
         setProductsData(responseData);
       } catch (error) {
         console.error("Error fetching filtered products:", error);
@@ -60,7 +68,7 @@ const ProductItems = ({ data }: { data: any }) => {
       }
     };
     fetchFilteredProducts();
-  }, [selectedTag, country]);
+  }, [selectedTag, activeCountry, initialCountry]);
 
   const getProductLink = (product: any) => {
     const productId = product.id || product.title;
@@ -97,7 +105,6 @@ const ProductItems = ({ data }: { data: any }) => {
       scrollToSection(tag.scrollId);
     } else {
       setSelectedTag(tag.value);
-      // Optional: scroll back to product top if changing filter
       scrollToSection('products-section');
     }
   };
@@ -121,14 +128,13 @@ const ProductItems = ({ data }: { data: any }) => {
   ]);
 
   useEffect(() => {
-    // Check for other sections data availability
     const checkAvailability = async () => {
+      if (!activeCountry) return;
       try {
-        const { get_eye_lashes, get_solutions, get_applicators } = await import("@/app/api/product");
         const [lashes, solutions, applicators] = await Promise.all([
-          get_eye_lashes(1, 0, country),
-          get_solutions(1, 0, country),
-          get_applicators(1, 0, country)
+          get_eye_lashes(1, 0, activeCountry),
+          get_solutions(1, 0, activeCountry),
+          get_applicators(1, 0, activeCountry)
         ]);
 
         const baseTags = [
@@ -154,7 +160,7 @@ const ProductItems = ({ data }: { data: any }) => {
     };
 
     checkAvailability();
-  }, [country]);
+  }, [activeCountry]);
 
   const filteredProducts = useMemo(() => {
     if (!normalizedData) return [];
@@ -192,7 +198,6 @@ const ProductItems = ({ data }: { data: any }) => {
     <section id="products-section" className="w-full py-12 bg-white relative">
       <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
 
-
         {/* Filter Button Row */}
         <div className="mb-16 pt-8 border-t border-secondary-100">
           <div className="flex justify-end">
@@ -209,7 +214,7 @@ const ProductItems = ({ data }: { data: any }) => {
         </div>
 
         {/* Products Grid */}
-        {!country || isLoading ? (
+        {isLoading ? (
           <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]">
@@ -237,6 +242,7 @@ const ProductItems = ({ data }: { data: any }) => {
                         fill
                         className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-1"
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 30vw, 25vw"
+                        priority={index < 4}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-secondary-200">
@@ -261,7 +267,7 @@ const ProductItems = ({ data }: { data: any }) => {
                       <div className="text-left md:text-right shrink-0">
                         <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
                         <div className="text-sm md:text-2xl font-black text-secondary-900 font-price group-hover:text-primary-500 transition-colors">
-                          {formatPrice(currentPrice, country)}
+                          {formatPrice(currentPrice, activeCountry)}
                         </div>
                       </div>
                     </div>

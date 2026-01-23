@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useUserCountry } from "@/app/hooks/useUserCountry";
-import { formatPrice, getAccessoryImageUrl } from "@/app/util";
-import { useCart } from "@/app/context/CartContext";
-import { get_applicators, get_solutions } from "@/app/api/product";
+import { useEffect, useState, useRef } from "react";
+import { useUserCountry } from "../../hooks/useUserCountry";
+import { formatPrice, getAccessoryImageUrl } from "../../util";
+import { useCart } from "../../context/CartContext";
+import { get_applicators, get_solutions } from "../../api/product";
 
 type AccessoryItem = {
   id: number;
@@ -17,20 +17,31 @@ type AccessoryItem = {
   type: "applicator" | "solution";
 };
 
-const AccessoriesSection = () => {
-  const { country } = useUserCountry();
-  const [items, setItems] = useState<AccessoryItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: AccessoryItem[]; initialCountry?: string }) => {
+  const { country: clientCountry } = useUserCountry();
+  const activeCountry = clientCountry || initialCountry || null;
+  const [items, setItems] = useState<AccessoryItem[]>(initialData || []);
+  const [loading, setLoading] = useState<boolean>(false);
   const { addAccessoryItem, state: cartState, updateAccessoryQuantity, removeAccessoryItem } = useCart();
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     let mounted = true;
     const fetchAll = async () => {
+      if (isFirstRender.current) {
+        isFirstRender.current = false;
+        if (activeCountry?.toLowerCase() === initialCountry?.toLowerCase()) {
+          return;
+        }
+      }
+
+      if (!activeCountry) return;
+
       try {
         setLoading(true);
         const [applicatorsRes, solutionsRes] = await Promise.all([
-          get_applicators(50, 0, country),
-          get_solutions(50, 0, country),
+          get_applicators(50, 0, activeCountry),
+          get_solutions(50, 0, activeCountry),
         ]);
 
         if (!mounted) return;
@@ -49,7 +60,7 @@ const AccessoriesSection = () => {
 
     fetchAll();
     return () => { mounted = false; };
-  }, [country]);
+  }, [activeCountry, initialCountry]);
 
   if (!loading && items.length === 0) return null;
 
@@ -113,7 +124,7 @@ const AccessoriesSection = () => {
                       <div className="text-left shrink-0">
                         <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
                         <div className="text-sm md:text-2xl font-black text-secondary-900 font-price group-hover:text-primary-500 transition-colors">
-                          {rawPrice != null ? formatPrice(rawPrice, country) : "—"}
+                          {rawPrice != null ? formatPrice(rawPrice, activeCountry) : "—"}
                         </div>
                       </div>
 

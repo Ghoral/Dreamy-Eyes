@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { get_enabled_offers } from "@/app/api/offers";
-import { useCart, Offer } from "@/app/context/CartContext";
+import { get_enabled_offers } from "../../api/offers";
+import { useCart, Offer } from "../../context/CartContext";
 
-const OffersSlider = () => {
-  const [offers, setOffers] = useState<Offer[]>([]);
-  const [loading, setLoading] = useState(true);
+const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
+  const [offers, setOffers] = useState<Offer[]>(initialData || []);
+  const [loading, setLoading] = useState(!initialData);
   const { state: cartState, setOffer } = useCart();
 
   useEffect(() => {
+    if (initialData) return;
     const fetchOffers = async () => {
       try {
         setLoading(true);
