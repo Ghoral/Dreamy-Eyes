@@ -192,7 +192,7 @@ const Navbar = () => {
         {/* Sub-Navbar for Categories - Inside main nav */}
         <div className={`transition-all duration-500 border-t border-secondary-100/30 ${shouldShowDarkNav ? "opacity-100 max-h-20" : "opacity-0 max-h-0 overflow-hidden"}`}>
           <div className="max-w-[1800px] mx-auto px-4 md:px-12">
-            <div className="hidden lg:flex items-center justify-center gap-8 py-5">
+            <div className="flex items-center lg:justify-center gap-6 md:gap-8 py-4 md:py-5 overflow-x-auto scrollbar-hide px-2">
               {[
                 { label: "Lenses", href: "/" },
                 { label: "Sale", href: "/#sale-section" },
@@ -204,7 +204,7 @@ const Navbar = () => {
                   key={item.label}
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item.href)}
-                  className="text-xs font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 text-secondary-700"
+                  className="text-[10px] md:text-xs font-black tracking-widest uppercase transition-all duration-300 hover:text-primary-500 text-secondary-700 whitespace-nowrap"
                 >
                   {item.label}
                 </Link>
