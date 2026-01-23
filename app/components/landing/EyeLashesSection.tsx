@@ -1,23 +1,33 @@
 "use client";
 
 import Image from "next/image";
-import { useUserCountry } from "@/app/hooks/useUserCountry";
-import { formatPrice, getThumbnailUrl } from "@/app/util";
+import { useUserCountry } from "../../hooks/useUserCountry";
+import { formatPrice, getThumbnailUrl } from "../../util";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { get_eye_lashes } from "@/app/api/product";
+import { useEffect, useState, useRef } from "react";
+import { get_eye_lashes } from "../../api/product";
 
-export default function EyeLashesSection() {
-    const { country } = useUserCountry();
+export default function EyeLashesSection({ initialData, initialCountry }: { initialData?: any[]; initialCountry?: string }) {
+    const { country: clientCountry } = useUserCountry();
+    const activeCountry = clientCountry || initialCountry || null;
     const router = useRouter();
-    const [lashes, setLashes] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [lashes, setLashes] = useState<any[]>(initialData || []);
+    const [loading, setLoading] = useState(false);
+    const isFirstRender = useRef(true);
 
     useEffect(() => {
         const fetchData = async () => {
+            if (isFirstRender.current) {
+                isFirstRender.current = false;
+                if (activeCountry?.toLowerCase() === initialCountry?.toLowerCase()) {
+                    return;
+                }
+            }
+
+            if (!activeCountry) return;
             setLoading(true);
             try {
-                const { data } = await get_eye_lashes(10, 0, country);
+                const { data } = await get_eye_lashes(10, 0, activeCountry);
                 if (data && Array.isArray(data)) {
                     setLashes(data);
                 } else {
@@ -30,7 +40,7 @@ export default function EyeLashesSection() {
             }
         };
         fetchData();
-    }, [country]);
+    }, [activeCountry, initialCountry]);
 
     if (!loading && lashes.length === 0) return null;
 
@@ -97,7 +107,7 @@ export default function EyeLashesSection() {
                                         <div className="text-left md:text-right shrink-0">
                                             <span className="text-[8px] md:text-[10px] font-bold text-secondary-400 tracking-widest uppercase block mb-1">MSRP</span>
                                             <div className="text-sm md:text-2xl font-black text-secondary-900 font-price group-hover:text-primary-500 transition-colors">
-                                                {formatPrice(lash.price, country)}
+                                                {formatPrice(lash.price, activeCountry)}
                                             </div>
                                         </div>
                                     </div>
