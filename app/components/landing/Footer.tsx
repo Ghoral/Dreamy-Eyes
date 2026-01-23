@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="bg-[#0A0A0A] pt-32 pb-16 relative overflow-hidden border-t border-white/5">
+    <footer className="bg-[#0A0A0A] pt-16 md:pt-32 pb-12 relative overflow-hidden border-t border-white/5">
       {/* Dynamic Background Elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary-600/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -20,7 +20,7 @@ const Footer = () => {
       <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
 
         {/* Info Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-24 mb-24 py-24 border-y border-white/5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-24 mb-12 md:mb-24 py-12 md:py-24 border-y border-white/5">
           {/* Brand Column */}
           <div className="lg:col-span-4 space-y-10 text-center lg:text-left">
             <div>
@@ -53,8 +53,8 @@ const Footer = () => {
           {/* Navigation Matrix */}
           <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-16">
             <div className="flex flex-col items-center md:items-start">
-              <span className="text-[10px] font-black tracking-[0.4em] text-primary-500 uppercase block mb-10">Navigation</span>
-              <ul className="flex flex-col items-center md:items-start gap-y-6">
+              <span className="text-[10px] font-black tracking-[0.4em] text-primary-500 uppercase block mb-6 md:mb-10">Navigation</span>
+              <ul className="flex flex-col items-center md:items-start gap-y-4 md:gap-y-6">
                 {[
                   { label: 'Collection', href: '/' },
                   { label: 'Eye Lashes', href: '/#eyelashes-section' },
@@ -70,11 +70,11 @@ const Footer = () => {
               </ul>
             </div>
 
-            <div className="border-t md:border-t-0 md:border-l border-white/5 pt-12 md:pt-0 md:pl-12 flex flex-col items-center md:items-start">
-              <span className="text-[10px] font-black tracking-[0.4em] text-primary-500 uppercase block mb-10">Connect</span>
-              <div className="space-y-8 flex flex-col items-center md:items-start">
+            <div className="border-t md:border-t-0 md:border-l border-white/5 pt-10 md:pt-0 md:pl-12 flex flex-col items-center md:items-start">
+              <span className="text-[10px] font-black tracking-[0.4em] text-primary-500 uppercase block mb-6 md:mb-10">Connect</span>
+              <div className="space-y-6 md:space-y-8 flex flex-col items-center md:items-start">
                 <div className="flex flex-col items-center md:items-start">
-                  <p className="text-[8px] font-black text-secondary-500 uppercase tracking-widest mb-3">Direct Inquiry</p>
+                  <p className="text-[8px] font-black text-secondary-500 uppercase tracking-widest mb-1 md:mb-3">Direct Inquiry</p>
                   <a href="mailto:dreamyeyesinfo@gmail.com" className="text-xl font-bold text-white hover:text-primary-500 transition-all duration-500 border-b border-primary-500/30 hover:border-primary-500 pb-1">
                     dreamyeyesinfo@gmail.com
                   </a>
@@ -85,8 +85,8 @@ const Footer = () => {
         </div>
 
         {/* Footer Meta */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="flex gap-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-10">
+          <div className="flex gap-6 md:gap-10">
             {['Privacy', 'Legal', 'Terms'].map((item) => (
               <Link key={item} href="#" className="text-[9px] font-black tracking-[0.3em] text-secondary-600 hover:text-white transition-colors uppercase">
                 {item}
