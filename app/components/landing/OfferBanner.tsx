@@ -51,12 +51,14 @@ const OfferBanner = () => {
       : selectedOffer.minimum_quantity || 0;
 
   return (
-    <div className="fixed top-1/2 right-0 -translate-y-1/2 z-[45] bg-gradient-to-b from-primary-500 via-primary-600 to-primary-700 text-white shadow-2xl border-l-2 border-y-2 border-primary-400 rounded-l-3xl w-[300px] transition-transform duration-300">
-      <div className="p-6 relative">
+    <div className="fixed top-1/2 right-0 -translate-y-1/2 z-[45] bg-secondary-900 text-white shadow-2xl border-l border-y border-white/10 rounded-l-[32px] w-[320px] transition-all duration-500 transform translate-x-4 hover:translate-x-0">
+      <div className="p-8 relative overflow-hidden">
+        {/* Background Decorative Element */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+
         {/* Close Button */}
         <button
           onClick={() => {
-            // Remove only offer items from cart
             if (offerSelectedProducts && offerSelectedProducts.length > 0) {
               offerSelectedProducts.forEach((offerItem) => {
                 const cartItem = cartState.items.find(
@@ -67,71 +69,62 @@ const OfferBanner = () => {
                 if (cartItem) {
                   const offerQuantity = offerItem.quantity || 0;
                   const newQuantity = cartItem.quantity - offerQuantity;
-
                   if (newQuantity <= 0) {
-                    // Remove entire item if quantity becomes 0 or less
                     removeItem(offerItem.id, offerItem.color);
                   } else {
-                    // Reduce quantity by offer quantity
-                    updateQuantity(
-                      offerItem.id,
-                      newQuantity,
-                      offerItem.color
-                    );
+                    updateQuantity(offerItem.id, newQuantity, offerItem.color);
                   }
                 }
               });
             }
-
-            // Clear offer from CartContext
             setOffer(null, []);
           }}
-          className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/20 transition-colors"
+          className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 group"
           aria-label="Remove offer"
         >
-          <CloseIcon />
+          <svg
+            className="w-4 h-4 text-white group-hover:rotate-90 transition-transform duration-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
 
-        <div className="flex flex-col items-start gap-4 mt-2">
-          {/* Offer Badge */}
-          <div className="bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full border border-white/30">
-            <span className="text-xs font-bold tracking-widest uppercase">
-              OFFER APPLIED
-            </span>
+        <div className="flex flex-col items-start gap-8 relative z-10">
+          <div className="flex flex-col gap-2">
+            <span className="text-primary-500 font-bold tracking-[0.4em] uppercase text-[9px]">Privilege Active</span>
+            <h3 className="text-3xl font-black tracking-tighter uppercase leading-none">
+              {selectedOffer.name || selectedOffer.title || "Offer"}
+            </h3>
           </div>
 
-          {/* Offer Name */}
-          <div className="w-full">
-            <h3 className="font-black text-2xl leading-tight mb-3">
-              {selectedOffer.name ||
-                selectedOffer.title ||
-                `Offer #${selectedOffer.id}`}
-            </h3>
-            <div className="flex flex-col gap-2 text-sm text-white/90">
+          <div className="w-full space-y-4">
+            <div className="space-y-3">
               {offerValue > 0 && (
-                <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg">
-                  <span className="text-lg">💰</span>
-                  <span className="font-bold">Buy {offerValue} items</span>
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                  <span className="text-[9px] font-black tracking-widest text-white/40 uppercase">Goal</span>
+                  <span className="text-xs font-bold text-white uppercase">Buy {offerValue} Items</span>
                 </div>
               )}
               {offerQuantity > 0 && (
-                <div className="flex items-center gap-2 bg-white/10 p-2 rounded-lg">
-                  <span className="text-lg">🎁</span>
-                  <span className="font-bold">Get {offerQuantity} Free</span>
+                <div className="flex items-center justify-between p-3 bg-primary-500 rounded-xl">
+                  <span className="text-[9px] font-black tracking-widest text-white/70 uppercase">Benefit</span>
+                  <span className="text-xs font-bold text-white uppercase">Get {offerQuantity} Free</span>
                 </div>
               )}
+            </div>
 
-              <div className="h-px bg-white/20 w-full my-2" />
+            <div className="pt-4 border-t border-white/10 space-y-2">
+              <div className="flex items-center justify-between text-[10px] font-bold tracking-widest uppercase">
+                <span className="text-white/40">Status</span>
+                <span className="text-primary-500">{offerAppliedCount} Applied</span>
+              </div>
 
-              {offerAppliedCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                  <span>{offerAppliedCount} item{offerAppliedCount > 1 ? "s" : ""} selected</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                <span>{Math.max(cartState.totalItems - offerAppliedCount, 0)} at normal price</span>
+              {/* Animated Progress Bar Placeholder / Signature Line */}
+              <div className="h-0.5 w-full bg-white/10 relative overflow-hidden">
+                <div className="absolute inset-0 bg-primary-500 w-full animate-pulse" />
               </div>
             </div>
           </div>
