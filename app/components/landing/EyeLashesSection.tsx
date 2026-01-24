@@ -111,6 +111,13 @@ export default function EyeLashesSection({ initialData, initialCountry }: { init
                                             </div>
                                         </div>
                                     </div>
+
+                                    {lash.sub_title && (
+                                        <p className="text-[10px] md:text-xs font-medium text-secondary-900 uppercase tracking-wider">
+                                            {lash.sub_title}
+                                        </p>
+                                    )}
+
                                     <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
                                         <div className="absolute inset-0 bg-primary-500 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
                                     </div>

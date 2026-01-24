@@ -272,9 +272,15 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
                       </div>
                     </div>
 
-                    <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
-                      <div className="absolute inset-0 bg-primary-500 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
-                    </div>
+                    {product.sub_title && (
+                      <p className="text-[10px] md:text-xs font-medium text-secondary-900 uppercase tracking-wider">
+                        {product.sub_title}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
+                    <div className="absolute inset-0 bg-primary-500 -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
                   </div>
                 </div>
               );
@@ -290,49 +296,51 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
         )}
       </div>
 
-      {isFilterDrawerOpen && (
-        <>
-          <div className="fixed inset-0 bg-secondary-900/60 backdrop-blur-md z-[60]" onClick={() => setIsFilterDrawerOpen(false)} />
-          <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-[70] shadow-2xl p-12 overflow-y-auto">
-            <div className="flex justify-between items-center mb-16">
-              <h3 className="text-5xl font-black text-secondary-900 tracking-tighter">FILTERS</h3>
-              <button onClick={() => setIsFilterDrawerOpen(false)} className="p-4 bg-secondary-50 rounded-full hover:bg-secondary-100 transition-colors">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="space-y-12">
-              <div>
-                <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Color Spectrum</label>
-                <select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl focus:border-primary-500 appearance-none bg-transparent transition-colors font-price">
-                  <option value="all">ALL COLORS</option>
-                  {availableColors.map((c) => <option key={c} value={c}>{c.toUpperCase()}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-8">
-                <div>
-                  <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Min Price</label>
-                  <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none font-price" placeholder="0" />
-                </div>
-                <div>
-                  <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Max Price</label>
-                  <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none font-price" placeholder="∞" />
-                </div>
-              </div>
-              <div className="pt-20 space-y-4">
-                <button onClick={() => setIsFilterDrawerOpen(false)} className="w-full py-6 bg-secondary-900 text-white font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-primary-500 transition-all shadow-2xl">
-                  APPLY FILTERS
-                </button>
-                <button onClick={() => { setSelectedColor("all"); setPriceMin(""); setPriceMax(""); setPowerMin(""); setPowerMax(""); setSelectedTag("all"); setIsFilterDrawerOpen(false); }} className="w-full py-6 bg-secondary-50 text-secondary-400 font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
-                  RESET ALL
+      {
+        isFilterDrawerOpen && (
+          <>
+            <div className="fixed inset-0 bg-secondary-900/60 backdrop-blur-md z-[60]" onClick={() => setIsFilterDrawerOpen(false)} />
+            <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-white z-[70] shadow-2xl p-12 overflow-y-auto">
+              <div className="flex justify-between items-center mb-16">
+                <h3 className="text-5xl font-black text-secondary-900 tracking-tighter">FILTERS</h3>
+                <button onClick={() => setIsFilterDrawerOpen(false)} className="p-4 bg-secondary-50 rounded-full hover:bg-secondary-100 transition-colors">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
+              <div className="space-y-12">
+                <div>
+                  <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Color Spectrum</label>
+                  <select value={selectedColor} onChange={(e) => setSelectedColor(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl focus:border-primary-500 appearance-none bg-transparent transition-colors font-price">
+                    <option value="all">ALL COLORS</option>
+                    {availableColors.map((c) => <option key={c} value={c}>{c.toUpperCase()}</option>)}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Min Price</label>
+                    <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none font-price" placeholder="0" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black tracking-widest text-secondary-400 uppercase mb-4">Max Price</label>
+                    <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} className="w-full py-6 border-b-2 border-secondary-100 font-black text-2xl placeholder:text-secondary-100 focus:border-primary-500 outline-none font-price" placeholder="∞" />
+                  </div>
+                </div>
+                <div className="pt-20 space-y-4">
+                  <button onClick={() => setIsFilterDrawerOpen(false)} className="w-full py-6 bg-secondary-900 text-white font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-primary-500 transition-all shadow-2xl">
+                    APPLY FILTERS
+                  </button>
+                  <button onClick={() => { setSelectedColor("all"); setPriceMin(""); setPriceMax(""); setPowerMin(""); setPowerMax(""); setSelectedTag("all"); setIsFilterDrawerOpen(false); }} className="w-full py-6 bg-secondary-50 text-secondary-400 font-black text-sm tracking-[0.2em] rounded-2xl hover:bg-red-50 hover:text-red-500 transition-all">
+                    RESET ALL
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )
+      }
 
       <Toast message={toastConfig.message} type="success" isVisible={toastConfig.isVisible} onClose={() => setToastConfig({ message: "", isVisible: false })} duration={2000} />
-    </section>
+    </section >
   );
 };
 

@@ -210,15 +210,21 @@ const SalesSection = () => {
 
                   {/* Product Info */}
                   <div className="p-6">
-                    <h3 className="text-xl font-bold text-secondary-800 mb-2 group-hover:text-primary-600 transition-colors duration-300">
+                    <h3 className="text-xl font-bold text-secondary-800 mb-1 group-hover:text-primary-600 transition-colors duration-300">
                       {product.title}
                     </h3>
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-2">
                       <span className="text-2xl font-bold text-primary-600">
                         {formatPrice(currentPrice, country)}
                       </span>
                     </div>
+
+                    {product.sub_title && (
+                      <p className="text-[10px] font-medium text-secondary-900 uppercase tracking-wider mb-4">
+                        {product.sub_title}
+                      </p>
+                    )}
 
                     {/* Add to Cart Button */}
                     <button

@@ -55,38 +55,45 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
                 onClick={() => !isApplied && handleApplyOffer(offer)}
                 className="group cursor-pointer w-[calc(100%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
               >
-                <div className={`relative aspect-[16/9] mb-8 overflow-hidden rounded-2xl transition-all duration-700 ease-soft-spring border-2 ${isApplied ? "border-green-500 bg-green-50/30" : "border-secondary-50 bg-secondary-50"
+                <div className={`relative p-[1.5px] mb-8 rounded-[22px] transition-all duration-700 ease-soft-spring overflow-hidden ${isApplied
+                  ? "bg-green-500 shadow-lg"
+                  : "bg-gradient-to-br from-primary-500/60 via-primary-600/60 to-primary-500/60 group-hover:from-primary-400 group-hover:via-primary-500 group-hover:to-primary-600 shadow-sm hover:shadow-xl hover:-translate-y-1"
                   }`}>
-                  {/* Background Accents */}
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-200 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary-200 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
-                  </div>
+                  <div className={`relative aspect-[16/9] w-full h-full overflow-hidden rounded-[20px] transition-all duration-700 ${isApplied ? "bg-green-50/90" : "bg-secondary-50 group-hover:bg-white"
+                    }`}>
+                    {/* Background Accents (only show when not applied to keep active state clean) */}
+                    {!isApplied && (
+                      <div className="absolute inset-0 opacity-20 pointer-events-none">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary-200 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary-200 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+                      </div>
+                    )}
 
-                  {/* Content Container */}
-                  <div className="relative h-full w-full p-8 flex flex-col justify-between z-10">
-                    <div className="flex justify-between items-start">
-                      <span className="text-[10px] font-black tracking-[0.3em] uppercase text-secondary-400">
-                        {offer.discount_type === 'percentage' ? 'TIER I' : 'TIER II'}
-                      </span>
-                      {isApplied && (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
-                          <span className="text-[8px] font-black tracking-widest text-white uppercase">ACTIVE</span>
-                          <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                        </div>
-                      )}
+                    {/* Content Container */}
+                    <div className="relative h-full w-full p-8 flex flex-col justify-between z-10">
+                      <div className="flex justify-between items-start">
+                        <span className="text-[10px] font-black tracking-[0.3em] uppercase text-secondary-400">
+                          {offer.discount_type === 'percentage' ? 'TIER I' : 'TIER II'}
+                        </span>
+                        {isApplied && (
+                          <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
+                            <span className="text-[8px] font-black tracking-widest text-white uppercase">ACTIVE</span>
+                            <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <h4 className="text-xs font-black tracking-[0.2em] text-primary-500 uppercase mb-2">Member Privilege</h4>
+                        <h3 className="text-3xl font-black text-secondary-900 tracking-tighter leading-none uppercase">
+                          {offer.title || offer.name}
+                        </h3>
+                      </div>
                     </div>
 
-                    <div>
-                      <h4 className="text-xs font-black tracking-[0.2em] text-primary-500 uppercase mb-2">Member Privilege</h4>
-                      <h3 className="text-3xl font-black text-secondary-900 tracking-tighter leading-none uppercase">
-                        {offer.title || offer.name}
-                      </h3>
-                    </div>
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
-
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 </div>
 
                 <div className="flex flex-col gap-3">
