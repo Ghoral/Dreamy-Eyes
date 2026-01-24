@@ -21,6 +21,7 @@ import ModalOffers from "../components/modals/ModalOffers";
 import ModalAccessories from "../components/modals/ModalAccessories";
 import { Offer } from "../context/CartContext";
 import { useUserCountry } from "../hooks/useUserCountry";
+import { get_enabled_offers } from "../api/offers";
 
 // Helper function to calculate offer price (same logic as CartContext)
 const calculateOfferPrice = (
@@ -174,11 +175,24 @@ export default function CheckoutPage() {
   const [pendingSelectedProducts, setPendingSelectedProducts] = useState<any[]>(
     []
   );
+  const [availableOffers, setAvailableOffers] = useState<Offer[]>([]);
 
   useEffect(() => {
     loadUserAddresses();
     loadDeliveryCharge();
+    loadAvailableOffers();
   }, []);
+
+  const loadAvailableOffers = async () => {
+    try {
+      const response = await get_enabled_offers();
+      if (response.status && response.data) {
+        setAvailableOffers(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to load available offers:", error);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -504,6 +518,32 @@ export default function CheckoutPage() {
           </h1>
           <p className="text-secondary-500 font-serif italic text-xl">Complete your purchase below.</p>
         </div>
+
+        {/* Offer Availability Notice */}
+        {!cartState.selectedOffer && !zustandOffer && availableOffers.length > 0 && (
+          <div className="max-w-4xl mx-auto mb-12 bg-secondary-900 border border-secondary-800 rounded-2xl p-8 shadow-2xl relative overflow-hidden group animate-in slide-in-from-top duration-700">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+              <div className="flex items-center gap-6">
+                <div className="w-14 h-14 rounded-full bg-primary-500 flex items-center justify-center flex-shrink-0 shadow-glow">
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-white tracking-tight uppercase mb-1">Exclusive Privileges <span className="text-primary-400 font-serif italic font-normal lowercase">Available</span></h3>
+                  <p className="text-secondary-400 text-xs font-medium uppercase tracking-widest mt-2 leading-relaxed">We noticed you haven't applied an offer. View our exclusive vaults to unlock special pricing.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsOffersModalOpen(true)}
+                className="px-8 py-4 bg-white text-secondary-900 font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-primary-500 hover:text-white transition-all duration-500 whitespace-nowrap"
+              >
+                Claim Privilege
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Error Stage */}
         {error && (
