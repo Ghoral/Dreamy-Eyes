@@ -36,24 +36,16 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
   }
 
   return (
-    <section id="offers-section" className="bg-gradient-to-br from-white via-secondary-50 to-primary-50/20 py-8 md:py-16 relative overflow-hidden mx-auto w-[92%] md:w-[96%] max-w-[1600px] rounded-[5px] border border-secondary-100 shadow-none mt-4 md:mt-0 mb-8 md:mb-12">
-      {/* Soft Background Gradient */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[80%] bg-primary-100/30 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[60%] h-[80%] bg-secondary-100/30 blur-[120px] rounded-full" />
-      </div>
-
-      <div className="max-w-[1400px] mx-auto relative z-10 px-6">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center mb-10">
-          <span className="text-secondary-400 font-bold tracking-[0.3em] uppercase text-[10px] mb-3 bg-white border border-secondary-100 px-3 py-1 rounded-full">Limited Access</span>
-          <h2 className="text-3xl md:text-5xl font-black text-secondary-900 tracking-tight mb-2">
-            EXCLUSIVE <span className="text-primary-500 font-serif italic font-normal">Privileges</span>
+    <section id="offers-section" className="w-full pt-12 pb-4 bg-white relative overflow-hidden">
+      <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
+        <div className="mb-12 border-b border-secondary-100 pb-8">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-secondary-900 tracking-tighter uppercase whitespace-nowrap">
+            Exclusive <span className="text-secondary-400 font-serif italic font-normal">Offers</span>
           </h2>
         </div>
 
         {/* Voucher Grid */}
-        <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+        <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-8 md:gap-y-16">
           {offers.map((offer, index) => {
             const isApplied = cartState.selectedOffer?.id === offer.id;
 
@@ -61,34 +53,61 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
               <div
                 key={`offer-${offer.id}-${index}`}
                 onClick={() => !isApplied && handleApplyOffer(offer)}
-                className={`group relative flex flex-col items-center justify-between p-4 md:p-8 rounded-[5px] border transition-all duration-300 cursor-pointer overflow-hidden w-[calc(50%-0.5rem)] md:w-auto md:min-w-[240px] ${isApplied
-                  ? "bg-green-50 border-green-500 shadow-none scale-[1.02]"
-                  : "bg-white border-secondary-100 hover:border-primary-200 hover:shadow-sm hover:-translate-y-1"
-                  }`}
+                className="group cursor-pointer w-[calc(100%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
               >
-                {/* Icon */}
-                <div className={`text-4xl md:text-5xl mb-4 transition-transform duration-300 ${isApplied ? 'scale-110' : 'group-hover:scale-110 group-hover:rotate-12'}`}>
-                  {offer.discount_type === 'percentage' ? '💎' : '🎁'}
-                </div>
-
-                {/* Content */}
-                <div className="text-center flex-1 flex flex-col justify-center gap-2 w-full">
-                  <h3 className={`text-xl md:text-2xl font-black leading-none uppercase ${isApplied ? 'text-green-900' : 'text-secondary-900'}`}>
-                    {offer.title || offer.name}
-                  </h3>
-                  {offer.description && (
-                    <p className={`text-[11px] font-medium leading-relaxed line-clamp-2 ${isApplied ? 'text-green-700/80' : 'text-secondary-500'}`}>
-                      {offer.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Action Button Look */}
-                <div className={`mt-6 w-full py-2.5 rounded-full text-[10px] font-black tracking-widest uppercase text-center transition-colors ${isApplied
-                  ? "bg-green-600 text-white"
-                  : "bg-secondary-50 text-secondary-900 group-hover:bg-secondary-900 group-hover:text-white"
+                <div className={`relative aspect-[16/9] mb-8 overflow-hidden rounded-2xl transition-all duration-700 ease-soft-spring border-2 ${isApplied ? "border-green-500 bg-green-50/30" : "border-secondary-50 bg-secondary-50"
                   }`}>
-                  {isApplied ? "Applied" : "Redeem"}
+                  {/* Background Accents */}
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-200 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-secondary-200 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+                  </div>
+
+                  {/* Content Container */}
+                  <div className="relative h-full w-full p-8 flex flex-col justify-between z-10">
+                    <div className="flex justify-between items-start">
+                      <span className="text-[10px] font-black tracking-[0.3em] uppercase text-secondary-400">
+                        {offer.discount_type === 'percentage' ? 'TIER I' : 'TIER II'}
+                      </span>
+                      {isApplied && (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
+                          <span className="text-[8px] font-black tracking-widest text-white uppercase">ACTIVE</span>
+                          <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-black tracking-[0.2em] text-primary-500 uppercase mb-2">Member Privilege</h4>
+                      <h3 className="text-3xl font-black text-secondary-900 tracking-tighter leading-none uppercase">
+                        {offer.title || offer.name}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-primary-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <p className="text-[11px] font-medium text-secondary-400 leading-relaxed uppercase tracking-wider line-clamp-2">
+                        {offer.description || "Unlock special pricing and exclusive benefits with this limited time privilege."}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[8px] font-bold text-secondary-300 tracking-widest uppercase block mb-1">Status</span>
+                      <span className={`text-[10px] font-black tracking-widest uppercase ${isApplied ? 'text-green-600' : 'text-secondary-900 group-hover:text-primary-500 transition-colors'}`}>
+                        {isApplied ? "Claimed" : "Redeem (Click to Activate)"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Signature Animated Line */}
+                  <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
+                    <div className={`absolute inset-0 ${isApplied ? 'bg-green-500' : 'bg-primary-500'} transition-transform duration-700 ${isApplied ? 'translate-x-0' : '-translate-x-full group-hover:translate-x-0'}`}></div>
+                  </div>
                 </div>
               </div>
             );

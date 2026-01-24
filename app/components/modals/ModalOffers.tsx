@@ -193,20 +193,26 @@ export default function ModalOffers({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-500 to-primary-600 p-4 text-white flex-shrink-0">
-            <div className="flex items-center justify-between">
+          <div className="bg-secondary-900 p-8 text-white flex-shrink-0 relative overflow-hidden">
+            {/* Background Decorative Element */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2" />
+
+            <div className="flex items-center justify-between relative z-10">
               <div>
-                <h2 className="text-xl font-bold">Available Offers</h2>
-                <p className="text-primary-100 text-xs mt-1">
-                  Select an offer to apply to your order
+                <span className="text-primary-500 font-bold tracking-[0.4em] uppercase text-[10px] mb-2 block">Exclusive Access</span>
+                <h2 className="text-4xl font-black tracking-tighter uppercase whitespace-nowrap">
+                  OFFER <span className="text-secondary-400 font-serif italic font-normal">VAULT</span>
+                </h2>
+                <p className="text-secondary-400 text-[10px] font-medium tracking-widest uppercase mt-2">
+                  Select a privilege to apply
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded flex items-center justify-center transition-colors"
+                className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center transition-all duration-300 group"
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-6 h-6 text-white group-hover:rotate-90 transition-transform duration-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -214,7 +220,7 @@ export default function ModalOffers({
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
@@ -244,193 +250,52 @@ export default function ModalOffers({
                     <div
                       key={offer.id}
                       onClick={() => handleSelectOffer(offer)}
-                      className={`relative p-6 rounded border-2 cursor-pointer transition-all overflow-hidden transform hover:scale-[1.02] ${isSelected
-                        ? "border-primary-500 bg-gradient-to-br from-primary-50 via-primary-100 to-primary-50 shadow-xl ring-2 ring-primary-300"
-                        : "border-secondary-200 bg-gradient-to-br from-white to-secondary-50 hover:border-primary-400 hover:shadow-lg"
+                      className={`relative p-8 rounded-2xl border-2 cursor-pointer transition-all duration-500 overflow-hidden ${isSelected
+                        ? "border-green-500 bg-green-50/30 shadow-2xl"
+                        : "border-secondary-50 bg-secondary-50 hover:border-primary-200"
                         }`}
                     >
-                      {/* Offer Badge/Sticker - Top Right */}
-                      {isSelected && (
-                        <div className="absolute top-0 right-0 bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 text-white px-5 py-2 rounded shadow-xl transform rotate-3">
-                          <div className="flex items-center space-x-1.5">
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2.5}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                            <span className="text-xs font-extrabold tracking-wide">
-                              SELECTED
-                            </span>
+                      <div className="flex flex-col gap-6">
+                        <div className="flex justify-between items-start">
+                          <div className="flex flex-col gap-1">
+                            <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${isSelected ? 'text-green-600' : 'text-primary-500'}`}>Privilege #{offer.id}</span>
+                            <h3 className="text-3xl font-black text-secondary-900 tracking-tighter uppercase leading-none">
+                              {offer.name || offer.title || `Offer #${offer.id}`}
+                            </h3>
                           </div>
+                          {isSelected && (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
+                              <span className="text-[8px] font-black tracking-widest text-white uppercase">SELECTED</span>
+                              <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {!isSelected && (
-                        <div className="absolute top-0 right-0 bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white px-5 py-2 rounded shadow-lg transform rotate-3">
-                          <span className="text-xs font-extrabold tracking-wide">
-                            AVAILABLE
-                          </span>
+
+                        {offer.description && (
+                          <p className="text-sm font-medium text-secondary-500 leading-relaxed uppercase tracking-wider">
+                            {offer.description}
+                          </p>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-3">
+                          {offer.value !== undefined && offer.value !== null && (
+                            <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-secondary-100">
+                              <span className="text-[10px] font-black tracking-widest text-secondary-400 uppercase">Requirement</span>
+                              <span className="text-sm font-bold text-secondary-900 uppercase">Buy {Number(offer.value)} Items</span>
+                            </div>
+                          )}
+                          {offer.quantity !== undefined && offer.quantity !== null && (
+                            <div className={`flex items-center justify-between p-4 rounded-xl ${isSelected ? 'bg-green-600' : 'bg-primary-500'}`}>
+                              <span className="text-[10px] font-black tracking-widest text-white/70 uppercase">Benefit</span>
+                              <span className="text-sm font-bold text-white uppercase">Get {Number(offer.quantity)} Free</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {/* Offer Number Badge - Sticker Style */}
-                      <div className="absolute top-4 left-4 bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 text-white w-14 h-14 rounded flex items-center justify-center shadow-xl font-extrabold text-xl border-4 border-white transform -rotate-12 z-10">
-                        #{offer.id}
                       </div>
 
-                      <div className="flex items-start justify-between pt-2">
-                        <div className="flex-1 ml-20">
-                          <h3 className="text-2xl font-extrabold text-secondary-800 mb-2 mt-1">
-                            {offer.name || offer.title || `Offer #${offer.id}`}
-                          </h3>
-                          {offer.description && (
-                            <p className="text-secondary-600 mb-3">
-                              {offer.description}
-                            </p>
-                          )}
-                          <div className="space-y-2 text-sm">
-                            {/* Show value (buy X items) */}
-                            {offer.value !== undefined &&
-                              offer.value !== null && (
-                                <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2">
-                                  <p className="text-secondary-700 font-medium text-sm">
-                                    💰{" "}
-                                    <strong>
-                                      Buy {Number(offer.value)} items
-                                    </strong>{" "}
-                                    (at normal price) to qualify
-                                    {cartState.totalItems >=
-                                      Number(offer.value) ? (
-                                      <span className="text-green-600 ml-2 font-bold">
-                                        ✓ You qualify!
-                                      </span>
-                                    ) : (
-                                      <span className="text-red-600 ml-2">
-                                        (Add{" "}
-                                        {Number(offer.value) -
-                                          cartState.totalItems}{" "}
-                                        more item
-                                        {Number(offer.value) -
-                                          cartState.totalItems >
-                                          1
-                                          ? "s"
-                                          : ""}
-                                        )
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                              )}
-                            {/* Show quantity (get Y items with offer) */}
-                            {offer.quantity !== undefined &&
-                              offer.quantity !== null && (
-                                <div className="bg-primary-50 border border-primary-200 rounded p-3 mb-2">
-                                  <p className="text-primary-700 font-semibold text-sm mb-1">
-                                    🎁{" "}
-                                    <strong>
-                                      Get {Number(offer.quantity)} item
-                                      {Number(offer.quantity) > 1
-                                        ? "s"
-                                        : ""}{" "}
-                                      with offer benefit
-                                    </strong>
-                                  </p>
-                                  {cartState.totalItems >
-                                    Number(offer.quantity) ? (
-                                    <div className="bg-amber-50 border border-amber-200 rounded p-2 mt-2">
-                                      <p className="text-xs text-amber-800">
-                                        📊{" "}
-                                        <strong>
-                                          You have {cartState.totalItems} items
-                                          in cart.
-                                        </strong>
-                                        <br />•{" "}
-                                        <strong>
-                                          {Number(offer.quantity)} item
-                                          {Number(offer.quantity) > 1
-                                            ? "s"
-                                            : ""}
-                                        </strong>{" "}
-                                        → Get offer benefit
-                                        <br />• Remaining{" "}
-                                        <strong>
-                                          {cartState.totalItems -
-                                            Number(offer.quantity)}{" "}
-                                          items
-                                        </strong>{" "}
-                                        → Normal price
-                                      </p>
-                                    </div>
-                                  ) : cartState.totalItems ===
-                                    Number(offer.quantity) ? (
-                                    <p className="text-xs text-secondary-600 mt-1">
-                                      All {cartState.totalItems} item
-                                      {Number(offer.quantity) > 1
-                                        ? "s"
-                                        : ""}{" "}
-                                      will receive the offer benefit.
-                                    </p>
-                                  ) : (
-                                    <p className="text-xs text-secondary-600 mt-1">
-                                      When you apply this offer,{" "}
-                                      {Number(offer.quantity)} item
-                                      {Number(offer.quantity) > 1
-                                        ? "s"
-                                        : ""}{" "}
-                                      will get the benefit.
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                            {/* Fallback to minimum_quantity for backward compatibility */}
-                            {!offer.value && offer.minimum_quantity && (
-                              <p>
-                                Minimum quantity: {offer.minimum_quantity} items
-                                {cartState.totalItems >=
-                                  offer.minimum_quantity ? (
-                                  <span className="text-green-600 ml-2">✓</span>
-                                ) : (
-                                  <span className="text-red-600 ml-2">
-                                    (Need{" "}
-                                    {offer.minimum_quantity -
-                                      cartState.totalItems}{" "}
-                                    more)
-                                  </span>
-                                )}
-                              </p>
-                            )}
-                            {offer.minimum_value && (
-                              <p>
-                                Minimum value: ${offer.minimum_value}
-                                {cartState.totalPrice >= offer.minimum_value ? (
-                                  <span className="text-green-600 ml-2">✓</span>
-                                ) : (
-                                  <span className="text-red-600 ml-2">
-                                    (Need $
-                                    {(
-                                      offer.minimum_value - cartState.totalPrice
-                                    ).toFixed(2)}{" "}
-                                    more)
-                                  </span>
-                                )}
-                              </p>
-                            )}
-                            {offer.discount_type && offer.discount_value && (
-                              <p className="text-primary-600 font-semibold">
-                                Benefit:{" "}
-                                {offer.discount_type === "percentage"
-                                  ? `${offer.discount_value}%`
-                                  : `$${offer.discount_value}`}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                      {/* Signature Animated Line */}
+                      <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-6">
+                        <div className={`absolute inset-0 ${isSelected ? 'bg-green-500' : 'bg-primary-500'} transition-transform duration-700 ${isSelected ? 'translate-x-0' : '-translate-x-full'}`}></div>
                       </div>
                     </div>
                   );
@@ -528,24 +393,34 @@ export default function ModalOffers({
           </div>
 
           {/* Footer with buttons */}
-          <div className="border-t border-secondary-200 p-4 bg-secondary-50 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 bg-white border-2 border-secondary-200 text-secondary-700 rounded text-sm font-semibold hover:bg-secondary-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleApplyOffer}
-                disabled={!localSelectedOffer}
-                className={`px-4 py-2 rounded text-sm font-semibold transition-all ${localSelectedOffer
-                  ? "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-soft hover:shadow-glow"
-                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  }`}
-              >
-                Apply Offer
-              </button>
+          <div className="border-t border-secondary-100 p-8 bg-secondary-50 flex-shrink-0">
+            <div className="flex flex-col gap-6">
+              {localSelectedOffer && (
+                <div className="flex items-center gap-4 p-4 bg-white rounded-xl border border-secondary-100">
+                  <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+                  <p className="text-[10px] font-black tracking-widest text-secondary-900 uppercase">
+                    Ready to Claim: {localSelectedOffer.name || localSelectedOffer.title}
+                  </p>
+                </div>
+              )}
+              <div className="flex items-center justify-between gap-4">
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-8 py-4 bg-white border-2 border-secondary-200 text-secondary-900 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase hover:bg-secondary-50 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApplyOffer}
+                  disabled={!localSelectedOffer}
+                  className={`flex-1 px-8 py-4 rounded-xl text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-500 ${localSelectedOffer
+                    ? "bg-secondary-900 text-white hover:bg-primary-500 shadow-xl"
+                    : "bg-secondary-100 text-secondary-300 cursor-not-allowed"
+                    }`}
+                >
+                  Apply Privilege
+                </button>
+              </div>
             </div>
           </div>
         </div>
