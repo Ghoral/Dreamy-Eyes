@@ -250,52 +250,57 @@ export default function ModalOffers({
                     <div
                       key={offer.id}
                       onClick={() => handleSelectOffer(offer)}
-                      className={`relative p-8 rounded-2xl border-2 cursor-pointer transition-all duration-500 overflow-hidden ${isSelected
-                        ? "border-green-500 bg-green-50/30 shadow-2xl"
-                        : "border-secondary-50 bg-secondary-50 hover:border-primary-200"
+                      className={`relative p-[1px] rounded-[17px] cursor-pointer transition-all duration-500 overflow-hidden ${isSelected
+                        ? "bg-green-500 shadow-xl"
+                        : "bg-secondary-100 hover:bg-gradient-to-br hover:from-primary-400 hover:to-primary-600 shadow-sm"
                         }`}
                     >
-                      <div className="flex flex-col gap-6">
-                        <div className="flex justify-between items-start">
-                          <div className="flex flex-col gap-1">
-                            <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${isSelected ? 'text-green-600' : 'text-primary-500'}`}>Privilege #{offer.id}</span>
-                            <h3 className="text-3xl font-black text-secondary-900 tracking-tighter uppercase leading-none">
-                              {offer.name || offer.title || `Offer #${offer.id}`}
-                            </h3>
+                      <div className={`relative p-8 rounded-2xl transition-all duration-500 ${isSelected
+                        ? "bg-green-50/90"
+                        : "bg-secondary-50 hover:bg-white"
+                        }`}>
+                        <div className="flex flex-col gap-6">
+                          <div className="flex justify-between items-start">
+                            <div className="flex flex-col gap-1">
+                              <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${isSelected ? 'text-green-600' : 'text-primary-500'}`}>Privilege #{offer.id}</span>
+                              <h3 className="text-3xl font-black text-secondary-900 tracking-tighter uppercase leading-none">
+                                {offer.name || offer.title || `Offer #${offer.id}`}
+                              </h3>
+                            </div>
+                            {isSelected && (
+                              <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
+                                <span className="text-[8px] font-black tracking-widest text-white uppercase">SELECTED</span>
+                                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                              </div>
+                            )}
                           </div>
-                          {isSelected && (
-                            <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
-                              <span className="text-[8px] font-black tracking-widest text-white uppercase">SELECTED</span>
-                              <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                            </div>
+
+                          {offer.description && (
+                            <p className="text-sm font-medium text-secondary-500 leading-relaxed uppercase tracking-wider">
+                              {offer.description}
+                            </p>
                           )}
+
+                          <div className="grid grid-cols-1 gap-3">
+                            {offer.value !== undefined && offer.value !== null && (
+                              <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-secondary-100">
+                                <span className="text-[10px] font-black tracking-widest text-secondary-400 uppercase">Requirement</span>
+                                <span className="text-sm font-bold text-secondary-900 uppercase">Buy {Number(offer.value)} Items</span>
+                              </div>
+                            )}
+                            {offer.quantity !== undefined && offer.quantity !== null && (
+                              <div className={`flex items-center justify-between p-4 rounded-xl ${isSelected ? 'bg-green-600' : 'bg-primary-500'}`}>
+                                <span className="text-[10px] font-black tracking-widest text-white/70 uppercase">Benefit</span>
+                                <span className="text-sm font-bold text-white uppercase">Get {Number(offer.quantity)} Free</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        {offer.description && (
-                          <p className="text-sm font-medium text-secondary-500 leading-relaxed uppercase tracking-wider">
-                            {offer.description}
-                          </p>
-                        )}
-
-                        <div className="grid grid-cols-1 gap-3">
-                          {offer.value !== undefined && offer.value !== null && (
-                            <div className="flex items-center justify-between p-4 bg-white rounded-xl border border-secondary-100">
-                              <span className="text-[10px] font-black tracking-widest text-secondary-400 uppercase">Requirement</span>
-                              <span className="text-sm font-bold text-secondary-900 uppercase">Buy {Number(offer.value)} Items</span>
-                            </div>
-                          )}
-                          {offer.quantity !== undefined && offer.quantity !== null && (
-                            <div className={`flex items-center justify-between p-4 rounded-xl ${isSelected ? 'bg-green-600' : 'bg-primary-500'}`}>
-                              <span className="text-[10px] font-black tracking-widest text-white/70 uppercase">Benefit</span>
-                              <span className="text-sm font-bold text-white uppercase">Get {Number(offer.quantity)} Free</span>
-                            </div>
-                          )}
+                        {/* Signature Animated Line */}
+                        <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-6">
+                          <div className={`absolute inset-0 ${isSelected ? 'bg-green-500' : 'bg-primary-500'} transition-transform duration-700 ${isSelected ? 'translate-x-0' : '-translate-x-full'}`}></div>
                         </div>
-                      </div>
-
-                      {/* Signature Animated Line */}
-                      <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-6">
-                        <div className={`absolute inset-0 ${isSelected ? 'bg-green-500' : 'bg-primary-500'} transition-transform duration-700 ${isSelected ? 'translate-x-0' : '-translate-x-full'}`}></div>
                       </div>
                     </div>
                   );
