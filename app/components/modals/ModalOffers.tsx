@@ -251,20 +251,20 @@ export default function ModalOffers({
                       key={offer.id}
                       onClick={() => handleSelectOffer(offer)}
                       className={`relative p-8 rounded-2xl border-2 cursor-pointer transition-all duration-500 overflow-hidden ${isSelected
-                        ? "border-primary-500 bg-primary-50/30 shadow-2xl"
+                        ? "border-green-500 bg-green-50/30 shadow-2xl"
                         : "border-secondary-50 bg-secondary-50 hover:border-primary-200"
                         }`}
                     >
                       <div className="flex flex-col gap-6">
                         <div className="flex justify-between items-start">
                           <div className="flex flex-col gap-1">
-                            <span className="text-[10px] font-black tracking-[0.3em] text-primary-500 uppercase">Privilege #{offer.id}</span>
+                            <span className={`text-[10px] font-black tracking-[0.3em] uppercase ${isSelected ? 'text-green-600' : 'text-primary-500'}`}>Privilege #{offer.id}</span>
                             <h3 className="text-3xl font-black text-secondary-900 tracking-tighter uppercase leading-none">
                               {offer.name || offer.title || `Offer #${offer.id}`}
                             </h3>
                           </div>
                           {isSelected && (
-                            <div className="flex items-center gap-2 px-3 py-1 bg-primary-500 rounded-full">
+                            <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
                               <span className="text-[8px] font-black tracking-widest text-white uppercase">SELECTED</span>
                               <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                             </div>
@@ -285,7 +285,7 @@ export default function ModalOffers({
                             </div>
                           )}
                           {offer.quantity !== undefined && offer.quantity !== null && (
-                            <div className="flex items-center justify-between p-4 bg-primary-500 rounded-xl">
+                            <div className={`flex items-center justify-between p-4 rounded-xl ${isSelected ? 'bg-green-600' : 'bg-primary-500'}`}>
                               <span className="text-[10px] font-black tracking-widest text-white/70 uppercase">Benefit</span>
                               <span className="text-sm font-bold text-white uppercase">Get {Number(offer.quantity)} Free</span>
                             </div>
@@ -295,7 +295,7 @@ export default function ModalOffers({
 
                       {/* Signature Animated Line */}
                       <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-6">
-                        <div className={`absolute inset-0 bg-primary-500 transition-transform duration-700 ${isSelected ? 'translate-x-0' : '-translate-x-full'}`}></div>
+                        <div className={`absolute inset-0 ${isSelected ? 'bg-green-500' : 'bg-primary-500'} transition-transform duration-700 ${isSelected ? 'translate-x-0' : '-translate-x-full'}`}></div>
                       </div>
                     </div>
                   );

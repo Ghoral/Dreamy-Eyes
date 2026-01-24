@@ -28,8 +28,8 @@ const ProductOfferBadge = ({ offers }: ProductOfferBadgeProps) => {
                         key={offer.id}
                         onClick={(e) => !isApplied && handleActivate(e, offer)}
                         className={`group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${isApplied
-                                ? "bg-green-50 border-green-200 text-green-700 shadow-sm"
-                                : "bg-primary-50 border-primary-100 text-primary-600 hover:bg-primary-500 hover:text-white"
+                            ? "bg-green-50 border-green-200 text-green-700 shadow-sm"
+                            : "bg-primary-50 border-primary-100 text-primary-600 hover:bg-primary-500 hover:text-white"
                             }`}
                     >
                         <span className="text-[9px] font-black uppercase tracking-wider">
@@ -41,7 +41,7 @@ const ProductOfferBadge = ({ offers }: ProductOfferBadgeProps) => {
                         {!isApplied && (
                             <div className="flex items-center gap-1 overflow-hidden max-w-0 group-hover:max-w-[100px] transition-all duration-500 ease-in-out whitespace-nowrap">
                                 <span className="text-[8px] font-bold uppercase opacity-0 group-hover:opacity-100 transition-opacity delay-100">
-                                    • Click to Activate
+                                    (Click to Activate)
                                 </span>
                             </div>
                         )}

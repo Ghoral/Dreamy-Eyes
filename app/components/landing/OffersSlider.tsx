@@ -36,7 +36,7 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
   }
 
   return (
-    <section id="offers-section" className="w-full py-12 bg-white relative overflow-hidden">
+    <section id="offers-section" className="w-full pt-12 pb-4 bg-white relative overflow-hidden">
       <div className="max-w-[1700px] mx-auto px-4 md:px-12 relative z-10">
         <div className="mb-12 border-b border-secondary-100 pb-8">
           <h2 className="text-4xl md:text-5xl font-extrabold text-secondary-900 tracking-tighter uppercase whitespace-nowrap">
@@ -45,7 +45,7 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
         </div>
 
         {/* Voucher Grid */}
-        <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+        <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-8 md:gap-y-16">
           {offers.map((offer, index) => {
             const isApplied = cartState.selectedOffer?.id === offer.id;
 
@@ -55,7 +55,7 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
                 onClick={() => !isApplied && handleApplyOffer(offer)}
                 className="group cursor-pointer w-[calc(100%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
               >
-                <div className={`relative aspect-[16/9] mb-8 overflow-hidden rounded-2xl transition-all duration-700 ease-soft-spring border-2 ${isApplied ? "border-primary-500 bg-primary-50/30" : "border-secondary-50 bg-secondary-50"
+                <div className={`relative aspect-[16/9] mb-8 overflow-hidden rounded-2xl transition-all duration-700 ease-soft-spring border-2 ${isApplied ? "border-green-500 bg-green-50/30" : "border-secondary-50 bg-secondary-50"
                   }`}>
                   {/* Background Accents */}
                   <div className="absolute inset-0 opacity-20">
@@ -70,7 +70,7 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
                         {offer.discount_type === 'percentage' ? 'TIER I' : 'TIER II'}
                       </span>
                       {isApplied && (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-primary-500 rounded-full">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-green-600 rounded-full">
                           <span className="text-[8px] font-black tracking-widest text-white uppercase">ACTIVE</span>
                           <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                         </div>
@@ -98,15 +98,15 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
                     </div>
                     <div className="text-right shrink-0">
                       <span className="text-[8px] font-bold text-secondary-300 tracking-widest uppercase block mb-1">Status</span>
-                      <span className={`text-[10px] font-black tracking-widest uppercase ${isApplied ? 'text-primary-500' : 'text-secondary-900 group-hover:text-primary-500 transition-colors'}`}>
-                        {isApplied ? "Claimed" : "Redeem"}
+                      <span className={`text-[10px] font-black tracking-widest uppercase ${isApplied ? 'text-green-600' : 'text-secondary-900 group-hover:text-primary-500 transition-colors'}`}>
+                        {isApplied ? "Claimed" : "Redeem (Click to Activate)"}
                       </span>
                     </div>
                   </div>
 
                   {/* Signature Animated Line */}
                   <div className="h-0.5 w-full bg-secondary-100 relative overflow-hidden mt-2">
-                    <div className={`absolute inset-0 bg-primary-500 transition-transform duration-700 ${isApplied ? 'translate-x-0' : '-translate-x-full group-hover:translate-x-0'}`}></div>
+                    <div className={`absolute inset-0 ${isApplied ? 'bg-green-500' : 'bg-primary-500'} transition-transform duration-700 ${isApplied ? 'translate-x-0' : '-translate-x-full group-hover:translate-x-0'}`}></div>
                   </div>
                 </div>
               </div>
