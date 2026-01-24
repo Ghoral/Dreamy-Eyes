@@ -55,11 +55,11 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
                 onClick={() => !isApplied && handleApplyOffer(offer)}
                 className="group cursor-pointer w-[calc(100%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]"
               >
-                <div className={`relative p-[1px] mb-8 rounded-[21px] transition-all duration-700 ease-soft-spring overflow-hidden ${isApplied
+                <div className={`relative p-[1.5px] mb-8 rounded-[22px] transition-all duration-700 ease-soft-spring overflow-hidden ${isApplied
                   ? "bg-green-500 shadow-lg"
-                  : "bg-secondary-100 group-hover:bg-gradient-to-br group-hover:from-primary-400 group-hover:via-primary-500 group-hover:to-primary-600 shadow-sm hover:shadow-xl hover:-translate-y-1"
+                  : "bg-gradient-to-br from-primary-500/60 via-primary-600/60 to-primary-500/60 group-hover:from-primary-400 group-hover:via-primary-500 group-hover:to-primary-600 shadow-sm hover:shadow-xl hover:-translate-y-1"
                   }`}>
-                  <div className={`relative aspect-[16/9] w-full h-full overflow-hidden rounded-2xl transition-all duration-700 ${isApplied ? "bg-green-50/90" : "bg-secondary-50 group-hover:bg-white"
+                  <div className={`relative aspect-[16/9] w-full h-full overflow-hidden rounded-[20px] transition-all duration-700 ${isApplied ? "bg-green-50/90" : "bg-secondary-50 group-hover:bg-white"
                     }`}>
                     {/* Background Accents (only show when not applied to keep active state clean) */}
                     {!isApplied && (

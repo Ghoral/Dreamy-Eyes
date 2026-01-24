@@ -250,12 +250,12 @@ export default function ModalOffers({
                     <div
                       key={offer.id}
                       onClick={() => handleSelectOffer(offer)}
-                      className={`relative p-[1px] rounded-[17px] cursor-pointer transition-all duration-500 overflow-hidden ${isSelected
+                      className={`relative p-[1.5px] rounded-[22px] cursor-pointer transition-all duration-500 overflow-hidden ${isSelected
                         ? "bg-green-500 shadow-xl"
-                        : "bg-secondary-100 hover:bg-gradient-to-br hover:from-primary-400 hover:to-primary-600 shadow-sm"
+                        : "bg-gradient-to-br from-primary-500/60 via-primary-600/60 to-primary-500/60 hover:from-primary-400 hover:to-primary-600 shadow-sm"
                         }`}
                     >
-                      <div className={`relative p-8 rounded-2xl transition-all duration-500 ${isSelected
+                      <div className={`relative p-8 rounded-[20px] transition-all duration-500 ${isSelected
                         ? "bg-green-50/90"
                         : "bg-secondary-50 hover:bg-white"
                         }`}>
