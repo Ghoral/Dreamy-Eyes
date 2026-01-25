@@ -14,8 +14,7 @@ export const UserMetadataLogger = () => {
 
         if (user) {
           const metadata = user.user_metadata;
-          console.log("User metadata:", metadata);
-          console.log("Country from metadata:", metadata?.country);
+
         }
       } catch (error) {
         // Silently ignore errors
@@ -31,8 +30,7 @@ export const UserMetadataLogger = () => {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         const metadata = session.user.user_metadata;
-        console.log("User metadata:", metadata);
-        console.log("Country from metadata:", metadata?.country);
+
       }
     });
 

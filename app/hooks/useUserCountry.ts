@@ -38,7 +38,7 @@ const fetchCountryFromIP = async (): Promise<string | null> => {
         if (verifyResponse.ok) {
           const verifyData = await verifyResponse.json();
           if (verifyData.valid && verifyData.country) {
-            console.log("Using decrypted cookie IP country:", verifyData.country);
+
             return verifyData.country.toLowerCase();
           } else {
             console.warn("Cookie decryption failed (may be tampered), re-fetching...");
@@ -62,10 +62,10 @@ const fetchCountryFromIP = async (): Promise<string | null> => {
     const countryName = data.countryName || "nepal"; // Default to Nepal
 
     // Encrypted cookie is automatically set by the API response
-    console.log("Fetched IP country:", countryName);
+
     return countryName.toLowerCase();
   } catch (error) {
-    console.error("Error fetching country from IP:", error);
+
 
     // Fallback to default if all else fails
     return "nepal";

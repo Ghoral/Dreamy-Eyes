@@ -43,7 +43,7 @@ const SalesSection = () => {
     let mounted = true;
     const fetchData = async () => {
       if (!country) return; // Wait for country to be determined
-      console.log('[SalesSection] Fetching products for country:', country);
+
       setLoading(true);
       const res = await get_products(6, 0, ["sale"], country);
       if (mounted && res?.status && res?.data) {
