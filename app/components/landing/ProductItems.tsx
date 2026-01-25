@@ -20,6 +20,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
   const [totalProducts, setTotalProducts] = useState(0);
   const [productsPerPage, setProductsPerPage] = useState(15);
   const [sortBy, setSortBy] = useState<string>("latest_added");
+  const [hasEverLoaded, setHasEverLoaded] = useState(false);
 
   const [toastConfig, setToastConfig] = useState<{
     message: string;
@@ -39,6 +40,14 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
   useEffect(() => {
     console.log('[ProductItems] productsData changed:', productsData);
   }, [productsData]);
+
+  useEffect(() => {
+    if (productsData && !isLoading) {
+      setHasEverLoaded(true);
+    }
+  }, [productsData, isLoading]);
+
+  console.log('[ProductItems] Rendering. total:', totalProducts, 'limit:', productsPerPage, 'loading:', isLoading, 'hasEverLoaded:', hasEverLoaded);
 
   const normalizedData = useMemo(() => {
     const targetData = productsData;
@@ -64,6 +73,8 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
     return [];
   }, [productsData]);
 
+  const persistentTotal = useRef(totalProducts);
+
   useEffect(() => {
     if (productsData) {
       // Priority 1: Direct total on state
@@ -79,11 +90,13 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
       if (finalTotal !== null) {
         setTotalProducts(finalTotal);
+        persistentTotal.current = finalTotal;
       } else if (currentPage === 1) {
         const items = Array.isArray(productsData) ? productsData :
           (productsData.data && Array.isArray(productsData.data) ? productsData.data : []);
         if (items.length > 0) {
           setTotalProducts(items.length);
+          persistentTotal.current = items.length;
         }
       }
     }
@@ -408,7 +421,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
         )}
 
         {/* Pagination Controls */}
-        {totalProducts > 0 && Math.ceil(totalProducts / productsPerPage) > 1 && (
+        {(totalProducts > 0 || hasEverLoaded) && (
           <div className="mt-24 flex flex-col items-center gap-8">
             <div className="flex items-center gap-3">
               <button
