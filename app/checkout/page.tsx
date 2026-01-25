@@ -463,11 +463,58 @@ export default function CheckoutPage() {
           accessoryPayload.length > 0 ? accessoryPayload : null,
       };
 
-      const { data: orderData, error: orderError } =
+      const { data: orderCreated, error: orderError } =
         await supabaseBrowserClient.rpc("create_orders_and_update_stock", payload);
 
       if (orderError) {
         throw new Error(orderError.message || "Failed to create order");
+      }
+
+      // Send Order Confirmation Email
+      try {
+        const fullItems = [
+          ...(cartState.normalItems || []),
+          ...(cartState.offerItems || []),
+          ...(cartState.accessoryItems || [])
+        ];
+
+        const originalTotal = cartState.items.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const offerItems = cartState.offerItems || [];
+        const offer = cartState.selectedOffer || zustandOffer;
+        let savings = 0;
+        if (offer && offerItems.length > 0) {
+          offerItems.forEach(oi => {
+            savings += (oi.price - calculateOfferPrice(oi.price, offer)) * oi.quantity;
+          });
+        }
+        const finalAmount = originalTotal - savings + deliveryCharge;
+        const formattedTotal = formatPrice(calculatePriceSync(finalAmount, country), country);
+
+        const selectedAddress = addresses.find(a => a.id === selectedAddressId);
+
+        await fetch("/api/send-order-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerEmail: user.email,
+            orderData: {
+              order_id: order_number,
+              total_amount: formattedTotal,
+              first_name: user.user_metadata?.first_name || selectedAddress?.street?.split(' ')[0] || "Customer",
+              last_name: user.user_metadata?.last_name || "",
+              items: fullItems.map(item => ({
+                title: item.title,
+                quantity: item.quantity,
+                price: formatPrice(calculatePriceSync(item.price * item.quantity, country), country)
+              }))
+            },
+          }),
+        });
+      } catch (emailError) {
+        console.error("Failed to send order confirmation email:", emailError);
+        // We don't throw error here to not block the success page redirect
       }
 
       clearOffer();
