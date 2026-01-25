@@ -3,45 +3,24 @@
 import { useState, useEffect } from "react";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
 
-const IP_COUNTRY_COOKIE_NAME = "dreamy-eyes-ip-country";
-
-const getCookie = (name: string): string | null => {
-  if (typeof document === "undefined") return null;
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) {
-    return parts.pop()?.split(";").shift() || null;
-  }
-  return null;
-};
-
-const fetchCountryFromIP = async (): Promise<string | null> => {
+const fetchCountryName = async (): Promise<string> => {
   try {
-    if (typeof window === "undefined") return "nepal";
+    // 1. Get raw country code from Vercel-optimized endpoint
+    const locRes = await fetch("/api/location", { cache: 'no-store' });
+    const locData = await locRes.json();
+    const code = locData.country?.toUpperCase();
 
-    // 1. Browser Probe (Captures Browser VPN)
-    let browserHint = "";
-    try {
-      const res = await fetch("https://ipapi.co/json/", { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        browserHint = data.country_code || "";
-        console.log(`[useUserCountry] Browser Probe: ${browserHint}`);
-      }
-    } catch (e) {
-      console.warn("[useUserCountry] Browser probe failed.");
-    }
+    // 2. Sync with main detection API to get full name and update encrypted cookie
+    const syncRes = await fetch(`/api/detect-country?hint=${code || ""}&v=${Date.now()}`, {
+      cache: 'no-store'
+    });
 
-    // 2. Server Sync
-    const response = await fetch(`/api/detect-country?hint=${browserHint}`, { cache: 'no-store' });
-    if (!response.ok) throw new Error("API failed");
+    if (!syncRes.ok) return "india";
 
-    const data = await response.json();
-    console.log(`[useUserCountry] Server Response: ${data.countryName}`);
-    return (data.countryName || "Nepal").toLowerCase();
+    const syncData = await syncRes.json();
+    return (syncData.countryName || "India").toLowerCase();
   } catch (error) {
-    console.error("[useUserCountry] Fetch failed:", error);
-    return "nepal";
+    return "india";
   }
 };
 
@@ -50,22 +29,33 @@ export const useUserCountry = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const init = async () => {
       try {
         const supabase = createSupabaseClient();
         const { data: { user } } = await supabase.auth.getUser();
 
+        // Priority 1: User Profile
         if (user?.user_metadata?.country) {
-          console.log("[useUserCountry] Using Account Settings");
-          setCountry(user.user_metadata.country.toLowerCase());
-        } else {
-          const res = await fetchCountryFromIP();
-          setCountry(res);
+          if (isMounted) {
+            setCountry(user.user_metadata.country.toLowerCase());
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // Priority 2: Vercel Detection
+        const detected = await fetchCountryName();
+        if (isMounted) {
+          setCountry(detected);
+          setIsLoading(false);
         }
       } catch (e) {
-        setCountry("nepal");
-      } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setCountry("india");
+          setIsLoading(false);
+        }
       }
     };
 
@@ -78,14 +68,17 @@ export const useUserCountry = () => {
         if (session?.user?.user_metadata?.country) {
           setCountry(session.user.user_metadata.country.toLowerCase());
         } else {
-          const res = await fetchCountryFromIP();
+          const res = await fetchCountryName();
           setCountry(res);
         }
         setIsLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return { country, isLoading };
