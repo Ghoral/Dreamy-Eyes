@@ -66,7 +66,6 @@ export const getFirstImageUrl = (images: string): string | null => {
     }
     return null;
   } catch (err) {
-    console.error("Invalid image format", err);
     return null;
   }
 };
@@ -183,14 +182,12 @@ export const fetchExchangeRate = async (): Promise<number> => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       rates = await response.json();
     } catch (primaryError) {
-      console.warn("Primary URL failed, trying fallback:", primaryError);
       // Try fallback URL
       try {
         response = await fetch(fallbackUrl);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         rates = await response.json();
       } catch (fallbackError) {
-        console.error("Both URLs failed:", fallbackError);
         throw fallbackError;
       }
     }
@@ -204,11 +201,9 @@ export const fetchExchangeRate = async (): Promise<number> => {
       if (nprRates && typeof nprRates === "object" && "inr" in nprRates) {
         finalRate = nprRates.inr;
       } else {
-        console.warn("INR rate not found in response, using fallback");
         finalRate = FALLBACK_RATE;
       }
     } else {
-      console.warn("Unexpected response format, using fallback rate");
       finalRate = FALLBACK_RATE;
     }
 
@@ -218,7 +213,6 @@ export const fetchExchangeRate = async (): Promise<number> => {
       finalRate <= 0 ||
       !isFinite(finalRate)
     ) {
-      console.warn("Invalid rate received, using fallback");
       finalRate = FALLBACK_RATE;
     }
 
@@ -230,14 +224,6 @@ export const fetchExchangeRate = async (): Promise<number> => {
 
     return finalRate;
   } catch (error) {
-    console.error("Error fetching exchange rate:", error);
-    console.error("Error details:", {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : undefined,
-    });
-
-
     return FALLBACK_RATE;
   }
 };

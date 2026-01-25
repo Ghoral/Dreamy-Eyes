@@ -82,7 +82,6 @@ const AccessoriesSection = ({ initialResponse, initialCountry }: { initialRespon
         if (!mounted) return;
         setItemsResponse(res);
       } catch (err: any) {
-        console.error("Failed to load accessories", err);
       } finally {
         if (!mounted) return;
         setLoading(false);

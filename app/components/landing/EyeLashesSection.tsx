@@ -58,7 +58,6 @@ export default function EyeLashesSection({ initialData, initialTotal, initialCou
                     setTotal(0);
                 }
             } catch (error) {
-                console.error("Failed to fetch lashes", error);
             } finally {
                 setLoading(false);
             }
@@ -66,7 +65,7 @@ export default function EyeLashesSection({ initialData, initialTotal, initialCou
         fetchData();
     }, [activeCountry, initialCountry, currentPage, sortBy]);
 
-    if (!loading && total === 0 && !hasEverLoaded) return null;
+    if (!loading && total === 0) return null;
 
     const getImageUrl = (lash: any) => {
         if (lash.primary_thumbnail) return getThumbnailUrl(lash);

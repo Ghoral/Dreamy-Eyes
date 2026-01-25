@@ -133,7 +133,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
           setProductsData(responseData);
         }
       } catch (error) {
-        console.error("Error fetching filtered products:", error);
       } finally {
         setIsLoading(false);
       }
@@ -225,7 +224,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
         setAvailableTags(baseTags);
       } catch (e) {
-        console.error("Error checking section availability", e);
       }
     };
 

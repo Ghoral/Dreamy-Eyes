@@ -16,7 +16,6 @@ const TikTokCarousel = () => {
           setAppDetails(response.data);
         }
       } catch (error) {
-        console.error("Error fetching app details:", error);
       } finally {
         setLoading(false);
       }

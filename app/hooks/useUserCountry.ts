@@ -41,13 +41,13 @@ const fetchCountryFromIP = async (): Promise<string | null> => {
 
             return verifyData.country.toLowerCase();
           } else {
-            console.warn("Cookie decryption failed (may be tampered), re-fetching...");
+
             // Cookie was tampered with or corrupted, clear it and re-fetch
             document.cookie = `${IP_COUNTRY_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
           }
         }
       } catch (verifyError) {
-        console.error("Error verifying cookie:", verifyError);
+
         // Continue to re-fetch if verification fails
       }
     }
@@ -96,7 +96,7 @@ export const useUserCountry = () => {
         const ipCountry = await fetchCountryFromIP();
         setCountry(ipCountry);
       } catch (error) {
-        console.error("Error in fetchUserCountry:", error);
+
         // Fallback to cookie or Nepal
         if (typeof window !== "undefined") {
           const cookieCountry = getCookie(IP_COUNTRY_COOKIE_NAME);

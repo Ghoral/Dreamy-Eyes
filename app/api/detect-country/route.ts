@@ -46,7 +46,7 @@ function decryptValue(encryptedValue: string): string | null {
 
     return decrypted;
   } catch (error) {
-    console.error("Decryption error:", error);
+
     return null;
   }
 }

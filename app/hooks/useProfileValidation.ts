@@ -46,7 +46,7 @@ export const useProfileValidation = () => {
 
       setIsValidating(false);
     } catch (error) {
-      console.error("Error checking profile completion:", error);
+
       setIsValidating(false);
     }
   };

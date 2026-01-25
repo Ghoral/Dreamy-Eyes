@@ -40,7 +40,6 @@ export default function LoginPage() {
           .filter((d) => d.length > 0 && !d.startsWith("#") && !d.includes(" ") && d.includes("."));
         setInvalidDomains(list);
       } catch (e) {
-        console.error("Failed to load invalid domains:", e);
       }
     };
     loadInvalidDomains();
