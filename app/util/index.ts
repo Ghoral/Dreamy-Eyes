@@ -237,11 +237,11 @@ export const calculatePrice = async (
 ): Promise<number> => {
   const countryLower = country?.toLowerCase() || "";
 
-  if (!country || countryLower === "nepal") {
+  if (!country || countryLower === "nepal" || countryLower === "np") {
     return nprPrice; // Return NPR price as is
   }
 
-  if (countryLower === "india") {
+  if (countryLower === "india" || countryLower === "in") {
     const rate = await fetchExchangeRate();
     return nprPrice * rate; // Convert NPR to INR using real-time rate
   }
@@ -257,11 +257,11 @@ export const calculatePriceSync = (
 ): number => {
   const countryLower = country?.toLowerCase() || "";
 
-  if (!country || countryLower === "nepal") {
+  if (!country || countryLower === "nepal" || countryLower === "np") {
     return nprPrice; // Return NPR price as is
   }
 
-  if (countryLower === "india") {
+  if (countryLower === "india" || countryLower === "in") {
     const rate = exchangeRateCache?.rate || FALLBACK_RATE;
     return nprPrice * rate; // Convert NPR to INR using cached rate
   }
@@ -274,7 +274,7 @@ export const calculatePriceSync = (
 export const formatPrice = (price: number, country: string | null): string => {
   const countryLower = country?.toLowerCase() || "";
   // Show Rs only for Nepal, ₹ for everyone else (India and other countries)
-  const symbol = countryLower === "nepal" ? "Rs" : "₹";
+  const symbol = (countryLower === "nepal" || countryLower === "np") ? "Rs" : "₹";
 
 
   // Format with 2 decimal places

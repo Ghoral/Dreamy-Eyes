@@ -41,20 +41,19 @@ export async function getServerSideCountry(): Promise<string> {
         const vercelCountry = headerList.get("x-vercel-ip-country") || headerList.get("cf-ipcountry");
         if (vercelCountry) {
             const code = vercelCountry.toUpperCase();
-            if (code === "NP") return "nepal";
-            if (code === "IN") return "india";
+            return (code === "NP") ? "np" : "in";
         }
 
         // 2. Check persistent encrypted cookie
         const cookie = cookieStore.get(IP_COUNTRY_COOKIE_NAME);
         if (cookie?.value) {
             const decrypted = decryptCountryValue(cookie.value);
-            if (decrypted) return decrypted.toLowerCase();
+            if (decrypted) return decrypted.toLowerCase() === "np" ? "np" : "in";
         }
 
-        // Default to India on failure
-        return "india";
+        // Default to 'in' on failure (Everything else is India/International)
+        return "in";
     } catch (e) {
-        return "india";
+        return "in";
     }
 }

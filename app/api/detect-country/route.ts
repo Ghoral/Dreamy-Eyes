@@ -35,29 +35,21 @@ export async function GET(req: NextRequest) {
     ? hint
     : (req.headers.get("x-vercel-ip-country") || req.headers.get("cf-ipcountry") || "Unknown");
 
-  // 2. Resolve Full Name
-  let countryName = "India"; // Default fallback
-  if (countryCode !== "Unknown") {
-    try {
-      const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-      countryName = regionNames.of(countryCode) || "India";
-    } catch (e) {
-      if (countryCode === "IN") countryName = "India";
-      else if (countryCode === "NP") countryName = "Nepal";
-      else countryName = countryCode;
-    }
-  }
+  // 2. Map to 'np' or 'in' (Everything non-Nepal defaults to 'in')
+  const resolved = (countryCode === "NP") ? "np" : "in";
+
+  console.log(`[DetectCountry] IP: ${ip} | Resolved: ${resolved}`);
 
   const response = NextResponse.json({
     ip,
     country: countryCode,
-    countryName,
-    isIndia: countryCode === "IN" || countryName === "India",
-    isNepal: countryCode === "NP",
+    countryName: resolved,
+    isIndia: resolved === "in",
+    isNepal: resolved === "np",
   });
 
   // Set the encrypted cookie
-  const encryptedValue = encryptValue(countryName);
+  const encryptedValue = encryptValue(resolved);
   response.cookies.set(IP_COUNTRY_COOKIE_NAME, encryptedValue, {
     maxAge: IP_COUNTRY_COOKIE_MAX_AGE,
     path: "/",
