@@ -18,7 +18,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
   const isFirstRender = useRef(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [productsPerPage, setProductsPerPage] = useState(15);
+  const [productsPerPage, setProductsPerPage] = useState(20);
   const [sortBy, setSortBy] = useState<string>("latest_added");
   const [hasEverLoaded, setHasEverLoaded] = useState(false);
 
@@ -104,7 +104,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
       if (isFirstRender.current) {
         isFirstRender.current = false;
         // Skip fetch if current state matches server state
-        if (activeCountry?.toLowerCase() === initialCountry?.toLowerCase() && selectedTag === 'all' && currentPage === 1 && productsPerPage === 15) {
+        if (activeCountry?.toLowerCase() === initialCountry?.toLowerCase() && selectedTag === 'all' && currentPage === 1 && productsPerPage === 20) {
           return;
         }
       }
@@ -118,10 +118,9 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
             ? ["sale", "latest_arrival", "top_seller", "best_reviewed"]
             : [selectedTag];
 
-        const offset = (currentPage - 1) * productsPerPage;
         const { data: responseData } = await get_products(
-          productsPerPage,
-          offset,
+          1000,
+          0,
           tagsToSend,
           activeCountry,
           { sort: sortBy }
@@ -138,7 +137,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
       }
     };
     fetchFilteredProducts();
-  }, [selectedTag, activeCountry, initialCountry, currentPage, productsPerPage, sortBy]);
+  }, [selectedTag, activeCountry, initialCountry, sortBy]);
 
   const getProductLink = (product: any) => {
     const productId = product.id || product.title;
@@ -269,12 +268,12 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
         {/* Filter & Per Page Row */}
         <div className="mb-16 pt-8 border-t border-secondary-100">
           <div className="w-full flex flex-col lg:flex-row justify-between items-center gap-8">
-            {(!isLoading && totalProducts > 0) && (
+            {(filteredProducts.length > 0) && (
               <div className="order-2 lg:order-1 flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-left-4 duration-700">
                 {/* Per Page Selector */}
                 <div className="flex items-center gap-4 bg-secondary-50 p-1.5 rounded-full border border-secondary-100">
                   <span className="pl-4 pr-2 text-[10px] font-black tracking-widest text-secondary-400 uppercase">View:</span>
-                  {[15, 25, 50, 100].map((limit) => (
+                  {[20, 40, 60, 100].map((limit) => (
                     <button
                       key={limit}
                       onClick={() => {
@@ -294,7 +293,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
             )}
 
             <div className="order-1 lg:order-2 flex flex-row items-center gap-3 w-full lg:w-auto justify-end">
-              {!isLoading && totalProducts > 0 && (
+              {filteredProducts.length > 0 && (
                 <div className="relative group/sort w-auto animate-in fade-in slide-in-from-right-4 duration-700">
                   <select
                     value={sortBy}
@@ -345,7 +344,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
           </div>
         ) : filteredProducts && filteredProducts.length > 0 ? (
           <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
-            {filteredProducts.map((product: any, index: number) => {
+            {filteredProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage).map((product: any, index: number) => {
               const imageUrl = getThumbnailUrl(product);
               const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
 
@@ -423,7 +422,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
         )}
 
         {/* Pagination Controls */}
-        {(totalProducts > 0 || hasEverLoaded) && (
+        {(filteredProducts.length > 0 || hasEverLoaded) && (
           <div className="mt-24 flex flex-col items-center gap-8">
             <div className="flex items-center gap-3">
               <button
@@ -438,12 +437,13 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
               </button>
 
               <div className="flex items-center gap-2">
-                {[...Array(Math.ceil(totalProducts / productsPerPage))].map((_, i) => {
+                {[...Array(Math.ceil(filteredProducts.length / productsPerPage))].map((_, i) => {
                   const pageNum = i + 1;
+                  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
                   // Show current page, first, last, and pages around current
                   if (
                     pageNum === 1 ||
-                    pageNum === Math.ceil(totalProducts / productsPerPage) ||
+                    pageNum === totalPages ||
                     (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
                   ) {
                     return (
@@ -473,10 +473,10 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
               <button
                 onClick={() => {
-                  setCurrentPage(prev => Math.min(Math.ceil(totalProducts / productsPerPage), prev + 1));
+                  setCurrentPage(prev => Math.min(Math.ceil(filteredProducts.length / productsPerPage), prev + 1));
                   scrollToSection('products-section');
                 }}
-                disabled={currentPage === Math.ceil(totalProducts / productsPerPage)}
+                disabled={currentPage === Math.ceil(filteredProducts.length / productsPerPage)}
                 className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-secondary-100 text-secondary-900 hover:border-primary-500 hover:text-primary-500 disabled:opacity-20 disabled:hover:border-secondary-100 disabled:hover:text-secondary-900 transition-all group"
               >
                 <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
@@ -484,7 +484,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
             </div>
 
             <p className="text-[10px] font-black tracking-[0.3em] text-secondary-300 uppercase">
-              Page {currentPage} of {Math.ceil(totalProducts / productsPerPage)} — {totalProducts} Artifacts
+              Page {currentPage} of {Math.ceil(filteredProducts.length / productsPerPage)} — {filteredProducts.length} Artifacts
             </p>
           </div>
         )}
