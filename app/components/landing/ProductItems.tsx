@@ -21,6 +21,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
   const [productsPerPage, setProductsPerPage] = useState(20);
   const [sortBy, setSortBy] = useState<string>("latest_added");
   const [hasEverLoaded, setHasEverLoaded] = useState(false);
+  const isMounting = useRef(true);
 
   const [toastConfig, setToastConfig] = useState<{
     message: string;
@@ -40,6 +41,14 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
   useEffect(() => {
 
   }, [productsData]);
+
+  useEffect(() => {
+    if (isMounting.current) {
+      isMounting.current = false;
+      return;
+    }
+    scrollToSection('products-section');
+  }, [currentPage]);
 
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -369,7 +378,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
         {/* Products Grid */}
         {isLoading ? (
-          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24 min-h-screen">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="w-[calc(50%-1rem)] sm:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-2rem)] xl:w-[calc(25%-2.25rem)] max-w-[380px]">
                 <ProductCardShimmer />
@@ -377,7 +386,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
             ))}
           </div>
         ) : filteredProducts && filteredProducts.length > 0 ? (
-          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24">
+          <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-12 md:gap-y-24 min-h-screen">
             {filteredProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage).map((product: any, index: number) => {
               const imageUrl = getThumbnailUrl(product);
               const currentPrice = typeof product.price === "number" ? product.price : parseFloat(product.price);
@@ -462,7 +471,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
               <button
                 onClick={() => {
                   setCurrentPage(prev => Math.max(1, prev - 1));
-                  scrollToSection('products-section');
                 }}
                 disabled={currentPage === 1}
                 className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-secondary-100 text-secondary-900 hover:border-primary-500 hover:text-primary-500 disabled:opacity-20 disabled:hover:border-secondary-100 disabled:hover:text-secondary-900 transition-all group"
@@ -485,7 +493,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
                         key={pageNum}
                         onClick={() => {
                           setCurrentPage(pageNum);
-                          scrollToSection('products-section');
                         }}
                         className={`w-14 h-14 rounded-full font-black text-sm tracking-widest transition-all ${currentPage === pageNum
                           ? "bg-secondary-900 text-white shadow-xl scale-110"
@@ -508,7 +515,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
               <button
                 onClick={() => {
                   setCurrentPage(prev => Math.min(Math.ceil(filteredProducts.length / productsPerPage), prev + 1));
-                  scrollToSection('products-section');
                 }}
                 disabled={currentPage === Math.ceil(filteredProducts.length / productsPerPage)}
                 className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-secondary-100 text-secondary-900 hover:border-primary-500 hover:text-primary-500 disabled:opacity-20 disabled:hover:border-secondary-100 disabled:hover:text-secondary-900 transition-all group"
