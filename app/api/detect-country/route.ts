@@ -46,34 +46,80 @@ function decryptValue(encryptedValue: string): string | null {
 
     return decrypted;
   } catch (error) {
-
     return null;
   }
 }
 
-export function GET(req: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0] ||
     req.headers.get("x-real-ip") ||
-    "Unknown";
+    "127.0.0.1";
 
-  // Example: detect country from Cloudflare / Vercel headers
-  const country =
+  const { searchParams } = new URL(req.url);
+  const hint = searchParams.get("hint")?.toUpperCase();
+
+  console.log(`[DetectCountry] Incoming Request IP: ${ip} | Client Hint: ${hint || 'None'}`);
+
+  // Detect country from Cloudflare / Vercel headers
+  let country =
     req.headers.get("x-vercel-ip-country") || // Vercel
     req.headers.get("cf-ipcountry") || // Cloudflare
+    hint || // Prioritize browser hint for local dev/VPN testing
     "Unknown";
+
+  if (country !== "Unknown") {
+    console.log(`[DetectCountry] Detected via Header: ${country}`);
+  }
+
+  console.log(`[DetectCountry] Header Detection: ${country}`);
+
+  // Fallback for local development or missing headers
+  if (country === "Unknown" || !country) {
+    try {
+      // Use a fast, free GeoIP service for fallback detection (useful for local VPN testing)
+      let geoRes = await fetch("https://ipapi.co/json/", { cache: 'no-store' });
+      if (geoRes.ok) {
+        const geoData = await geoRes.json();
+        if (geoData.country_code) {
+          country = geoData.country_code;
+          console.log(`[DetectCountry] GeoIP Fallback (ipapi.co): ${country}`);
+        }
+      } else {
+        // Try second fallback if first one fails
+        console.log(`[DetectCountry] ipapi.co failed, trying ip-api.com fallback...`);
+        geoRes = await fetch("http://ip-api.com/json/", { cache: 'no-store' });
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData.countryCode) {
+            country = geoData.countryCode;
+            console.log(`[DetectCountry] GeoIP Fallback (ip-api.com): ${country}`);
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[DetectCountry] GeoIP Fallback Error:`, e);
+    }
+  }
 
   const isIndia = country === "IN";
   const isNepal = country === "NP";
 
-  // Map country code to country name for consistency
-  let countryName = "nepal"; // Default to Nepal
-  if (isIndia) {
-    countryName = "india";
-  } else if (isNepal) {
-    countryName = "nepal";
+  // Map country code to proper country name
+  let countryName = "Nepal"; // Ultimate fallback
+  if (country !== "Unknown") {
+    try {
+      const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+      countryName = regionNames.of(country) || country;
+    } catch (e) {
+      console.error(`[DetectCountry] Intl.DisplayNames Error for ${country}:`, e);
+      countryName = isIndia ? "India" : (isNepal ? "Nepal" : country);
+    }
   }
 
+  console.log(`[DetectCountry] Final Resolved Name: ${countryName}`);
 
   // Encrypt the country value
   const encryptedCountry = encryptValue(countryName);
@@ -97,4 +143,3 @@ export function GET(req: NextRequest) {
 
   return response;
 }
-
