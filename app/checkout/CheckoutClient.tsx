@@ -371,11 +371,11 @@ export default function CheckoutClient({
 
     if (paymentMethod === "cash_on_delivery") {
       if (!customerId.trim()) {
-        setError("Customer ID is required for Cash on Delivery");
+        setError("Transaction ID is required for Cash on Delivery");
         return;
       }
       if (!customerIdImage) {
-        setError("ID image is required for Cash on Delivery");
+        setError("Payment evidence is required for Cash on Delivery");
         return;
       }
     }
@@ -713,17 +713,17 @@ export default function CheckoutClient({
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Customer ID <span className="text-primary-500">*</span></label>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Transaction ID <span className="text-primary-500">*</span></label>
                     <input
                       type="text"
                       value={customerId}
                       onChange={(e) => setCustomerId(e.target.value)}
-                      placeholder="e.g. Citizenship/License/Passport Number"
+                      placeholder="e.g. TXN-123456"
                       className="w-full bg-secondary-50 border border-secondary-100 rounded px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">ID Document Image <span className="text-primary-500">*</span></label>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Settlement Evidence <span className="text-primary-500">*</span></label>
                     <div className="flex flex-col gap-4">
                       <input
                         type="file"
@@ -733,7 +733,7 @@ export default function CheckoutClient({
                       />
                       {customerIdPreview && (
                         <div className="relative rounded overflow-hidden border border-secondary-100 aspect-video bg-white">
-                          <img src={customerIdPreview} alt="customer ID" className="w-full h-full object-contain" />
+                          <img src={customerIdPreview} alt="payment evidence" className="w-full h-full object-contain" />
                         </div>
                       )}
                     </div>
