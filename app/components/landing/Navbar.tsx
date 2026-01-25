@@ -197,8 +197,7 @@ const Navbar = () => {
                 { label: "Lenses", href: "/" },
                 { label: "Sale", href: "/#sale-section" },
                 { label: "Lashes", href: "/#eyelashes-section" },
-                { label: "Solutions", href: "/#accessories-section" },
-                { label: "Tools", href: "/#accessories-section" }
+                { label: "Accessories", href: "/#accessories-section" }
               ].map((item) => (
                 <Link
                   key={item.label}
@@ -232,8 +231,7 @@ const Navbar = () => {
                 { label: "Lenses", href: "/" },
                 { label: "Sale", href: "/#sale-section" },
                 { label: "Lashes", href: "/#eyelashes-section" },
-                { label: "Solutions", href: "/#accessories-section" },
-                { label: "Tools", href: "/#accessories-section" }
+                { label: "Accessories", href: "/#accessories-section" }
               ].map((item) => (
                 <Link
                   key={item.label}

@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseBrowserClient } from "../services/supabase/client/supabaseBrowserClient";
+import { headers } from "next/headers";
 
 export async function get_all_products() {
   const { data, error } = await supabaseBrowserClient.rpc(
@@ -117,13 +118,17 @@ export async function get_products(
   tags: string[] = [],
   country: string | null = null
 ) {
-  // Convert country to API format: 'np' for Nepal, null for others
-  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : null;
+  const headerList = await headers();
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip");
+
+  // Convert country to API format: 'np' for Nepal, user IP or 'in' for others
+  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (ip || 'in');
 
   const { data, error } = await supabaseBrowserClient.rpc("get_products", {
     limit_value: limit,
     offset_value: offset,
     tags: tags.length > 0 ? tags : null,
+    country: countryCode,
   });
 
 
@@ -151,7 +156,10 @@ export async function get_eye_lashes(
   offset: number = 0,
   country: string | null = null
 ) {
-  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
+  const headerList = await headers();
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip");
+  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (ip || 'in');
+
   const { data, error } = await supabaseBrowserClient.rpc("get_eye_lashes", {
     limit_value: limit,
     offset_value: offset,
@@ -164,41 +172,23 @@ export async function get_eye_lashes(
   return { data: data.data, total: data.total, error: null };
 }
 
-export async function get_solutions(
-  limit: number = 10,
-  offset: number = 0,
+export async function get_applicator_solution(
   country: string | null = null
 ) {
-  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
-  const { data, error } = await supabaseBrowserClient.rpc("get_solutions", {
-    limit_value: limit,
-    offset_value: offset,
-    country: countryCode,
+  const headerList = await headers();
+  const ip = headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip");
+  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (ip || 'in');
+
+  const { data, error } = await supabaseBrowserClient.rpc("get_applicator_solution", {
+    p_country: countryCode,
   });
 
   if (error) {
     return { data: null, total: 0, error: error.details };
   }
-  return { data: data.data, total: data.total, error: null };
+  return { data: data, total: data?.length || 0, error: null };
 }
 
-export async function get_applicators(
-  limit: number = 10,
-  offset: number = 0,
-  country: string | null = null
-) {
-  const countryCode = country?.toLowerCase() === 'india' ? 'in' : 'np';
-  const { data, error } = await supabaseBrowserClient.rpc("get_applicators", {
-    limit_value: limit,
-    offset_value: offset,
-    country: countryCode,
-  });
-
-  if (error) {
-    return { data: null, total: 0, error: error.details };
-  }
-  return { data: data.data, total: data.total, error: null };
-}
 
 export async function get_banners() {
   const { data, error } = await supabaseBrowserClient.storage.from("banner").list("", {

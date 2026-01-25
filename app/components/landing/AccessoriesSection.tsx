@@ -4,17 +4,17 @@ import { useEffect, useState, useRef } from "react";
 import { useUserCountry } from "../../hooks/useUserCountry";
 import { formatPrice, getAccessoryImageUrl } from "../../util";
 import { useCart } from "../../context/CartContext";
-import { get_applicators, get_solutions } from "../../api/product";
+import { get_applicator_solution } from "../../api/product";
 
 type AccessoryItem = {
   id: number;
   created_at: string;
   name?: string | null;
-  title?: string | null; // Solutions have title
+  title?: string | null;
   price: number | string | null;
   quantity: number | string | null;
   image: string | null;
-  type: "applicator" | "solution";
+  type: string;
 };
 
 const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: AccessoryItem[]; initialCountry?: string }) => {
@@ -39,17 +39,11 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
 
       try {
         setLoading(true);
-        const [applicatorsRes, solutionsRes] = await Promise.all([
-          get_applicators(50, 0, activeCountry),
-          get_solutions(50, 0, activeCountry),
-        ]);
+        const res = await get_applicator_solution(activeCountry);
 
         if (!mounted) return;
 
-        const applicators = (Array.isArray(applicatorsRes.data) ? applicatorsRes.data : []).map((i: any) => ({ ...i, type: "applicator" as const }));
-        const solutions = (Array.isArray(solutionsRes.data) ? solutionsRes.data : []).map((i: any) => ({ ...i, type: "solution" as const }));
-
-        setItems([...applicators, ...solutions]);
+        setItems(Array.isArray(res.data) ? res.data : []);
       } catch (err: any) {
         console.error("Failed to load accessories", err);
       } finally {
@@ -85,7 +79,8 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
             const qty = typeof item.quantity === "string" ? parseInt(item.quantity) : (item.quantity as number | null);
             const inStock = (qty ?? 0) > 0;
             const displayName = item.title || item.name || "Accessory";
-            const bucketFolder = item.type === "solution" ? "solutions" : "applicators";
+            const isSolution = item.image?.includes("solution") || item.image?.startsWith("sol-");
+            const bucketFolder = isSolution ? "solutions" : "applicators";
 
             return (
               <div key={`${item.type}-${item.id}`} className="group cursor-pointer w-[calc(50%-1rem)] sm:w-[calc(33.33%-1rem)] lg:w-[calc(20%-1.5rem)] xl:w-[calc(16.666%-1.5rem)] max-w-[220px]">
@@ -97,7 +92,7 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
                       className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-8xl">{item.type === "solution" ? "💧" : "🛠️"}</div>
+                    <div className="w-full h-full flex items-center justify-center text-8xl">{isSolution ? "💧" : "🛠️"}</div>
                   )}
 
                   {!inStock && (
@@ -110,7 +105,7 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
 
                   <div className="absolute bottom-3 left-3 md:bottom-8 md:left-8">
                     <span className="px-2 md:px-5 py-1 md:py-2 bg-white/80 md:bg-white/90 backdrop-blur-md rounded-md md:rounded-xl text-[7px] md:text-[10px] font-black tracking-widest text-primary-500 shadow-sm uppercase">
-                      {item.type === "solution" ? "SOLUTIONS" : "APPLICATOR"}
+                      {isSolution ? "SOLUTIONS" : "APPLICATOR"}
                     </span>
                   </div>
                 </div>

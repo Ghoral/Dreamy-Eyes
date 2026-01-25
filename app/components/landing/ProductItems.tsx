@@ -7,7 +7,7 @@ import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "../../hooks/useUserCountry";
-import { get_products, get_eye_lashes, get_solutions, get_applicators } from "../../api/product";
+import { get_products, get_eye_lashes, get_applicator_solution } from "../../api/product";
 import ProductCardShimmer from "../ui/ProductCardShimmer";
 
 const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: string }) => {
@@ -131,10 +131,9 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
     const checkAvailability = async () => {
       if (!activeCountry) return;
       try {
-        const [lashes, solutions, applicators] = await Promise.all([
+        const [lashes, accessories] = await Promise.all([
           get_eye_lashes(1, 0, activeCountry),
-          get_solutions(1, 0, activeCountry),
-          get_applicators(1, 0, activeCountry)
+          get_applicator_solution(activeCountry)
         ]);
 
         const baseTags = [
@@ -146,11 +145,8 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
           baseTags.push({ label: "Lashes", scrollId: "eyelashes-section", type: 'scroll' } as any);
         }
 
-        if (solutions.total > 0) {
-          baseTags.push({ label: "Solutions", scrollId: "accessories-section", type: 'scroll' } as any);
-        }
-        if (applicators.total > 0) {
-          baseTags.push({ label: "Tools", scrollId: "accessories-section", type: 'scroll' } as any);
+        if (accessories.total > 0) {
+          baseTags.push({ label: "Accessories", scrollId: "accessories-section", type: 'scroll' } as any);
         }
 
         setAvailableTags(baseTags);
