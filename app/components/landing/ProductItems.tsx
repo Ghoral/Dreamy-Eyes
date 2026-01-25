@@ -41,11 +41,45 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
   }, [productsData]);
 
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
   useEffect(() => {
     if (productsData && !isLoading) {
       setHasEverLoaded(true);
     }
   }, [productsData, isLoading]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show button when scrolled past products section or 500px
+      const productsSection = document.getElementById('products-section');
+      if (productsSection) {
+        const rect = productsSection.getBoundingClientRect();
+        // If top of section is above viewport significantly (meaning we scrolled down)
+        setShowScrollTop(rect.top < -200);
+      } else {
+        setShowScrollTop(window.scrollY > 500);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    const productsSection = document.getElementById('products-section');
+    if (productsSection) {
+      const offset = 100;
+      const elementPosition = productsSection.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - offset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
 
   const normalizedData = useMemo(() => {
@@ -532,6 +566,13 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
           </>
         )
       }
+
+      <button
+        onClick={scrollToTop}
+        className={`fixed bottom-8 right-8 z-50 p-4 bg-secondary-900 text-white rounded-full shadow-2xl transition-all duration-500 hover:bg-primary-500 hover:scale-110 ${showScrollTop ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}`}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
+      </button>
 
       <Toast message={toastConfig.message} type="success" isVisible={toastConfig.isVisible} onClose={() => setToastConfig({ message: "", isVisible: false })} duration={2000} />
     </section >
