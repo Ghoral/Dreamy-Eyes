@@ -467,6 +467,7 @@ export default function CheckoutClient({
           offerProducts && offerProducts.length > 0 ? offerProducts : null,
         p_accessories:
           accessoryPayload.length > 0 ? accessoryPayload : null,
+        p_delivery_charge: deliveryCharge,
       };
 
       const { data: orderData, error: orderError } =
