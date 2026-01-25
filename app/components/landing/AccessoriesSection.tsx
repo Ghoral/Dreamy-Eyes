@@ -116,29 +116,9 @@ const AccessoriesSection = ({ initialResponse, initialCountry }: { initialRespon
 
         {/* View & Sort Row */}
         <div className="mb-12 pt-4">
-          <div className={`flex flex-col lg:flex-row justify-between items-center gap-6 ${(!loading && totalProducts === 0) ? 'lg:justify-end' : ''}`}>
+          <div className="flex justify-end items-center">
             {(!loading && totalProducts > 0) && (
-              <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-left-4 duration-700">
-                {/* Per Page Selector */}
-                <div className="flex items-center gap-4 bg-secondary-50 p-1.5 rounded-full border border-secondary-100">
-                  <span className="pl-4 pr-2 text-[10px] font-black tracking-widest text-secondary-400 uppercase">View:</span>
-                  {[15, 25, 50, 100].map((limit) => (
-                    <button
-                      key={limit}
-                      onClick={() => {
-                        setProductsPerPage(limit);
-                        setCurrentPage(1);
-                      }}
-                      className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all ${productsPerPage === limit
-                        ? "bg-white text-primary-500 shadow-sm"
-                        : "text-secondary-400 hover:text-secondary-900"
-                        }`}
-                    >
-                      {limit}
-                    </button>
-                  ))}
-                </div>
-
+              <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-right-4 duration-700">
                 {/* Category Dropdown */}
                 <div className="relative group/category w-full sm:w-auto">
                   <select

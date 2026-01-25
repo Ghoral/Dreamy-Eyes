@@ -273,7 +273,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
         {/* Filter & Per Page Row */}
         <div className="mb-16 pt-8 border-t border-secondary-100">
-          <div className={`flex flex-col-reverse lg:flex-row justify-between items-center gap-6 ${(!isLoading && totalProducts === 0) ? 'lg:justify-end' : ''}`}>
+          <div className="w-full flex flex-col lg:flex-row justify-between items-center gap-8">
             {(!isLoading && totalProducts > 0) && (
               <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-left-4 duration-700">
                 {/* Per Page Selector */}
@@ -295,9 +295,12 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
 
-                {/* Sort Dropdown */}
-                <div className="relative group/sort w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+              {!isLoading && totalProducts > 0 && (
+                <div className="relative group/sort w-full sm:w-auto animate-in fade-in slide-in-from-right-4 duration-700">
                   <select
                     value={sortBy}
                     onChange={(e) => {
@@ -311,23 +314,25 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
                     <option value="price_desc">PRICE: HIGH TO LOW</option>
                     <option value="power_asc">POWER: LOW TO HIGH</option>
                     <option value="power_desc">POWER: HIGH TO LOW</option>
+                    <option value="name_asc">NAME: A TO Z</option>
+                    <option value="name_desc">NAME: Z TO A</option>
                   </select>
                   <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <button
-              onClick={() => setIsFilterDrawerOpen(true)}
-              className="w-full sm:w-auto group relative flex items-center justify-center gap-3 px-8 py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
-            >
-              <svg className="w-3.5 h-3.5 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-              <span className="text-[10px] font-black tracking-[0.2em] text-white uppercase">Refine Search</span>
-            </button>
+              <button
+                onClick={() => setIsFilterDrawerOpen(true)}
+                className="w-full sm:w-auto group relative flex items-center justify-center gap-3 px-8 py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
+              >
+                <svg className="w-3.5 h-3.5 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span className="text-[10px] font-black tracking-[0.2em] text-white uppercase">Refine Search</span>
+              </button>
+            </div>
           </div>
         </div>
 
