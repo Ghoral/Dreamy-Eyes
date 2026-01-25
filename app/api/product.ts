@@ -167,19 +167,44 @@ export async function get_products(
 
 
 export async function get_applicator_solution(
-  country: string | null = null
+  limit: number = 10,
+  offset: number = 0,
+  country: string | null = null,
+  filter: any = null
 ) {
   const headerList = await headers();
   const ip = headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip");
-  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (ip || 'in');
+  const headerCountry = headerList.get("x-vercel-ip-country") || headerList.get("cf-ipcountry");
+
+  // Map to ISO codes
+  let countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (headerCountry?.toLowerCase() || 'in');
+  if (country?.toLowerCase() === 'india') countryCode = 'in';
+
+  console.log('[API] Calling get_applicator_solution RPC with params:', {
+    limit_value: limit,
+    offset_value: offset,
+    p_country: countryCode,
+    filter: filter,
+  });
 
   const { data, error } = await supabaseBrowserClient.rpc("get_applicator_solution", {
+    limit_value: limit,
+    offset_value: offset,
     p_country: countryCode,
+    filter: filter,
   });
+
+  console.log('[API] Applicator solution raw result:', { data, error });
 
   if (error) {
     return { data: null, total: 0, error: error.details };
   }
+
+  // Handle RPC result object { data: [], total: n }
+  if (data && typeof data.total === 'number') {
+    return { data: data.data, total: data.total, error: null };
+  }
+
   return { data: data, total: data?.length || 0, error: null };
 }
 

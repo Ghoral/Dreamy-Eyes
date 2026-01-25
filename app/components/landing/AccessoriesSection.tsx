@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useUserCountry } from "../../hooks/useUserCountry";
 import { formatPrice, getAccessoryImageUrl } from "../../util";
 import { useCart } from "../../context/CartContext";
@@ -17,20 +17,54 @@ type AccessoryItem = {
   type: string;
 };
 
-const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: AccessoryItem[]; initialCountry?: string }) => {
+const AccessoriesSection = ({ initialResponse, initialCountry }: { initialResponse?: any; initialCountry?: string }) => {
   const { country: clientCountry } = useUserCountry();
   const activeCountry = clientCountry || initialCountry || null;
-  const [items, setItems] = useState<AccessoryItem[]>(initialData || []);
+  const [itemsResponse, setItemsResponse] = useState<any>(initialResponse || null);
   const [loading, setLoading] = useState<boolean>(false);
   const { addAccessoryItem, state: cartState, updateAccessoryQuantity, removeAccessoryItem } = useCart();
   const isFirstRender = useRef(true);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage, setProductsPerPage] = useState(15);
+  const [sortBy, setSortBy] = useState<string>("latest_added");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [totalProducts, setTotalProducts] = useState(initialResponse?.total || 0);
+  const [hasEverLoaded, setHasEverLoaded] = useState(!!initialResponse);
+  const persistentTotal = useRef(totalProducts);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 120;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    if (itemsResponse && !loading) {
+      setHasEverLoaded(true);
+    }
+  }, [itemsResponse, loading]);
+
+  useEffect(() => {
+    if (itemsResponse) {
+      const finalTotal = itemsResponse.total;
+      if (typeof finalTotal === 'number') {
+        setTotalProducts(finalTotal);
+        persistentTotal.current = finalTotal;
+      }
+    }
+  }, [itemsResponse]);
 
   useEffect(() => {
     let mounted = true;
     const fetchAll = async () => {
       if (isFirstRender.current) {
         isFirstRender.current = false;
-        if (activeCountry?.toLowerCase() === initialCountry?.toLowerCase()) {
+        if (activeCountry?.toLowerCase() === initialCountry?.toLowerCase() && currentPage === 1 && productsPerPage === 15 && sortBy === 'latest_added' && selectedCategory === 'all') {
           return;
         }
       }
@@ -39,11 +73,14 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
 
       try {
         setLoading(true);
-        const res = await get_applicator_solution(activeCountry);
+        const offset = (currentPage - 1) * productsPerPage;
+        const res = await get_applicator_solution(productsPerPage, offset, activeCountry, {
+          sort: sortBy,
+          type: selectedCategory === 'all' ? null : selectedCategory
+        });
 
         if (!mounted) return;
-
-        setItems(Array.isArray(res.data) ? res.data : []);
+        setItemsResponse(res);
       } catch (err: any) {
         console.error("Failed to load accessories", err);
       } finally {
@@ -54,11 +91,14 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
 
     fetchAll();
     return () => { mounted = false; };
-  }, [activeCountry, initialCountry]);
+  }, [activeCountry, initialCountry, currentPage, productsPerPage, sortBy, selectedCategory]);
 
-  if (!loading && items.length === 0) return null;
+  const displayedItems = useMemo(() => {
+    if (!itemsResponse?.data) return [];
+    return Array.isArray(itemsResponse.data) ? itemsResponse.data : [];
+  }, [itemsResponse]);
 
-  const displayedItems = items;
+  if (!loading && totalProducts === 0) return null;
 
   return (
     <section id="accessories-section" className="py-6 bg-white relative">
@@ -73,8 +113,79 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
           </div>
         </div>
 
+
+        {/* View & Sort Row */}
+        <div className="mb-12 pt-4">
+          <div className={`flex flex-col lg:flex-row justify-between items-center gap-6 ${(!loading && totalProducts === 0) ? 'lg:justify-end' : ''}`}>
+            {(!loading && totalProducts > 0) && (
+              <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-left-4 duration-700">
+                {/* Per Page Selector */}
+                <div className="flex items-center gap-4 bg-secondary-50 p-1.5 rounded-full border border-secondary-100">
+                  <span className="pl-4 pr-2 text-[10px] font-black tracking-widest text-secondary-400 uppercase">View:</span>
+                  {[15, 25, 50, 100].map((limit) => (
+                    <button
+                      key={limit}
+                      onClick={() => {
+                        setProductsPerPage(limit);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all ${productsPerPage === limit
+                        ? "bg-white text-primary-500 shadow-sm"
+                        : "text-secondary-400 hover:text-secondary-900"
+                        }`}
+                    >
+                      {limit}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Category Dropdown */}
+                <div className="relative group/category w-full sm:w-auto">
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      setSelectedCategory(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
+                  >
+                    <option value="all">ALL CATEGORIES</option>
+                    <option value="applicator">APPLICATORS</option>
+                    <option value="solution">SOLUTIONS</option>
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="relative group/sort w-full sm:w-auto">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
+                  >
+                    <option value="latest_added">LATEST ADDED</option>
+                    <option value="oldest">OLDEST</option>
+                    <option value="price_asc">PRICE: LOW TO HIGH</option>
+                    <option value="price_desc">PRICE: HIGH TO LOW</option>
+                    <option value="name_asc">NAME: A TO Z</option>
+                    <option value="name_desc">NAME: Z TO A</option>
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-12 gap-y-6 md:gap-y-12">
-          {displayedItems.map((item) => {
+          {displayedItems.map((item: AccessoryItem) => {
             const rawPrice = typeof item.price === "string" ? parseFloat(item.price) : (item.price as number | null);
             const qty = typeof item.quantity === "string" ? parseInt(item.quantity) : (item.quantity as number | null);
             const inStock = (qty ?? 0) > 0;
@@ -189,6 +300,71 @@ const AccessoriesSection = ({ initialData, initialCountry }: { initialData?: Acc
             );
           })}
         </div>
+
+        {/* Pagination Controls */}
+        {(totalProducts > 0 || hasEverLoaded) && (
+          <div className="mt-24 flex flex-col items-center gap-8">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setCurrentPage(prev => Math.max(1, prev - 1));
+                  scrollToSection('accessories-section');
+                }}
+                disabled={currentPage === 1}
+                className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-secondary-100 text-secondary-900 hover:border-primary-500 hover:text-primary-500 disabled:opacity-20 disabled:hover:border-secondary-100 disabled:hover:text-secondary-900 transition-all group"
+              >
+                <svg className="w-6 h-6 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+
+              <div className="flex items-center gap-2">
+                {[...Array(Math.ceil(totalProducts / productsPerPage))].map((_, i) => {
+                  const pageNum = i + 1;
+                  if (
+                    pageNum === 1 ||
+                    pageNum === Math.ceil(totalProducts / productsPerPage) ||
+                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => {
+                          setCurrentPage(pageNum);
+                          scrollToSection('accessories-section');
+                        }}
+                        className={`w-14 h-14 rounded-full font-black text-sm tracking-widest transition-all ${currentPage === pageNum
+                          ? "bg-secondary-900 text-white shadow-xl scale-110"
+                          : "bg-white border-2 border-secondary-100 text-secondary-400 hover:border-primary-500 hover:text-primary-500"
+                          }`}
+                      >
+                        {String(pageNum).padStart(2, '0')}
+                      </button>
+                    );
+                  } else if (
+                    pageNum === currentPage - 2 ||
+                    pageNum === currentPage + 2
+                  ) {
+                    return <span key={pageNum} className="text-secondary-200 font-black tracking-widest">...</span>;
+                  }
+                  return null;
+                })}
+              </div>
+
+              <button
+                onClick={() => {
+                  setCurrentPage(prev => Math.min(Math.ceil(totalProducts / productsPerPage), prev + 1));
+                  scrollToSection('accessories-section');
+                }}
+                disabled={currentPage === Math.ceil(totalProducts / productsPerPage) || totalProducts === 0}
+                className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-secondary-100 text-secondary-900 hover:border-primary-500 hover:text-primary-500 disabled:opacity-20 disabled:hover:border-secondary-100 disabled:hover:text-secondary-900 transition-all group"
+              >
+                <svg className="w-6 h-6 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+            <p className="text-[10px] font-black tracking-[0.3em] text-secondary-400 uppercase">
+              Showing page {currentPage} of {Math.max(1, Math.ceil(totalProducts / productsPerPage))}
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

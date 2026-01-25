@@ -10,7 +10,7 @@ const EyeLashesWrapper = async () => {
     const { data: response } = await get_products(10, 0, ["eye_lashes"], country);
 
     // We then access the inner 'data' property from 'response' to get the actual products array.
-    return <EyeLashesSection initialData={response?.data || []} initialCountry={country} />;
+    return <EyeLashesSection initialData={response?.data || []} initialTotal={response?.total || 0} initialCountry={country} />;
 };
 
 export default EyeLashesWrapper;

@@ -4,11 +4,10 @@ import { getServerSideCountry } from "../../util/country";
 
 const AccessoriesWrapper = async () => {
     const country = await getServerSideCountry();
-    const res = await get_applicator_solution(country);
+    // get_applicator_solution(limit, offset, country, filter)
+    const res = await get_applicator_solution(15, 0, country);
 
-    const initialItems = Array.isArray(res.data) ? res.data : [];
-
-    return <AccessoriesSection initialData={initialItems} initialCountry={country} />;
+    return <AccessoriesSection initialResponse={res} initialCountry={country} />;
 };
 
 export default AccessoriesWrapper;

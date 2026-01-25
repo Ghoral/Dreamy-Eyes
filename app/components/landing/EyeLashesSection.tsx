@@ -7,11 +7,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { get_products } from "../../api/product";
 
-export default function EyeLashesSection({ initialData, initialCountry }: { initialData?: any[]; initialCountry?: string }) {
+export default function EyeLashesSection({ initialData, initialTotal, initialCountry }: { initialData?: any[]; initialTotal?: number; initialCountry?: string }) {
     const { country: clientCountry } = useUserCountry();
     const activeCountry = clientCountry || initialCountry || null;
     const router = useRouter();
     const [lashes, setLashes] = useState<any[]>(initialData || []);
+    const [total, setTotal] = useState<number>(initialTotal || initialData?.length || 0);
     const [loading, setLoading] = useState(false);
     const isFirstRender = useRef(true);
 
@@ -30,8 +31,10 @@ export default function EyeLashesSection({ initialData, initialCountry }: { init
                 const { data: response } = await get_products(10, 0, ["eye_lashes"], activeCountry);
                 if (response && response.data && Array.isArray(response.data)) {
                     setLashes(response.data);
+                    setTotal(response.total || response.data.length);
                 } else {
                     setLashes([]);
+                    setTotal(0);
                 }
             } catch (error) {
                 console.error("Failed to fetch lashes", error);
@@ -42,7 +45,7 @@ export default function EyeLashesSection({ initialData, initialCountry }: { init
         fetchData();
     }, [activeCountry, initialCountry]);
 
-    if (!loading && lashes.length === 0) return null;
+    if (!loading && total === 0) return null;
 
     const getImageUrl = (lash: any) => {
         if (lash.primary_thumbnail) return getThumbnailUrl(lash);

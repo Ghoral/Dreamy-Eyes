@@ -208,7 +208,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
       try {
         const [lashesRes, accessories] = await Promise.all([
           get_products(1, 0, ["eye_lashes"], activeCountry),
-          get_applicator_solution(activeCountry)
+          get_applicator_solution(1, 0, activeCountry)
         ]);
 
         const lashes = lashesRes?.data || { total: 0 };
@@ -307,7 +307,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
                     className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
                   >
                     <option value="latest_added">LATEST ADDED</option>
-                    <option value="latest">LATEST</option>
                     <option value="price_asc">PRICE: LOW TO HIGH</option>
                     <option value="price_desc">PRICE: HIGH TO LOW</option>
                     <option value="power_asc">POWER: LOW TO HIGH</option>
