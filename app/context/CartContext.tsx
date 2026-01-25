@@ -1012,7 +1012,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       }
     } catch (error) {
       // Error saving cart
-      console.error("Error saving cart to localStorage:", error);
     }
   }, [state, isInitialized, isClient]);
 

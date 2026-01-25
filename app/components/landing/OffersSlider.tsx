@@ -19,7 +19,6 @@ const OffersSlider = ({ initialData }: { initialData?: Offer[] }) => {
           setOffers(response.data);
         }
       } catch (error) {
-        console.error("Error fetching offers:", error);
       } finally {
         setLoading(false);
       }

@@ -133,7 +133,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
           setProductsData(responseData);
         }
       } catch (error) {
-        console.error("Error fetching filtered products:", error);
       } finally {
         setIsLoading(false);
       }
@@ -225,7 +224,6 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
         setAvailableTags(baseTags);
       } catch (e) {
-        console.error("Error checking section availability", e);
       }
     };
 
@@ -295,16 +293,16 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
+            <div className="flex flex-row items-center gap-3 w-full lg:w-auto justify-end">
               {!isLoading && totalProducts > 0 && (
-                <div className="relative group/sort w-full sm:w-auto animate-in fade-in slide-in-from-right-4 duration-700">
+                <div className="relative group/sort w-auto animate-in fade-in slide-in-from-right-4 duration-700">
                   <select
                     value={sortBy}
                     onChange={(e) => {
                       setSortBy(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
+                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-4 sm:px-6 py-3 text-[9px] sm:text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-10 sm:pr-12 uppercase"
                   >
                     <option value="latest_added">LATEST ADDED</option>
                     <option value="price_asc">PRICE: LOW TO HIGH</option>
@@ -314,20 +312,23 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
                     <option value="name_asc">NAME: A TO Z</option>
                     <option value="name_desc">NAME: Z TO A</option>
                   </select>
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
+                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
               )}
 
               <button
                 onClick={() => setIsFilterDrawerOpen(true)}
-                className="w-full sm:w-auto group relative flex items-center justify-center gap-3 px-8 py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
+                className="flex-1 sm:flex-none group relative flex items-center justify-center gap-2 px-4 sm:px-8 py-3 bg-secondary-900 rounded-full hover:bg-primary-500 transition-all duration-500 shadow-xl hover:scale-105"
               >
                 <svg className="w-3.5 h-3.5 text-white group-hover:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                 </svg>
-                <span className="text-[10px] font-black tracking-[0.2em] text-white uppercase">Refine Search</span>
+                <span className="text-[9px] sm:text-[10px] font-black tracking-[0.2em] text-white uppercase whitespace-nowrap">
+                  <span className="hidden sm:inline">Refine Search</span>
+                  <span className="sm:hidden">Refine</span>
+                </span>
               </button>
             </div>
           </div>

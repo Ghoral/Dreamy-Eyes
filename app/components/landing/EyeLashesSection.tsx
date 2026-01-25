@@ -58,7 +58,6 @@ export default function EyeLashesSection({ initialData, initialTotal, initialCou
                     setTotal(0);
                 }
             } catch (error) {
-                console.error("Failed to fetch lashes", error);
             } finally {
                 setLoading(false);
             }
@@ -66,7 +65,7 @@ export default function EyeLashesSection({ initialData, initialTotal, initialCou
         fetchData();
     }, [activeCountry, initialCountry, currentPage, sortBy]);
 
-    if (!loading && total === 0 && !hasEverLoaded) return null;
+    if (!loading && total === 0) return null;
 
     const getImageUrl = (lash: any) => {
         if (lash.primary_thumbnail) return getThumbnailUrl(lash);
@@ -94,9 +93,9 @@ export default function EyeLashesSection({ initialData, initialTotal, initialCou
                     {/* Filters & Sorting */}
                     <div className="w-full flex justify-end items-center">
                         {(!loading && total > 0) && (
-                            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-right-4 duration-700">
+                            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-right-4 duration-700">
                                 {/* Sort Dropdown */}
-                                <div className="relative group/sort w-full sm:w-auto">
+                                <div className="relative group/sort w-auto sm:w-auto">
                                     <select
                                         value={sortBy}
                                         onChange={(e) => {

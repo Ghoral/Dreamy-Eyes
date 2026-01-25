@@ -190,7 +190,6 @@ export default function CheckoutPage() {
         setAvailableOffers(response.data);
       }
     } catch (error) {
-      console.error("Failed to load available offers:", error);
     }
   };
 
@@ -225,11 +224,9 @@ export default function CheckoutPage() {
         const charge = Number(data.delivery_charge);
         setDeliveryCharge(charge);
       } else {
-        console.error("Error loading delivery charge:", error);
         setDeliveryCharge(250);
       }
     } catch (error) {
-      console.error("Error loading delivery charge:", error);
       setDeliveryCharge(250);
     }
   };
@@ -254,13 +251,11 @@ export default function CheckoutPage() {
         });
 
       if (error) {
-        console.error("Upload error:", error);
         return null;
       }
 
       return data.path;
     } catch (error) {
-      console.error("Error uploading screenshot:", error);
       return null;
     }
   };
@@ -482,7 +477,6 @@ export default function CheckoutPage() {
       }
       router.push(`/checkout/success?order=${order_number}`);
     } catch (error: any) {
-      console.error("Checkout error:", error);
       setError(error.message || "Failed to process order. Please try again.");
     } finally {
       setIsProcessing(false);

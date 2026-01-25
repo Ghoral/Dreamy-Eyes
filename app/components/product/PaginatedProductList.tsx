@@ -68,11 +68,10 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 transform ${
-            currentPage === 1
+          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 transform ${currentPage === 1
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : "bg-white text-secondary-700 hover:bg-primary-50 hover:-translate-y-1 hover:shadow-lg border border-secondary-200 hover:scale-105"
-          }`}
+            }`}
         >
           <svg
             className="w-4 h-4 mr-1"
@@ -111,11 +110,10 @@ const Pagination = ({
             <button
               key={page}
               onClick={() => onPageChange(page)}
-              className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-300 ${
-                currentPage === page
+              className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all duration-300 ${currentPage === page
                   ? "bg-primary-500 text-white shadow-glow transform scale-110"
                   : "bg-white text-secondary-700 hover:bg-primary-50 hover:-translate-y-1 hover:shadow-lg border border-secondary-200"
-              }`}
+                }`}
             >
               {page}
             </button>
@@ -141,11 +139,10 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 transform ${
-            currentPage === totalPages
+          className={`px-5 py-2.5 rounded-lg flex items-center transition-all duration-300 transform ${currentPage === totalPages
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
               : "bg-white text-secondary-700 hover:bg-primary-50 hover:-translate-y-1 hover:shadow-lg border border-secondary-200"
-          }`}
+            }`}
         >
           Next
           <svg
@@ -476,7 +473,6 @@ const PaginatedProductList = ({ type }: { type: string }) => {
         }
       } catch (err) {
         setError("An error occurred while fetching products");
-        console.error(err);
       } finally {
         setLoading(false);
       }

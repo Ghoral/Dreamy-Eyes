@@ -201,7 +201,6 @@ export async function get_banners() {
   });
 
   if (error || !data) {
-    console.error("Error fetching banners:", error);
     return [];
   }
 
