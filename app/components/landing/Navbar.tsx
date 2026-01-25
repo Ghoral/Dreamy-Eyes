@@ -107,11 +107,24 @@ const Navbar = () => {
             {/* Logo */}
             <Link href="/" className="absolute left-1/2 -translate-x-1/2 transition-transform hover:scale-110 duration-500">
               <div className={`flex flex-col items-center transition-all duration-500 ${shouldShowDarkNav ? "scale-90" : "scale-100"}`}>
-                <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif drop-shadow-md ${shouldShowDarkNav ? "text-secondary-900" : "text-white"
-                  }`}>
-                  Dreamy <span className="text-primary-500">Eyes</span>
-                </span>
-                <div className={`h-0.5 w-12 bg-primary-500 transition-all duration-500 ${shouldShowDarkNav ? "opacity-100" : "opacity-0"}`} />
+                {shouldShowDarkNav ? (
+                  <div className="relative h-10 w-40 md:h-12 md:w-48 transition-all duration-500">
+                    <Image
+                      src="/images/logo.png"
+                      alt="Dreamy Eyes"
+                      fill
+                      className="object-contain"
+                      priority
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <span className={`text-3xl md:text-4xl font-black tracking-tighter uppercase font-serif drop-shadow-md text-white`}>
+                      Dreamy <span className="text-primary-500">Eyes</span>
+                    </span>
+                    <div className="h-0.5 w-12 bg-primary-500 transition-all duration-500 opacity-0" />
+                  </>
+                )}
               </div>
             </Link>
 
