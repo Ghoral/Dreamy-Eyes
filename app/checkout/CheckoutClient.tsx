@@ -855,34 +855,11 @@ export default function CheckoutClient({
                           </div>
                         )}
 
-                        {paymentMethod !== "cash_on_delivery" && (
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-                            <span>Delivery Charge</span>
-                            <span className="text-white">{formatPrice(deliveryConverted, country)}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Cash on Delivery Specific Breakdown */}
-                      {paymentMethod === "cash_on_delivery" && (
-                        <div className="mt-8 pt-6 border-t border-white/5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
-                          <div className="flex justify-between items-center bg-white/5 p-4 rounded border border-white/5">
-                            <div className="flex flex-col">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-primary-400">Delivery Payment</span>
-                              <span className="text-[8px] text-white/40 uppercase font-medium mt-1">Payable now via screenshot</span>
-                            </div>
-                            <span className="text-lg font-black text-primary-400">{formatPrice(deliveryConverted, country)}</span>
-                          </div>
-
-                          <div className="flex justify-between items-center p-4">
-                            <div className="flex flex-col">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Cash to be Paid</span>
-                              <span className="text-[8px] text-white/40 uppercase font-medium mt-1">Due at doorstep</span>
-                            </div>
-                            <span className="text-lg font-black text-white">{formatPrice(subtotalConverted, country)}</span>
-                          </div>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                          <span>Delivery Charge</span>
+                          <span className="text-white">{formatPrice(deliveryConverted, country)}</span>
                         </div>
-                      )}
+                      </div>
 
                       {/* The Big Divider */}
                       <div className="h-[1px] w-full bg-white/10 my-8" />
