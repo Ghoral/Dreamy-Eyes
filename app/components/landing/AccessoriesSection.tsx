@@ -117,45 +117,45 @@ const AccessoriesSection = ({ initialResponse, initialCountry }: { initialRespon
         <div className="mb-12 pt-4">
           <div className="flex justify-end items-center">
             {(!loading && totalProducts > 0) && (
-              <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-right-4 duration-700">
+              <div className="flex flex-row items-center gap-3 w-full lg:w-auto animate-in fade-in slide-in-from-right-4 duration-700 justify-end">
                 {/* Category Dropdown */}
-                <div className="relative group/category w-full sm:w-auto">
+                <div className="relative group/category w-auto">
                   <select
                     value={selectedCategory}
                     onChange={(e) => {
                       setSelectedCategory(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
+                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-4 sm:px-6 py-3 text-[9px] sm:text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-10 sm:pr-12 uppercase"
                   >
-                    <option value="all">ALL CATEGORIES</option>
+                    <option value="all">CATEGORIES</option>
                     <option value="applicator">APPLICATORS</option>
                     <option value="solution">SOLUTIONS</option>
                   </select>
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
+                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
 
                 {/* Sort Dropdown */}
-                <div className="relative group/sort w-full sm:w-auto">
+                <div className="relative group/sort w-auto">
                   <select
                     value={sortBy}
                     onChange={(e) => {
                       setSortBy(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
+                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-4 sm:px-6 py-3 text-[9px] sm:text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-10 sm:pr-12 uppercase"
                   >
-                    <option value="latest_added">LATEST ADDED</option>
+                    <option value="latest_added">SORT</option>
                     <option value="oldest">OLDEST</option>
-                    <option value="price_asc">PRICE: LOW TO HIGH</option>
-                    <option value="price_desc">PRICE: HIGH TO LOW</option>
-                    <option value="name_asc">NAME: A TO Z</option>
-                    <option value="name_desc">NAME: Z TO A</option>
+                    <option value="price_asc">PRICE: LOW</option>
+                    <option value="price_desc">PRICE: HIGH</option>
+                    <option value="name_asc">A - Z</option>
+                    <option value="name_desc">Z - A</option>
                   </select>
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
+                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
               </div>
