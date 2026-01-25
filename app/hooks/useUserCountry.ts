@@ -3,72 +3,24 @@
 import { useState, useEffect } from "react";
 import { createSupabaseClient } from "../services/supabase/client/supabaseBrowserClient";
 
-const IP_COUNTRY_COOKIE_NAME = "dreamy-eyes-ip-country";
-
-// Helper function to get cookie value by name
-const getCookie = (name: string): string | null => {
-  if (typeof document === "undefined") return null;
-
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-
-  if (parts.length === 2) {
-    return parts.pop()?.split(";").shift() || null;
-  }
-  return null;
-};
-
-const fetchCountryFromIP = async (): Promise<string | null> => {
+const fetchCountryName = async (): Promise<string> => {
   try {
-    // Check if we're on the client side
-    if (typeof window === "undefined") {
-      return "nepal"; // Default for SSR
-    }
+    // 1. Get raw country code from Vercel-optimized endpoint
+    const locRes = await fetch("/api/location", { cache: 'no-store' });
+    const locData = await locRes.json();
+    const code = locData.country?.toUpperCase();
 
-    // Check if encrypted cookie exists
-    const encryptedCookie = getCookie(IP_COUNTRY_COOKIE_NAME);
-    if (encryptedCookie) {
-      // Verify and decrypt cookie server-side
-      try {
-        const verifyResponse = await fetch("/api/verify-country", {
-          method: "POST",
-          credentials: "include",
-        });
+    // 2. Sync with main detection API to get full name and update encrypted cookie
+    const syncRes = await fetch(`/api/detect-country?hint=${code || ""}&v=${Date.now()}`, {
+      cache: 'no-store'
+    });
 
-        if (verifyResponse.ok) {
-          const verifyData = await verifyResponse.json();
-          if (verifyData.valid && verifyData.country) {
+    if (!syncRes.ok) return "india";
 
-            return verifyData.country.toLowerCase();
-          } else {
-            console.warn("Cookie decryption failed (may be tampered), re-fetching...");
-            // Cookie was tampered with or corrupted, clear it and re-fetch
-            document.cookie = `${IP_COUNTRY_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-          }
-        }
-      } catch (verifyError) {
-        console.error("Error verifying cookie:", verifyError);
-        // Continue to re-fetch if verification fails
-      }
-    }
-
-    // Fetch from API (which will set the encrypted cookie)
-    const response = await fetch("/api/detect-country");
-    if (!response.ok) {
-      throw new Error("Failed to fetch country");
-    }
-
-    const data = await response.json();
-    const countryName = data.countryName || "nepal"; // Default to Nepal
-
-    // Encrypted cookie is automatically set by the API response
-
-    return countryName.toLowerCase();
+    const syncData = await syncRes.json();
+    return (syncData.countryName || "India").toLowerCase();
   } catch (error) {
-
-
-    // Fallback to default if all else fails
-    return "nepal";
+    return "india";
   }
 };
 
@@ -77,61 +29,54 @@ export const useUserCountry = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserCountry = async () => {
+    let isMounted = true;
+
+    const init = async () => {
       try {
         const supabase = createSupabaseClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
 
-        // Priority 1: Use user metadata country if logged in
+        // Priority 1: User Profile
         if (user?.user_metadata?.country) {
-          const userCountry = user.user_metadata.country.toLowerCase();
-          setCountry(userCountry);
-          setIsLoading(false);
+          if (isMounted) {
+            setCountry(user.user_metadata.country.toLowerCase());
+            setIsLoading(false);
+          }
           return;
         }
 
-        // Priority 2: Fetch country from IP (for non-logged-in users or users without country in metadata)
-        const ipCountry = await fetchCountryFromIP();
-        setCountry(ipCountry);
-      } catch (error) {
-        console.error("Error in fetchUserCountry:", error);
-        // Fallback to cookie or Nepal
-        if (typeof window !== "undefined") {
-          const cookieCountry = getCookie(IP_COUNTRY_COOKIE_NAME);
-          setCountry(cookieCountry ? cookieCountry.toLowerCase() : "nepal");
-        } else {
-          setCountry("nepal");
+        // Priority 2: Vercel Detection
+        const detected = await fetchCountryName();
+        if (isMounted) {
+          setCountry(detected);
+          setIsLoading(false);
         }
-      } finally {
-        setIsLoading(false);
+      } catch (e) {
+        if (isMounted) {
+          setCountry("india");
+          setIsLoading(false);
+        }
       }
     };
 
-    fetchUserCountry();
+    init();
 
-    // Listen for auth state changes
     const supabase = createSupabaseClient();
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user?.user_metadata?.country) {
-        // User logged in with country in metadata
-        setCountry(session.user.user_metadata.country.toLowerCase());
-      } else if (session?.user) {
-        // User logged in but no country in metadata, use IP country
-        const ipCountry = await fetchCountryFromIP();
-        setCountry(ipCountry);
-      } else {
-        // User logged out, use IP country
-        const ipCountry = await fetchCountryFromIP();
-        setCountry(ipCountry);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        setIsLoading(true);
+        if (session?.user?.user_metadata?.country) {
+          setCountry(session.user.user_metadata.country.toLowerCase());
+        } else {
+          const res = await fetchCountryName();
+          setCountry(res);
+        }
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

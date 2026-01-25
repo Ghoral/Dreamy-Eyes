@@ -50,14 +50,14 @@ export default function OrdersPage() {
       ).rpc("get_my_orders");
 
       if (ordersError) {
-        console.error("Error fetching orders:", ordersError);
+
         setError("Failed to load orders");
         return;
       }
 
       setOrders((ordersData as Order[]) || []);
     } catch (error) {
-      console.error("Error loading orders:", error);
+
       setError("Failed to load orders");
     } finally {
       setIsLoading(false);
@@ -117,7 +117,7 @@ export default function OrdersPage() {
         return getProductImageUrl(parsedImages[firstColor][0]);
       }
     } catch (error) {
-      console.error("Error parsing images:", error);
+
     }
     return "/images/logo.png"; // Default fallback
   };

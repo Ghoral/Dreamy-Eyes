@@ -1,19 +1,59 @@
 import { cookies, headers } from "next/headers";
+import crypto from "crypto";
+
+const IP_COUNTRY_COOKIE_NAME = "dreamy-eyes-ip-country";
+const SECRET_KEY = process.env.COOKIE_SECRET_KEY || "your-secret-key-change-in-production";
+
+// Derive a 32-byte encryption key from the secret
+function getEncryptionKey(): Buffer {
+    return crypto.createHash("sha256").update(SECRET_KEY).digest();
+}
+
+// Decrypt the country value
+export function decryptCountryValue(encryptedValue: string): string | null {
+    try {
+        const parts = encryptedValue.split(":");
+        if (parts.length !== 3) return null;
+
+        const iv = Buffer.from(parts[0], "hex");
+        const authTag = Buffer.from(parts[1], "hex");
+        const encrypted = parts[2];
+
+        const key = getEncryptionKey();
+        const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+        decipher.setAuthTag(authTag);
+
+        let decrypted = decipher.update(encrypted, "hex", "utf8");
+        decrypted += decipher.final("utf8");
+
+        return decrypted;
+    } catch (error) {
+        return null;
+    }
+}
 
 export async function getServerSideCountry(): Promise<string> {
-    const cookieStore = await cookies();
-    const headerList = await headers();
+    try {
+        const cookieStore = await cookies();
+        const headerList = await headers();
 
-    // Priority 1: Check for Vercel country header
-    const vercelCountry = headerList.get("x-vercel-ip-country");
-    if (vercelCountry) {
-        if (vercelCountry.toUpperCase() === "NP") return "nepal";
-        if (vercelCountry.toUpperCase() === "IN") return "india";
+        // 1. Check for infrastructure headers
+        const vercelCountry = headerList.get("x-vercel-ip-country") || headerList.get("cf-ipcountry");
+        if (vercelCountry) {
+            const code = vercelCountry.toUpperCase();
+            return (code === "NP") ? "np" : "in";
+        }
+
+        // 2. Check persistent encrypted cookie
+        const cookie = cookieStore.get(IP_COUNTRY_COOKIE_NAME);
+        if (cookie?.value) {
+            const decrypted = decryptCountryValue(cookie.value);
+            if (decrypted) return decrypted.toLowerCase() === "np" ? "np" : "in";
+        }
+
+        // Default to 'in' on failure (Everything else is India/International)
+        return "in";
+    } catch (e) {
+        return "in";
     }
-
-    // Priority 2: Check for a session/cookie (though likely encrypted in this app)
-    // For now, let's keep it simple: if no Vercel header, default to nepal 
-    // but try to see if there's any unencrypted hint.
-
-    return "nepal"; // Default base
 }

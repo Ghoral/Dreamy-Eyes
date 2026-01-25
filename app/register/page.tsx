@@ -61,7 +61,6 @@ export default function RegisterPage() {
           .filter((d) => d.length > 0 && !d.startsWith("#") && !d.includes(" ") && d.includes("."));
         setInvalidDomains(list);
       } catch (e) {
-        console.error("Failed to load invalid domains:", e);
       }
     };
     loadInvalidDomains();
@@ -248,7 +247,6 @@ export default function RegisterPage() {
         router.push("/login?message=Account created successfully! Please check your email to verify your account.");
       }
     } catch (error) {
-      console.error("Error during registration:", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);

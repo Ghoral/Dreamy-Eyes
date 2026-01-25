@@ -23,14 +23,13 @@ export default function SaleProductPage() {
       try {
         setLoading(true);
         const result = await get_sale_by_id(id);
-        
+
         if (result.status && result.data) {
           setProduct(result.data);
         } else {
           setError(result.message || "Sale product not found");
         }
       } catch (err: any) {
-        console.error("Error fetching sale product:", err);
         setError(err.message || "Failed to load sale product");
       } finally {
         setLoading(false);

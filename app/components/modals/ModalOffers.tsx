@@ -104,7 +104,6 @@ export default function ModalOffers({
         }
       }
     } catch (error) {
-      console.error("Error fetching offers:", error);
     } finally {
       setLoading(false);
     }

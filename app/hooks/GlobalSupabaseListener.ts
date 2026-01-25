@@ -12,10 +12,6 @@ export const GlobalSupabaseListenerWrapper = () => {
           //     showSnackbar({ message: event?.message ?? "", type: "error" })
           //   );
         }
-        console.error(
-          `[${event.context}] Supabase error:`,
-          event.error?.message
-        );
       }
 
       if (event?.type === "SUCCESS") {
