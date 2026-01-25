@@ -270,7 +270,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
         <div className="mb-16 pt-8 border-t border-secondary-100">
           <div className="w-full flex flex-col lg:flex-row justify-between items-center gap-8">
             {(!isLoading && totalProducts > 0) && (
-              <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-left-4 duration-700">
+              <div className="order-2 lg:order-1 flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-left-4 duration-700">
                 {/* Per Page Selector */}
                 <div className="flex items-center gap-4 bg-secondary-50 p-1.5 rounded-full border border-secondary-100">
                   <span className="pl-4 pr-2 text-[10px] font-black tracking-widest text-secondary-400 uppercase">View:</span>
@@ -293,7 +293,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
               </div>
             )}
 
-            <div className="flex flex-row items-center gap-3 w-full lg:w-auto justify-end">
+            <div className="order-1 lg:order-2 flex flex-row items-center gap-3 w-full lg:w-auto justify-end">
               {!isLoading && totalProducts > 0 && (
                 <div className="relative group/sort w-auto animate-in fade-in slide-in-from-right-4 duration-700">
                   <select
