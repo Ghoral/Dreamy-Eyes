@@ -144,9 +144,11 @@ interface Address {
 }
 
 export default function CheckoutClient({
-  initialDeliveryCharges
+  initialDeliveryCharges,
+  hasError = false
 }: {
-  initialDeliveryCharges: { inside: number; outside: number; inr: number }
+  initialDeliveryCharges: { inside: number; outside: number; inr: number };
+  hasError?: boolean;
 }) {
   const { state: cartState, clearCart, setOffer } = useCart();
   const {
@@ -225,12 +227,11 @@ export default function CheckoutClient({
 
 
   useEffect(() => {
-    if (country?.toLowerCase() === "nepal") {
-      setDeliveryCharge(
-        deliveryLocation === "inside"
-          ? deliveryCharges.inside
-          : deliveryCharges.outside
-      );
+    const isNepal = country?.toLowerCase() === "nepal" || country?.toLowerCase() === "np";
+
+    if (isNepal) {
+      const charge = deliveryLocation === "inside" ? deliveryCharges.inside : deliveryCharges.outside;
+      setDeliveryCharge(charge);
     } else {
       setDeliveryCharge(deliveryCharges.inr);
     }
@@ -612,50 +613,6 @@ export default function CheckoutClient({
                   ))}
                 </div>
               )}
-
-              {/* Delivery Location Selection for Nepal */}
-              {country?.toLowerCase() === "nepal" && (
-                <div className="mt-10 pt-10 border-t border-secondary-50">
-                  <div className="flex flex-col mb-6">
-                    <span className="text-secondary-400 font-black tracking-[0.4em] uppercase text-[9px] mb-1">Logistics</span>
-                    <h3 className="text-xl font-black text-secondary-900 tracking-tight uppercase">Delivery Area</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      { id: "inside", label: "Inside Ring Road", charge: deliveryCharges.inside },
-                      { id: "outside", label: "Outside Ring Road", charge: deliveryCharges.outside }
-                    ].map((loc) => (
-                      <div key={loc.id} className="relative">
-                        <input
-                          type="radio"
-                          id={`delivery-loc-${loc.id}`}
-                          name="deliveryLocation"
-                          value={loc.id}
-                          checked={deliveryLocation === loc.id}
-                          onChange={(e) => setDeliveryLocation(e.target.value as any)}
-                          className="sr-only"
-                        />
-                        <label
-                          htmlFor={`delivery-loc-${loc.id}`}
-                          className={`block p-6 rounded border-2 cursor-pointer transition-all duration-500 ${deliveryLocation === loc.id
-                            ? "border-primary-500 bg-primary-50 shadow-[0_10px_20px_rgba(195,78,138,0.1)]"
-                            : "border-secondary-50 bg-white hover:border-secondary-100"
-                            }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className={`font-black uppercase tracking-tight text-sm ${deliveryLocation === loc.id ? "text-secondary-900" : "text-secondary-400"}`}>
-                              {loc.label}
-                            </span>
-                            <span className={`text-xs font-black ${deliveryLocation === loc.id ? "text-primary-500" : "text-secondary-300"}`}>
-                              {formatPrice(loc.charge, "nepal")}
-                            </span>
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Payment Module */}
@@ -700,6 +657,50 @@ export default function CheckoutClient({
                   </div>
                 ))}
               </div>
+
+              {/* Delivery Location Selection for Nepal - PRE-PAYMENT SELECTION */}
+              {(country?.toLowerCase() === "nepal" || country?.toLowerCase() === "np") && (
+                <div className="mt-10 pt-10 border-t border-secondary-50">
+                  <div className="flex flex-col mb-4">
+                    <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[9px] mb-1">Logistics</span>
+                    <h3 className="text-xl font-black text-secondary-900 tracking-tight uppercase">Delivery Area</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { id: "inside", label: "Inside Ring Road", charge: deliveryCharges.inside },
+                      { id: "outside", label: "Outside Ring Road", charge: deliveryCharges.outside }
+                    ].map((loc) => (
+                      <div key={loc.id} className="relative">
+                        <input
+                          type="radio"
+                          id={`delivery-loc-${loc.id}`}
+                          name="deliveryLocation"
+                          value={loc.id}
+                          checked={deliveryLocation === loc.id}
+                          onChange={(e) => setDeliveryLocation(e.target.value as any)}
+                          className="sr-only"
+                        />
+                        <label
+                          htmlFor={`delivery-loc-${loc.id}`}
+                          className={`block p-6 rounded border-2 cursor-pointer transition-all duration-500 ${deliveryLocation === loc.id
+                            ? "border-primary-500 bg-primary-50 shadow-[0_10px_20_rgba(195,78,138,0.1)]"
+                            : "border-secondary-50 bg-white hover:border-secondary-100"
+                            }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className={`font-black uppercase tracking-tight text-sm ${deliveryLocation === loc.id ? "text-secondary-900" : "text-secondary-400"}`}>
+                              {loc.label}
+                            </span>
+                            <span className={`text-xs font-black ${deliveryLocation === loc.id ? "text-primary-500" : "text-secondary-300"}`}>
+                              {formatPrice(loc.charge, "nepal")}
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Cash on Delivery Fields */}
               {paymentMethod === "cash_on_delivery" && (
@@ -776,6 +777,16 @@ export default function CheckoutClient({
 
           {/* Right Column - Secure Ledger */}
           <div className="lg:col-span-5 space-y-12">
+            {/* Accessories Prompt */}
+            <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group mb-12">
+              <div className="flex-1">
+                <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
+                <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
+                <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
+              </div>
+              <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
+            </div>
+
             <div className="bg-secondary-900 rounded p-10 text-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
@@ -805,51 +816,117 @@ export default function CheckoutClient({
               {/* Pricing Math */}
               <div className="space-y-4 pt-6 relative z-10">
                 {(() => {
-                  const originalTotal = cartState.items.reduce((s, i) => s + (i.price * i.quantity), 0);
-                  const offerItems = cartState.offerItems || [];
+                  const allCartItems = [
+                    ...(cartState.normalItems || []),
+                    ...(cartState.offerItems || []),
+                    ...(cartState.accessoryItems || [])
+                  ];
+
+                  const rawItemsTotalNPR = allCartItems.reduce((s, i) => s + (i.price * i.quantity), 0);
                   const offer = cartState.selectedOffer || zustandOffer;
-                  let savings = 0;
-                  if (offer && offerItems.length > 0) {
-                    offerItems.forEach(oi => {
-                      savings += (oi.price - calculateOfferPrice(oi.price, offer)) * oi.quantity;
+                  let savingsNPR = 0;
+
+                  if (offer && (cartState.offerItems || []).length > 0) {
+                    (cartState.offerItems || []).forEach(oi => {
+                      savingsNPR += (oi.price - calculateOfferPrice(oi.price, offer)) * oi.quantity;
                     });
                   }
-                  const final = originalTotal - savings + deliveryCharge;
+
+                  const subtotalNPR = rawItemsTotalNPR - savingsNPR;
+                  const isIndia = country?.toLowerCase() === "india" || country?.toLowerCase() === "in";
+
+                  const subtotalConverted = calculatePriceSync(subtotalNPR, country);
+                  const deliveryConverted = isIndia ? deliveryCharge : calculatePriceSync(deliveryCharge, country);
+                  const finalTotal = subtotalConverted + deliveryConverted;
+
                   return (
                     <>
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-                        <span>Subsurface total</span>
-                        <span className="text-white">{formatPrice(calculatePriceSync(originalTotal, country), country)}</span>
-                      </div>
-                      {savings > 0 && (
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-green-400">
-                          <span>Vault Discount</span>
-                          <span>-{formatPrice(calculatePriceSync(savings, country), country)}</span>
+                      {/* Breakdown */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                          <span>Items Subtotal</span>
+                          <span className="text-white">{formatPrice(calculatePriceSync(rawItemsTotalNPR, country), country)}</span>
                         </div>
-                      )}
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
-                        <span>Logistics Fee</span>
-                        <span className="text-white">{formatPrice(calculatePriceSync(deliveryCharge, country), country)}</span>
-                      </div>
-                      <div className="h-[1px] w-full bg-white/10 my-6" />
-                      <div className="flex justify-between items-end">
-                        <span className="text-[11px] font-black uppercase tracking-[0.3em] text-white">Full Commitment</span>
-                        <span className="text-4xl font-black text-primary-400 tracking-tighter leading-none">{formatPrice(calculatePriceSync(final, country), country)}</span>
+
+                        {savingsNPR > 0 && (
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-green-400">
+                            <span>Vault Savings</span>
+                            <span>-{formatPrice(calculatePriceSync(savingsNPR, country), country)}</span>
+                          </div>
+                        )}
+
+                        {paymentMethod !== "cash_on_delivery" && (
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-white/40">
+                            <span>Delivery Charge</span>
+                            <span className="text-white">{formatPrice(deliveryConverted, country)}</span>
+                          </div>
+                        )}
                       </div>
 
-                      <form onSubmit={handleSubmit} className="mt-10">
+                      {/* Cash on Delivery Specific Breakdown */}
+                      {paymentMethod === "cash_on_delivery" && (
+                        <div className="mt-8 pt-6 border-t border-white/5 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-700">
+                          <div className="flex justify-between items-center bg-white/5 p-4 rounded border border-white/5">
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-primary-400">Delivery Payment</span>
+                              <span className="text-[8px] text-white/40 uppercase font-medium mt-1">Payable now via screenshot</span>
+                            </div>
+                            <span className="text-lg font-black text-primary-400">{formatPrice(deliveryConverted, country)}</span>
+                          </div>
+
+                          <div className="flex justify-between items-center p-4">
+                            <div className="flex flex-col">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-white/60">Cash to be Paid</span>
+                              <span className="text-[8px] text-white/40 uppercase font-medium mt-1">Due at doorstep</span>
+                            </div>
+                            <span className="text-lg font-black text-white">{formatPrice(subtotalConverted, country)}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* The Big Divider */}
+                      <div className="h-[1px] w-full bg-white/10 my-8" />
+
+                      {/* Final Total */}
+                      <div className="flex justify-between items-end mb-10">
+                        <div className="flex flex-col">
+                          <span className="text-primary-400 font-black tracking-[0.4em] uppercase text-[9px] mb-1">Grand</span>
+                          <span className="text-[14px] font-black uppercase tracking-[0.2em] text-white">TOTAL PRICE</span>
+                        </div>
+                        <span className="text-5xl font-black text-white tracking-tighter leading-none shadow-text">{formatPrice(finalTotal, country)}</span>
+                      </div>
+
+                      {hasError && (
+                        <div className="mt-6 p-6 bg-red-500/10 border border-red-500/20 rounded-lg animate-in fade-in slide-in-from-bottom-2 duration-700">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center text-white text-[10px] font-black">!</div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-red-400">System Sync Error</span>
+                          </div>
+                          <p className="text-[11px] font-medium text-white/70 leading-relaxed italic">
+                            We are currently unable to synchronize core delivery logistics. Please contact our support vault to finalize your order:
+                            <a
+                              href={`mailto:support@dreamyeyes.com?subject=Checkout%20Logistics%20Sync%20Error&body=Hello%20Dreamy%20Eyes%20Support,%0D%0A%0D%0AI%20am%20seeing%20a%20logistics%20sync%20error%20on%20the%20checkout%20page.%20Please%20help%20me%20finalize%20my%20order.%0D%0A%0D%0ACountry:%20${country || 'Unknown'}`}
+                              className="block mt-2 text-primary-400 font-black underline decoration-primary-400/30"
+                            >
+                              support@dreamyeyes.com
+                            </a>
+                          </p>
+                        </div>
+                      )}
+
+                      <form onSubmit={handleSubmit} className="mt-6">
                         <button
                           type="submit"
-                          disabled={isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))}
-                          className={`w-full h-20 rounded font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))
+                          disabled={hasError || isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))}
+                          className={`w-full h-20 rounded font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${hasError || isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))
                             ? "bg-white/5 text-white/20 cursor-not-allowed"
                             : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.3)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.5)] active:scale-[0.98]"
                             }`}
                         >
                           <div className="relative z-10">
-                            {isProcessing ? "Processing Order..." : "Place Order"}
+                            {isProcessing ? "Processing Vault..." : "CONFIRM ORDER"}
                           </div>
-                          {!isProcessing && selectedAddressId && (
+                          {!isProcessing && !hasError && selectedAddressId && (
                             <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                           )}
                         </button>
@@ -860,15 +937,6 @@ export default function CheckoutClient({
               </div>
             </div>
 
-            {/* Accessories Prompt */}
-            <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group">
-              <div className="flex-1">
-                <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
-                <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
-                <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
-              </div>
-              <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
-            </div>
           </div>
         </div>
       </div>
@@ -884,19 +952,21 @@ export default function CheckoutClient({
       />
 
       {/* Confirmation Dialog */}
-      {showConfirmDialog && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-secondary-900/60 backdrop-blur-xl animate-in fade-in duration-500">
-          <div className="bg-white rounded p-12 max-w-lg w-full shadow-2xl border border-secondary-100 text-center flex flex-col items-center">
-            <div className="w-20 h-20 bg-primary-100 text-primary-500 rounded-full flex items-center justify-center mb-8 font-black text-2xl animate-bounce">!</div>
-            <h3 className="text-2xl font-black text-secondary-900 uppercase tracking-tight mb-4">Reset Collection?</h3>
-            <p className="text-secondary-500 font-medium mb-10 leading-relaxed italic">Synchronizing a new offer requires clearing the current vault. Proceed with reset?</p>
-            <div className="flex gap-4 w-full">
-              <button onClick={() => setShowConfirmDialog(false)} className="flex-1 py-5 bg-secondary-50 text-secondary-900 font-black text-[10px] uppercase tracking-widest rounded hover:bg-secondary-100 transition-all">Cancel</button>
-              <button onClick={confirmOfferChange} className="flex-1 py-5 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded shadow-xl hover:bg-red-600 transition-all">Yes, Reset</button>
+      {
+        showConfirmDialog && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-secondary-900/60 backdrop-blur-xl animate-in fade-in duration-500">
+            <div className="bg-white rounded p-12 max-w-lg w-full shadow-2xl border border-secondary-100 text-center flex flex-col items-center">
+              <div className="w-20 h-20 bg-primary-100 text-primary-500 rounded-full flex items-center justify-center mb-8 font-black text-2xl animate-bounce">!</div>
+              <h3 className="text-2xl font-black text-secondary-900 uppercase tracking-tight mb-4">Reset Collection?</h3>
+              <p className="text-secondary-500 font-medium mb-10 leading-relaxed italic">Synchronizing a new offer requires clearing the current vault. Proceed with reset?</p>
+              <div className="flex gap-4 w-full">
+                <button onClick={() => setShowConfirmDialog(false)} className="flex-1 py-5 bg-secondary-50 text-secondary-900 font-black text-[10px] uppercase tracking-widest rounded hover:bg-secondary-100 transition-all">Cancel</button>
+                <button onClick={confirmOfferChange} className="flex-1 py-5 bg-red-500 text-white font-black text-[10px] uppercase tracking-widest rounded shadow-xl hover:bg-red-600 transition-all">Yes, Reset</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
