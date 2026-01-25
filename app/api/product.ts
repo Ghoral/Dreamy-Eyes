@@ -116,21 +116,35 @@ export async function get_products(
   limit: number = 10,
   offset: number = 0,
   tags: string[] = [],
-  country: string | null = null
+  country: string | null = null,
+  filter: any = null
 ) {
   const headerList = await headers();
   const ip = headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip");
 
-  // Convert country to API format: 'np' for Nepal, user IP or 'in' for others
-  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (ip || 'in');
+  const headerCountry = headerList.get("x-vercel-ip-country") || headerList.get("cf-ipcountry");
+
+  // Map to ISO codes
+  let countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (headerCountry?.toLowerCase() || 'in');
+  if (country?.toLowerCase() === 'india') countryCode = 'in';
+
+  console.log('[API] Calling get_products RPC with params:', {
+    limit_value: limit,
+    offset_value: offset,
+    tags: tags.length > 0 ? tags : null,
+    country: countryCode, // Sending ISO code (np, in, etc.)
+    filter: filter,
+  });
 
   const { data, error } = await supabaseBrowserClient.rpc("get_products", {
     limit_value: limit,
     offset_value: offset,
     tags: tags.length > 0 ? tags : null,
     country: countryCode,
+    filter: filter,
   });
 
+  console.log('[API] RPC raw result:', { data, error });
 
   if (error) {
     return {
