@@ -7,7 +7,7 @@ import { useCart } from "../../context/CartContext";
 import Toast from "../ui/Toast";
 import { useRouter } from "next/navigation";
 import { useUserCountry } from "../../hooks/useUserCountry";
-import { get_products, get_eye_lashes, get_applicator_solution } from "../../api/product";
+import { get_products, get_applicator_solution } from "../../api/product";
 import ProductCardShimmer from "../ui/ProductCardShimmer";
 
 const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: string }) => {
@@ -41,22 +41,22 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
   }, [productsData]);
 
   const normalizedData = useMemo(() => {
-    let targetData = productsData;
+    const targetData = productsData;
     if (!targetData) return [];
 
-    console.log('[ProductItems] productsData state content:', targetData);
+    console.log('[ProductItems] Normalizing data structure:', targetData);
 
-    // Case 1: RPC result object { data: [], total: n }
-    if (targetData.data && Array.isArray(targetData.data)) {
+    // Case 1: RPC result object { data: [...], total: n }
+    if (targetData && targetData.data && Array.isArray(targetData.data)) {
       return targetData.data;
     }
 
-    // Case 2: Full API response { data: { data: [], total: n }, status: true } (Safety fallback)
-    if (targetData.data && targetData.data.data && Array.isArray(targetData.data.data)) {
+    // Case 2: Full API response wrapper { data: { data: [...], total: n } }
+    if (targetData && targetData.data && targetData.data.data && Array.isArray(targetData.data.data)) {
       return targetData.data.data;
     }
 
-    // Case 3: Direct array (legacy or fallback)
+    // Case 3: Direct array
     if (Array.isArray(targetData)) {
       return targetData;
     }
@@ -66,19 +66,24 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
   useEffect(() => {
     if (productsData) {
-      const detectedTotal =
-        typeof productsData.total === 'number' ? productsData.total :
-          (productsData.data && typeof productsData.data.total === 'number' ? productsData.data.total : null);
+      // Priority 1: Direct total on state
+      // Priority 2: Nested total in data property
+      // Priority 3: Fallback to array length ONLY IF on page 1 (to establish baseline)
 
-      if (detectedTotal !== null) {
-        setTotalProducts(detectedTotal);
+      let finalTotal = null;
+      if (typeof productsData.total === 'number') {
+        finalTotal = productsData.total;
+      } else if (productsData.data && typeof productsData.data.total === 'number') {
+        finalTotal = productsData.data.total;
+      }
+
+      if (finalTotal !== null) {
+        setTotalProducts(finalTotal);
       } else if (currentPage === 1) {
-        if (Array.isArray(productsData)) {
-          setTotalProducts(productsData.length);
-        } else if (productsData.data && Array.isArray(productsData.data)) {
-          setTotalProducts(productsData.data.length);
-        } else if (productsData.data && productsData.data.data && Array.isArray(productsData.data.data)) {
-          setTotalProducts(productsData.data.data.length);
+        const items = Array.isArray(productsData) ? productsData :
+          (productsData.data && Array.isArray(productsData.data) ? productsData.data : []);
+        if (items.length > 0) {
+          setTotalProducts(items.length);
         }
       }
     }
@@ -111,8 +116,12 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
           activeCountry,
           { sort: sortBy }
         );
-        // Extract the data property to match initial props structure (the RPC result)
-        setProductsData(responseData.data);
+
+        // CRITICAL: responseData is the RPC object { data: [...], total: n }
+        // We set the FULL object so totalProducts effect can see the total count
+        if (responseData) {
+          setProductsData(responseData);
+        }
       } catch (error) {
         console.error("Error fetching filtered products:", error);
       } finally {
@@ -184,10 +193,12 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
     const checkAvailability = async () => {
       if (!activeCountry) return;
       try {
-        const [lashes, accessories] = await Promise.all([
-          get_eye_lashes(1, 0, activeCountry),
+        const [lashesRes, accessories] = await Promise.all([
+          get_products(1, 0, ["eye_lashes"], activeCountry),
           get_applicator_solution(activeCountry)
         ]);
+
+        const lashes = lashesRes?.data || { total: 0 };
 
         const baseTags = [
           { label: "Lenses", value: "all", type: 'filter' },
@@ -249,50 +260,52 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
 
         {/* Filter & Per Page Row */}
         <div className="mb-16 pt-8 border-t border-secondary-100">
-          <div className="flex flex-col-reverse lg:flex-row justify-between items-center gap-6">
-            <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
-              {/* Per Page Selector */}
-              <div className="flex items-center gap-4 bg-secondary-50 p-1.5 rounded-full border border-secondary-100">
-                <span className="pl-4 pr-2 text-[10px] font-black tracking-widest text-secondary-400 uppercase">View:</span>
-                {[15, 25, 50, 100].map((limit) => (
-                  <button
-                    key={limit}
-                    onClick={() => {
-                      setProductsPerPage(limit);
+          <div className={`flex flex-col-reverse lg:flex-row justify-between items-center gap-6 ${(!isLoading && totalProducts === 0) ? 'lg:justify-end' : ''}`}>
+            {(!isLoading && totalProducts > 0) && (
+              <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto animate-in fade-in slide-in-from-left-4 duration-700">
+                {/* Per Page Selector */}
+                <div className="flex items-center gap-4 bg-secondary-50 p-1.5 rounded-full border border-secondary-100">
+                  <span className="pl-4 pr-2 text-[10px] font-black tracking-widest text-secondary-400 uppercase">View:</span>
+                  {[15, 25, 50, 100].map((limit) => (
+                    <button
+                      key={limit}
+                      onClick={() => {
+                        setProductsPerPage(limit);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all ${productsPerPage === limit
+                        ? "bg-white text-primary-500 shadow-sm"
+                        : "text-secondary-400 hover:text-secondary-900"
+                        }`}
+                    >
+                      {limit}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="relative group/sort w-full sm:w-auto">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest transition-all ${productsPerPage === limit
-                      ? "bg-white text-primary-500 shadow-sm"
-                      : "text-secondary-400 hover:text-secondary-900"
-                      }`}
+                    className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
                   >
-                    {limit}
-                  </button>
-                ))}
-              </div>
-
-              {/* Sort Dropdown */}
-              <div className="relative group/sort w-full sm:w-auto">
-                <select
-                  value={sortBy}
-                  onChange={(e) => {
-                    setSortBy(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full sm:w-auto bg-secondary-50 border border-secondary-100 rounded-full px-6 py-3 text-[10px] font-black tracking-widest text-secondary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none cursor-pointer pr-12 uppercase"
-                >
-                  <option value="latest_added">LATEST ADDED</option>
-                  <option value="latest">LATEST</option>
-                  <option value="price_asc">PRICE: LOW TO HIGH</option>
-                  <option value="price_desc">PRICE: HIGH TO LOW</option>
-                  <option value="power_asc">POWER: LOW TO HIGH</option>
-                  <option value="power_desc">POWER: HIGH TO LOW</option>
-                </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                    <option value="latest_added">LATEST ADDED</option>
+                    <option value="latest">LATEST</option>
+                    <option value="price_asc">PRICE: LOW TO HIGH</option>
+                    <option value="price_desc">PRICE: HIGH TO LOW</option>
+                    <option value="power_asc">POWER: LOW TO HIGH</option>
+                    <option value="power_desc">POWER: HIGH TO LOW</option>
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary-400">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <button
               onClick={() => setIsFilterDrawerOpen(true)}
@@ -395,7 +408,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
         )}
 
         {/* Pagination Controls */}
-        {!isLoading && totalProducts > 0 && Math.ceil(totalProducts / productsPerPage) > 1 && (
+        {totalProducts > 0 && Math.ceil(totalProducts / productsPerPage) > 1 && (
           <div className="mt-24 flex flex-col items-center gap-8">
             <div className="flex items-center gap-3">
               <button

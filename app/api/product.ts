@@ -165,26 +165,6 @@ export async function get_products(
   };
 }
 
-export async function get_eye_lashes(
-  limit: number = 10,
-  offset: number = 0,
-  country: string | null = null
-) {
-  const headerList = await headers();
-  const ip = headerList.get("x-forwarded-for")?.split(",")[0] || headerList.get("x-real-ip");
-  const countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (ip || 'in');
-
-  const { data, error } = await supabaseBrowserClient.rpc("get_eye_lashes", {
-    limit_value: limit,
-    offset_value: offset,
-    country: countryCode,
-  });
-
-  if (error) {
-    return { data: null, total: 0, error: error.details };
-  }
-  return { data: data.data, total: data.total, error: null };
-}
 
 export async function get_applicator_solution(
   country: string | null = null

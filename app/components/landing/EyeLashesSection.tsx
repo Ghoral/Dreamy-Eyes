@@ -5,7 +5,7 @@ import { useUserCountry } from "../../hooks/useUserCountry";
 import { formatPrice, getThumbnailUrl } from "../../util";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { get_eye_lashes } from "../../api/product";
+import { get_products } from "../../api/product";
 
 export default function EyeLashesSection({ initialData, initialCountry }: { initialData?: any[]; initialCountry?: string }) {
     const { country: clientCountry } = useUserCountry();
@@ -27,9 +27,9 @@ export default function EyeLashesSection({ initialData, initialCountry }: { init
             if (!activeCountry) return;
             setLoading(true);
             try {
-                const { data } = await get_eye_lashes(10, 0, activeCountry);
-                if (data && Array.isArray(data)) {
-                    setLashes(data);
+                const { data: response } = await get_products(10, 0, ["eye_lashes"], activeCountry);
+                if (response && response.data && Array.isArray(response.data)) {
+                    setLashes(response.data);
                 } else {
                     setLashes([]);
                 }
