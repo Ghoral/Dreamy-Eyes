@@ -38,7 +38,7 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   useEffect(() => {
-    console.log('[ProductItems] productsData changed:', productsData);
+
   }, [productsData]);
 
   useEffect(() => {
@@ -47,13 +47,10 @@ const ProductItems = ({ data, initialCountry }: { data: any; initialCountry?: st
     }
   }, [productsData, isLoading]);
 
-  console.log('[ProductItems] Rendering. total:', totalProducts, 'limit:', productsPerPage, 'loading:', isLoading, 'hasEverLoaded:', hasEverLoaded);
 
   const normalizedData = useMemo(() => {
     const targetData = productsData;
     if (!targetData) return [];
-
-    console.log('[ProductItems] Normalizing data structure:', targetData);
 
     // Case 1: RPC result object { data: [...], total: n }
     if (targetData && targetData.data && Array.isArray(targetData.data)) {

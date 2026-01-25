@@ -236,7 +236,7 @@ export const fetchExchangeRate = async (): Promise<number> => {
       stack: error instanceof Error ? error.stack : undefined,
       name: error instanceof Error ? error.name : undefined,
     });
-    console.log("Using fallback rate:", FALLBACK_RATE);
+
 
     return FALLBACK_RATE;
   }
@@ -289,7 +289,7 @@ export const formatPrice = (price: number, country: string | null): string => {
   const countryLower = country?.toLowerCase() || "";
   // Show Rs only for Nepal, ₹ for everyone else (India and other countries)
   const symbol = countryLower === "nepal" ? "Rs" : "₹";
-  console.log('[formatPrice] Country:', country, '-> Symbol:', symbol);
+
 
   // Format with 2 decimal places
   return `${symbol} ${price.toFixed(2)}`;

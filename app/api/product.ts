@@ -128,13 +128,7 @@ export async function get_products(
   let countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (headerCountry?.toLowerCase() || 'in');
   if (country?.toLowerCase() === 'india') countryCode = 'in';
 
-  console.log('[API] Calling get_products RPC with params:', {
-    limit_value: limit,
-    offset_value: offset,
-    tags: tags.length > 0 ? tags : null,
-    country: countryCode, // Sending ISO code (np, in, etc.)
-    filter: filter,
-  });
+
 
   const { data, error } = await supabaseBrowserClient.rpc("get_products", {
     limit_value: limit,
@@ -144,7 +138,6 @@ export async function get_products(
     filter: filter,
   });
 
-  console.log('[API] RPC raw result:', { data, error });
 
   if (error) {
     return {
@@ -180,12 +173,6 @@ export async function get_applicator_solution(
   let countryCode = country?.toLowerCase() === 'nepal' ? 'np' : (headerCountry?.toLowerCase() || 'in');
   if (country?.toLowerCase() === 'india') countryCode = 'in';
 
-  console.log('[API] Calling get_applicator_solution RPC with params:', {
-    limit_value: limit,
-    offset_value: offset,
-    p_country: countryCode,
-    filter: filter,
-  });
 
   const { data, error } = await supabaseBrowserClient.rpc("get_applicator_solution", {
     limit_value: limit,
@@ -193,8 +180,6 @@ export async function get_applicator_solution(
     p_country: countryCode,
     filter: filter,
   });
-
-  console.log('[API] Applicator solution raw result:', { data, error });
 
   if (error) {
     return { data: null, total: 0, error: error.details };
