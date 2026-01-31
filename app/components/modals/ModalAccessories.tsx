@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
 import { formatPriceWithCurrency, getAccessoryImageUrl } from "@/app/util";
 import { createSupabaseClient } from "@/app/services/supabase/client/supabaseBrowserClient";
+import { get_applicator_solution } from "@/app/api/product";
 import { useCart } from "@/app/context/CartContext";
 import Toast from "@/app/components/ui/Toast";
 
@@ -39,17 +40,15 @@ export default function ModalAccessories({
     const fetchAccessories = async () => {
       setLoading(true);
       try {
-        const supabase = createSupabaseClient();
-        const { data, error } = await supabase
-          .from("accessories")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(12);
-        if (!error && Array.isArray(data)) {
-          setItems(data);
+        const response = await get_applicator_solution(12, 0, country);
+        if (response && !response.error && Array.isArray(response.data)) {
+          setItems(response.data);
         } else {
           setItems([]);
         }
+      } catch (error) {
+        console.error("Failed to fetch accessories:", error);
+        setItems([]);
       } finally {
         setLoading(false);
       }

@@ -23,6 +23,7 @@ import { Offer } from "../context/CartContext";
 import { useUserCountry } from "../hooks/useUserCountry";
 import { get_enabled_offers } from "../api/offers";
 import { get_detail } from "../api/detail";
+import { get_applicator_solution } from "../api/product";
 
 // Helper function to calculate offer price (same logic as CartContext)
 const calculateOfferPrice = (
@@ -183,6 +184,7 @@ export default function CheckoutClient({
     []
   );
   const [availableOffers, setAvailableOffers] = useState<Offer[]>([]);
+  const [applicatorItems, setApplicatorItems] = useState<any[]>([]);
 
   const [deliveryCharges, setDeliveryCharges] = useState<{
     inside: number;
@@ -196,7 +198,19 @@ export default function CheckoutClient({
   useEffect(() => {
     loadUserAddresses();
     loadAvailableOffers();
+    loadApplicatorSolutions();
   }, []);
+
+  const loadApplicatorSolutions = async () => {
+    try {
+      const response = await get_applicator_solution(10, 0, country);
+      if (response && !response.error && response.data) {
+        setApplicatorItems(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to load applicator solutions:", error);
+    }
+  };
 
   const loadAvailableOffers = async () => {
     try {
@@ -779,14 +793,16 @@ export default function CheckoutClient({
           {/* Right Column - Secure Ledger */}
           <div className="lg:col-span-5 space-y-12">
             {/* Accessories Prompt */}
-            <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group mb-12">
-              <div className="flex-1">
-                <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
-                <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
-                <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
+            {applicatorItems.length > 0 && (
+              <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group mb-12">
+                <div className="flex-1">
+                  <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
+                  <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
+                  <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
+                </div>
+                <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
               </div>
-              <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
-            </div>
+            )}
 
             <div className="bg-secondary-900 rounded p-10 text-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
