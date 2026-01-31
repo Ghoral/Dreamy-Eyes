@@ -23,6 +23,8 @@ export interface CartItem {
   productImages?: string; // Store full product images JSON
   category?: "product" | "accessory";
   p_type?: "sale";
+  power?: string | number;
+  type?: string;
 }
 
 export interface Offer {
@@ -60,7 +62,7 @@ type CartAction =
   | { type: "REMOVE_ITEM"; payload: { id: string | number; color?: string } }
   | {
     type: "REMOVE_ACCESSORY_ITEM";
-    payload: { id: string | number; color?: string };
+    payload: { id: string | number; color?: string; type?: string };
   }
   | {
     type: "UPDATE_QUANTITY";
@@ -68,7 +70,7 @@ type CartAction =
   }
   | {
     type: "UPDATE_ACCESSORY_QUANTITY";
-    payload: { id: string | number; color?: string; quantity: number };
+    payload: { id: string | number; color?: string; quantity: number; type?: string };
   }
   | { type: "CLEAR_CART" }
   | { type: "LOAD_CART"; payload: CartState }
@@ -226,7 +228,7 @@ const mergeItems = (
 
   // Merge accessory items
   accessoryItems.forEach((item) => {
-    const key = `${item.category || "accessory"}-${item.id}-${item.color || ""}`;
+    const key = `${item.category || "accessory"}-${item.id}-${item.color || ""}-${item.type || ""}`;
     const existing = itemMap.get(key);
     if (existing) {
       existing.quantity += item.quantity;
@@ -271,7 +273,7 @@ const calculateTotalPriceWithOffer = (
 // Helper function to add item to array handling duplicates
 const addItemToArray = (array: CartItem[], item: CartItem) => {
   const existingIndex = array.findIndex(
-    (i) => i.id === item.id && i.color === item.color
+    (i) => i.id === item.id && i.color === item.color && i.type === item.type
   );
   if (existingIndex >= 0) {
     array[existingIndex].quantity += item.quantity;
@@ -410,7 +412,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case "ADD_ACCESSORY_ITEM": {
       const newAccessoryItems = [...state.accessoryItems];
       const accIndex = newAccessoryItems.findIndex(
-        (item) => item.id === action.payload.id && item.color === action.payload.color
+        (item) => item.id === action.payload.id && item.color === action.payload.color && item.type === action.payload.type
       );
       if (accIndex >= 0) {
         newAccessoryItems[accIndex] = {
@@ -496,7 +498,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       let newAccessoryItems = [...state.accessoryItems];
       const idx = newAccessoryItems.findIndex(
         (item) =>
-          item.id === action.payload.id && item.color === action.payload.color
+          item.id === action.payload.id && item.color === action.payload.color && item.type === action.payload.type
       );
       if (idx >= 0) {
         newAccessoryItems = newAccessoryItems.filter((_, i) => i !== idx);
@@ -597,10 +599,10 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
     case "UPDATE_ACCESSORY_QUANTITY": {
       const newAccessoryItems = [...state.accessoryItems];
-      const { id, color, quantity } = action.payload;
+      const { id, color, quantity, type } = action.payload;
       const newQty = Math.max(1, quantity);
       const idx = newAccessoryItems.findIndex(
-        (item) => item.id === id && item.color === color
+        (item) => item.id === id && item.color === color && item.type === type
       );
       if (idx >= 0) {
         const item = newAccessoryItems[idx];
@@ -759,7 +761,7 @@ interface CartContextType {
   addItem: (item: CartItem) => void;
   addAccessoryItem: (item: CartItem) => void;
   removeItem: (id: string | number, color?: string) => void;
-  removeAccessoryItem: (id: string | number, color?: string) => void;
+  removeAccessoryItem: (id: string | number, color?: string, type?: string) => void;
   updateQuantity: (
     id: string | number,
     quantity: number,
@@ -768,7 +770,8 @@ interface CartContextType {
   updateAccessoryQuantity: (
     id: string | number,
     quantity: number,
-    color?: string
+    color?: string,
+    type?: string
   ) => void;
   clearCart: () => void;
   validateCart: () => void;
@@ -1039,8 +1042,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const removeItem = (id: string | number, color?: string) => {
     dispatch({ type: "REMOVE_ITEM", payload: { id, color } });
   };
-  const removeAccessoryItem = (id: string | number, color?: string) => {
-    dispatch({ type: "REMOVE_ACCESSORY_ITEM", payload: { id, color } });
+  const removeAccessoryItem = (id: string | number, color?: string, type?: string) => {
+    dispatch({ type: "REMOVE_ACCESSORY_ITEM", payload: { id, color, type } });
   };
 
   const updateQuantity = (
@@ -1053,11 +1056,12 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const updateAccessoryQuantity = (
     id: string | number,
     quantity: number,
-    color?: string
+    color?: string,
+    type?: string
   ) => {
     dispatch({
       type: "UPDATE_ACCESSORY_QUANTITY",
-      payload: { id, color, quantity },
+      payload: { id, color, quantity, type },
     });
   };
 

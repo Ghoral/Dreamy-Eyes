@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useUserCountry } from "@/app/hooks/useUserCountry";
 import { formatPriceWithCurrency, getAccessoryImageUrl } from "@/app/util";
 import { createSupabaseClient } from "@/app/services/supabase/client/supabaseBrowserClient";
-import { get_applicator_solution } from "@/app/api/product";
+import { get_applicator_solution, check_stock_availability_accessories } from "@/app/api/product";
 import { useCart } from "@/app/context/CartContext";
 import Toast from "@/app/components/ui/Toast";
 
@@ -16,6 +16,7 @@ type Accessory = {
   price: number | string | null;
   quantity: number | string | null;
   image: string | null;
+  type: string;
 };
 
 export default function ModalAccessories({
@@ -28,7 +29,7 @@ export default function ModalAccessories({
   const { country } = useUserCountry();
   const [items, setItems] = useState<Accessory[]>([]);
   const [loading, setLoading] = useState(false);
-  const { addAccessoryItem } = useCart();
+  const { addAccessoryItem, state: cartState } = useCart();
   const [toastConfig, setToastConfig] = useState<{ message: string; isVisible: boolean }>({
     message: "",
     isVisible: false,
@@ -56,7 +57,7 @@ export default function ModalAccessories({
     if (isOpen) {
       fetchAccessories();
     }
-  }, [isOpen]);
+  }, [isOpen, country]);
 
   if (!isOpen) return null;
 
@@ -107,6 +108,13 @@ export default function ModalAccessories({
                       : (item.quantity as number | null);
                   const inStock = (qty ?? 0) > 0;
                   const selectedQty = quantityMap[item.id] ?? 1;
+
+                  // Get quantity already in cart
+                  const inCartItem = cartState.accessoryItems.find(
+                    (i) => i.id === item.id && i.type === item.type
+                  );
+                  const inCartQty = inCartItem ? inCartItem.quantity : 0;
+
                   return (
                     <div
                       key={item.id}
@@ -165,7 +173,7 @@ export default function ModalAccessories({
                           <div className="px-4 py-2 font-semibold text-secondary-800">{selectedQty}</div>
                           <button
                             className="px-3 py-2 bg-secondary-50 hover:bg-secondary-100 text-secondary-700 disabled:opacity-50"
-                            disabled={!inStock || (qty != null && selectedQty >= qty)}
+                            disabled={!inStock || (qty != null && (inCartQty + selectedQty) >= qty)}
                             onClick={() => {
                               const limit = qty ?? Number.POSITIVE_INFINITY;
                               const next = Math.min(limit, selectedQty + 1);
@@ -181,33 +189,21 @@ export default function ModalAccessories({
                             if (!inStock || rawPrice == null) return;
                             try {
                               setPendingId(item.id);
-                              const supabase = createSupabaseClient();
-                              const { data, error } = await supabase.rpc(
-                                "check_accessory_availability",
-                                { accessory_id: item.id }
-                              );
-                              if (error) {
-                                setToastConfig({ message: "Failed to check stock", isVisible: true });
-                                setTimeout(() => {
-                                  setToastConfig({ message: "", isVisible: false });
-                                }, 1500);
-                                return;
-                              }
-                              const available =
-                                typeof data === "boolean"
-                                  ? data
-                                  : (data?.available ?? data?.is_available ?? false);
-                              if (!available) {
-                                setToastConfig({ message: "Out of stock", isVisible: true });
-                                setTimeout(() => {
-                                  setToastConfig({ message: "", isVisible: false });
-                                }, 1500);
-                                return;
-                              }
+
                               const addQty = Math.max(
                                 1,
                                 Math.min(selectedQty, qty ?? selectedQty)
                               );
+
+                              const check = await check_stock_availability_accessories(item.type, item.id, inCartQty + addQty);
+                              if (!check.data) {
+                                setToastConfig({ message: `No more ${item.type}s available`, isVisible: true });
+                                setTimeout(() => {
+                                  setToastConfig({ message: "", isVisible: false });
+                                }, 1500);
+                                return;
+                              }
+
                               addAccessoryItem({
                                 id: item.id,
                                 title: item.name || "Accessory",
@@ -217,6 +213,7 @@ export default function ModalAccessories({
                                 maxQuantity: qty ?? undefined,
                                 image: item.image ? getAccessoryImageUrl(item.image) : undefined,
                                 category: "accessory" as const,
+                                type: item.type,
                               });
                               setToastConfig({ message: "Added to cart", isVisible: true });
                               setTimeout(() => {
@@ -226,17 +223,23 @@ export default function ModalAccessories({
                               setPendingId(null);
                             }
                           }}
-                          className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white font-semibold rounded transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
                         >
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-                            />
-                          </svg>
-                          Add
+                          {pendingId === item.id ? (
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
+                                />
+                              </svg>
+                              Add
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>

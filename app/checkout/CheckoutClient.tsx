@@ -23,7 +23,7 @@ import { Offer } from "../context/CartContext";
 import { useUserCountry } from "../hooks/useUserCountry";
 import { get_enabled_offers } from "../api/offers";
 import { get_detail } from "../api/detail";
-import { get_applicator_solution } from "../api/product";
+import { get_applicator_solution, check_stock_availability_accessories } from "../api/product";
 
 // Helper function to calculate offer price (same logic as CartContext)
 const calculateOfferPrice = (
@@ -184,7 +184,7 @@ export default function CheckoutClient({
     []
   );
   const [availableOffers, setAvailableOffers] = useState<Offer[]>([]);
-  const [applicatorItems, setApplicatorItems] = useState<any[]>([]);
+  const [hasAccessories, setHasAccessories] = useState(false);
 
   const [deliveryCharges, setDeliveryCharges] = useState<{
     inside: number;
@@ -203,9 +203,17 @@ export default function CheckoutClient({
 
   const loadApplicatorSolutions = async () => {
     try {
-      const response = await get_applicator_solution(10, 0, country);
-      if (response && !response.error && response.data) {
-        setApplicatorItems(response.data);
+      const appCheck = await check_stock_availability_accessories("applicator", 0, 1);
+      if (appCheck.data) {
+        setHasAccessories(true);
+        return;
+      }
+
+      const solCheck = await check_stock_availability_accessories("solution", 0, 1);
+      if (solCheck.data) {
+        setHasAccessories(true);
+      } else {
+        setHasAccessories(false);
       }
     } catch (error) {
       console.error("Failed to load applicator solutions:", error);
@@ -793,7 +801,7 @@ export default function CheckoutClient({
           {/* Right Column - Secure Ledger */}
           <div className="lg:col-span-5 space-y-12">
             {/* Accessories Prompt */}
-            {applicatorItems.length > 0 && (
+            {hasAccessories && (
               <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group mb-12">
                 <div className="flex-1">
                   <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>

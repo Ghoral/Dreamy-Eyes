@@ -42,7 +42,7 @@ const ModalCart = ({
   onViewCart: () => void;
   onCheckout: () => void;
 }) => {
-  const { state: cartItems, removeItem, updateQuantity } = useCart();
+  const { state: cartItems, removeItem, updateQuantity, updateAccessoryQuantity, removeAccessoryItem } = useCart();
   const router = useRouter();
   const { selectedOffer, isOfferApplied, clearOffer } = useOfferStore();
   const { country } = useUserCountry();
@@ -225,7 +225,9 @@ const ModalCart = ({
                               const itemKey = `${item.id}-${item.color}`;
                               setCheckingQuantities(prev => ({ ...prev, [itemKey]: true }));
                               try {
-                                if (item.colorHex && typeof item.id === "string") {
+                                if (item.category === "accessory") {
+                                  updateAccessoryQuantity(item.id, newQuantity, item.color, item.type);
+                                } else if (item.colorHex && typeof item.id === "string") {
                                   const result = await update_product_quantity(item.id, item.colorHex, newQuantity);
                                   if (result.success) updateQuantity(item.id, result.validated_quantity || newQuantity, item.color);
                                 } else {
@@ -240,7 +242,13 @@ const ModalCart = ({
                           >
                             <span className="text-lg font-medium leading-none">—</span>
                           </button>
-                          <span className="w-10 text-center text-sm font-black text-secondary-900">{item.quantity}</span>
+                          <div className="w-10 flex items-center justify-center relative">
+                            {checkingQuantities[`${item.id}-${item.color}`] ? (
+                              <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <span className="text-sm font-black text-secondary-900">{item.quantity}</span>
+                            )}
+                          </div>
                           <button
                             onClick={async () => {
                               if (typeof window !== "undefined") {
@@ -253,7 +261,14 @@ const ModalCart = ({
                               const itemKey = `${item.id}-${item.color}`;
                               setCheckingQuantities(prev => ({ ...prev, [itemKey]: true }));
                               try {
-                                if (item.colorHex && typeof item.id === "string") {
+                                if (item.category === "accessory") {
+                                  if (typeof window !== "undefined") {
+                                    const { check_stock_availability_accessories } = await import("../../api/product");
+                                    const check = await check_stock_availability_accessories(item.type || "", item.id, item.quantity + 1);
+                                    if (!check.data) return;
+                                  }
+                                  updateAccessoryQuantity(item.id, newQuantity, item.color, item.type);
+                                } else if (item.colorHex && typeof item.id === "string") {
                                   const result = await update_product_quantity(item.id, item.colorHex, newQuantity);
                                   if (result.success) updateQuantity(item.id, result.validated_quantity || newQuantity, item.color);
                                 } else {
@@ -271,7 +286,13 @@ const ModalCart = ({
                         </div>
 
                         <button
-                          onClick={() => removeItem(item.id, item.color)}
+                          onClick={() => {
+                            if (item.category === "accessory") {
+                              removeAccessoryItem(item.id, item.color, item.type);
+                            } else {
+                              removeItem(item.id, item.color);
+                            }
+                          }}
                           className="text-[10px] font-black text-secondary-300 hover:text-red-500 uppercase tracking-widest transition-colors duration-300"
                         >
                           Remove
