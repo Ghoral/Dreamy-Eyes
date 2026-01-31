@@ -158,7 +158,6 @@ export async function get_products(
   };
 }
 
-
 export async function get_applicator_solution(
   limit: number = 10,
   offset: number = 0,
@@ -193,6 +192,22 @@ export async function get_applicator_solution(
   return { data: data, total: data?.length || 0, error: null };
 }
 
+export async function check_stock_availability_accessories(item_type: string, item_id: number | string, required_qty: number) {
+  const { data, error } = await supabaseBrowserClient.rpc(
+    "check_stock_availability_accessories",
+    {
+      item_type,
+      item_id,
+      required_qty
+    }
+  );
+
+  if (error) {
+    return { data: false, error: error.details };
+  }
+
+  return { data: !!data, error: null };
+}
 
 export async function get_banners() {
   const { data, error } = await supabaseBrowserClient.storage.from("banner").list("", {

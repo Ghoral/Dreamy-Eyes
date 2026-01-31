@@ -23,6 +23,7 @@ import { Offer } from "../context/CartContext";
 import { useUserCountry } from "../hooks/useUserCountry";
 import { get_enabled_offers } from "../api/offers";
 import { get_detail } from "../api/detail";
+import { get_applicator_solution, check_stock_availability_accessories } from "../api/product";
 
 // Helper function to calculate offer price (same logic as CartContext)
 const calculateOfferPrice = (
@@ -183,6 +184,7 @@ export default function CheckoutClient({
     []
   );
   const [availableOffers, setAvailableOffers] = useState<Offer[]>([]);
+  const [hasAccessories, setHasAccessories] = useState(false);
 
   const [deliveryCharges, setDeliveryCharges] = useState<{
     inside: number;
@@ -196,7 +198,27 @@ export default function CheckoutClient({
   useEffect(() => {
     loadUserAddresses();
     loadAvailableOffers();
+    loadApplicatorSolutions();
   }, []);
+
+  const loadApplicatorSolutions = async () => {
+    try {
+      const appCheck = await check_stock_availability_accessories("applicator", 0, 1);
+      if (appCheck.data) {
+        setHasAccessories(true);
+        return;
+      }
+
+      const solCheck = await check_stock_availability_accessories("solution", 0, 1);
+      if (solCheck.data) {
+        setHasAccessories(true);
+      } else {
+        setHasAccessories(false);
+      }
+    } catch (error) {
+      console.error("Failed to load applicator solutions:", error);
+    }
+  };
 
   const loadAvailableOffers = async () => {
     try {
@@ -371,11 +393,11 @@ export default function CheckoutClient({
 
     if (paymentMethod === "cash_on_delivery") {
       if (!customerId.trim()) {
-        setError("Customer ID is required for Cash on Delivery");
+        setError("Transaction ID is required for Cash on Delivery");
         return;
       }
       if (!customerIdImage) {
-        setError("ID image is required for Cash on Delivery");
+        setError("Payment evidence is required for Cash on Delivery");
         return;
       }
     }
@@ -467,6 +489,7 @@ export default function CheckoutClient({
           offerProducts && offerProducts.length > 0 ? offerProducts : null,
         p_accessories:
           accessoryPayload.length > 0 ? accessoryPayload : null,
+        p_delivery_charge: deliveryCharge,
       };
 
       const { data: orderData, error: orderError } =
@@ -713,17 +736,17 @@ export default function CheckoutClient({
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Customer ID <span className="text-primary-500">*</span></label>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Transaction ID <span className="text-primary-500">*</span></label>
                     <input
                       type="text"
                       value={customerId}
                       onChange={(e) => setCustomerId(e.target.value)}
-                      placeholder="e.g. Citizenship/License/Passport Number"
+                      placeholder="e.g. TXN-123456"
                       className="w-full bg-secondary-50 border border-secondary-100 rounded px-6 py-4 font-black text-secondary-900 placeholder:text-secondary-200 focus:outline-none focus:border-primary-500 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">ID Document Image <span className="text-primary-500">*</span></label>
+                    <label className="text-[10px] font-black text-secondary-900 uppercase tracking-[0.3em] mb-3 block">Settlement Evidence <span className="text-primary-500">*</span></label>
                     <div className="flex flex-col gap-4">
                       <input
                         type="file"
@@ -733,7 +756,7 @@ export default function CheckoutClient({
                       />
                       {customerIdPreview && (
                         <div className="relative rounded overflow-hidden border border-secondary-100 aspect-video bg-white">
-                          <img src={customerIdPreview} alt="customer ID" className="w-full h-full object-contain" />
+                          <img src={customerIdPreview} alt="payment evidence" className="w-full h-full object-contain" />
                         </div>
                       )}
                     </div>
@@ -778,14 +801,16 @@ export default function CheckoutClient({
           {/* Right Column - Secure Ledger */}
           <div className="lg:col-span-5 space-y-12">
             {/* Accessories Prompt */}
-            <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group mb-12">
-              <div className="flex-1">
-                <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
-                <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
-                <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
+            {hasAccessories && (
+              <div className="bg-white border border-secondary-100 rounded p-10 shadow-[0_20px_40px_rgba(0,0,0,0.02)] flex flex-col md:flex-row items-center gap-8 group mb-12">
+                <div className="flex-1">
+                  <span className="text-primary-500 font-black tracking-[0.4em] uppercase text-[10px] mb-1 block">Enhance Outcome</span>
+                  <h3 className="text-xl font-black text-secondary-900 uppercase tracking-tight mb-2">COMPLETE YOUR LOOK</h3>
+                  <p className="text-secondary-400 text-xs font-medium">Curated tools for professional lens application.</p>
+                </div>
+                <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
               </div>
-              <button onClick={() => setIsAccessoriesModalOpen(true)} className="px-10 py-5 bg-secondary-900 text-white font-black text-[10px] uppercase tracking-widest rounded hover:bg-primary-500 transition-all duration-500">Browse Craft</button>
-            </div>
+            )}
 
             <div className="bg-secondary-900 rounded p-10 text-white shadow-[0_40px_100px_rgba(0,0,0,0.1)] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-primary-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />

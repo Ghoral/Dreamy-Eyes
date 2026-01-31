@@ -15,8 +15,8 @@ export default async function CheckoutPage() {
   if (response.status && response.data) {
     const data = response.data;
     initialDeliveryCharges = {
-      inside: Number(data.delivery_charge_inside_ring_road ?? 0),
-      outside: Number(data.delivery_charge_outside_ring_road ?? 0),
+      inside: Number(data.deliver_charge_inside_ring_road ?? 0),
+      outside: Number(data.deliver_charge_outside_ring_road ?? 0),
       inr: Number(data.deliver_charge_inr ?? 0),
     };
   } else {
