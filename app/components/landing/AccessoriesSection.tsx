@@ -4,7 +4,8 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useUserCountry } from "../../hooks/useUserCountry";
 import { formatPrice, getAccessoryImageUrl } from "../../util";
 import { useCart } from "../../context/CartContext";
-import { get_applicator_solution } from "../../api/product";
+import { get_applicator_solution, check_stock_availability_accessories } from "../../api/product";
+import Toast from "../ui/Toast";
 
 type AccessoryItem = {
   id: number;
@@ -24,6 +25,11 @@ const AccessoriesSection = ({ initialResponse, initialCountry }: { initialRespon
   const [loading, setLoading] = useState<boolean>(false);
   const { addAccessoryItem, state: cartState, updateAccessoryQuantity, removeAccessoryItem } = useCart();
   const isFirstRender = useRef(true);
+  const [toastConfig, setToastConfig] = useState<{ message: string; isVisible: boolean }>({
+    message: "",
+    isVisible: false,
+  });
+  const [updatingItems, setUpdatingItems] = useState<Record<string, boolean>>({});
 
   const [currentPage, setCurrentPage] = useState(1);
   const [productsPerPage, setProductsPerPage] = useState(15);
@@ -215,53 +221,73 @@ const AccessoriesSection = ({ initialResponse, initialCountry }: { initialRespon
 
                       {/* Controls */}
                       {(() => {
-                        const cartId = item.id; // Currently IDs might collide if not unique across tables, but context handles by item props usually
-                        // Warning: If IDs collide between tables, this is bad. Assuming they might.
-                        // However, cart usually tracks ID + maybe category/type?
-                        // `cartState.accessoryItems` check:
-                        // The cart logic merges acc items. If `id` is 1 for applicator and 1 for solution, they collide.
-                        // We strictly need to pass category to `addAccessoryItem`?
-                        // Actually `CartItem` has `category`.
-                        // The store uses `id` for lookup mostly.
-                        // I should verify CartContext id collision handling.
-                        // For now we assume unique IDs or risk collision.
-                        const cartItem = cartState.accessoryItems.find((i: any) => i.id === item.id && (i.title === displayName)); // Weak check
+                        const cartItem = cartState.accessoryItems.find((i: any) => i.id === item.id && i.type === item.type);
                         const inCartQty = cartItem ? cartItem.quantity : 0;
+                        const isUpdating = updatingItems[`${item.id}-${item.type}`];
 
                         return (
                           <div className="flex items-center bg-secondary-50 rounded-lg p-0.5 h-8 md:h-10 ml-4" onClick={(e) => e.stopPropagation()}>
                             <button
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                if (inCartQty <= 0) return;
-                                if (inCartQty === 1) {
-                                  removeAccessoryItem(item.id);
-                                } else {
-                                  updateAccessoryQuantity(item.id, inCartQty - 1);
+                                if (inCartQty <= 0 || isUpdating) return;
+
+                                const itemKey = `${item.id}-${item.type}`;
+                                setUpdatingItems(prev => ({ ...prev, [itemKey]: true }));
+                                try {
+                                  // Minimal delay to ensure loading state is visible
+                                  await new Promise(resolve => setTimeout(resolve, 300));
+                                  if (inCartQty === 1) {
+                                    removeAccessoryItem(item.id, undefined, item.type);
+                                  } else {
+                                    updateAccessoryQuantity(item.id, inCartQty - 1, undefined, item.type);
+                                  }
+                                } finally {
+                                  setUpdatingItems(prev => ({ ...prev, [itemKey]: false }));
                                 }
                               }}
-                              disabled={inCartQty === 0}
+                              disabled={inCartQty === 0 || isUpdating}
                               className="w-8 md:w-10 h-full flex items-center justify-center text-secondary-900 hover:text-primary-500 disabled:opacity-20 font-black text-lg transition-colors"
                             >
                               -
                             </button>
-                            <span className="text-secondary-900 font-bold text-xs md:text-sm w-6 text-center">{inCartQty}</span>
+                            <div className="w-6 flex items-center justify-center relative">
+                              {isUpdating ? (
+                                <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <span className="text-secondary-900 font-bold text-xs md:text-sm">{inCartQty}</span>
+                              )}
+                            </div>
                             <button
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
-                                if (!inStock) return;
-                                addAccessoryItem({
-                                  id: item.id,
-                                  title: displayName,
-                                  price: Number(rawPrice),
-                                  quantity: 1,
-                                  maxQuantity: qty ?? undefined,
-                                  image: item.image ? getAccessoryImageUrl(item.image, bucketFolder) : undefined,
-                                  category: "accessory" as const,
-                                  // We should really handle ID collision here if needed, but keeping simple as per prev code
-                                });
+                                if (!inStock || isUpdating) return;
+
+                                const itemKey = `${item.id}-${item.type}`;
+                                setUpdatingItems(prev => ({ ...prev, [itemKey]: true }));
+                                try {
+                                  const check = await check_stock_availability_accessories(item.type, item.id, inCartQty + 1);
+                                  if (!check.data) {
+                                    setToastConfig({ message: `No more ${item.type}s available in stock`, isVisible: true });
+                                    setTimeout(() => setToastConfig({ message: "", isVisible: false }), 2000);
+                                    return;
+                                  }
+
+                                  addAccessoryItem({
+                                    id: item.id,
+                                    title: displayName,
+                                    price: Number(rawPrice),
+                                    quantity: 1,
+                                    maxQuantity: qty ?? undefined,
+                                    image: item.image ? getAccessoryImageUrl(item.image, bucketFolder) : undefined,
+                                    category: "accessory" as const,
+                                    type: item.type,
+                                  });
+                                } finally {
+                                  setUpdatingItems(prev => ({ ...prev, [itemKey]: false }));
+                                }
                               }}
-                              disabled={!inStock || (qty != null && inCartQty >= qty)}
+                              disabled={!inStock || (qty != null && inCartQty >= qty) || isUpdating}
                               className="w-8 md:w-10 h-full flex items-center justify-center text-secondary-900 hover:text-primary-500 disabled:opacity-20 font-black text-lg transition-colors"
                             >
                               +
@@ -345,6 +371,13 @@ const AccessoriesSection = ({ initialResponse, initialCountry }: { initialRespon
           </div>
         )}
       </div>
+      <Toast
+        message={toastConfig.message}
+        type="error"
+        isVisible={toastConfig.isVisible}
+        onClose={() => setToastConfig({ message: "", isVisible: false })}
+        duration={2000}
+      />
     </section>
   );
 };
