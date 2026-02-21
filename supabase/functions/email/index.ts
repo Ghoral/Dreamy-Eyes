@@ -43,10 +43,16 @@ serve(async (req: Request) => {
         // 1. Handle Subject (fallback to title)
         const rawSubject = subject || title || "New Notification";
 
-        // 2. Handle Receiver (could be string or array)
+        // 2. Handle Receiver (could be string, array of strings, or array of objects)
         let to = "";
         if (Array.isArray(receiver)) {
-            to = receiver.filter(e => typeof e === 'string' && e.length > 0).join(", ");
+            to = receiver.map(r => {
+                if (typeof r === 'string') return r;
+                if (typeof r === 'object' && r !== null && r.email) {
+                    return r.name ? `"${r.name}" <${r.email}>` : r.email;
+                }
+                return null;
+            }).filter(Boolean).join(", ");
         } else if (typeof receiver === "string" && receiver.length > 0) {
             to = receiver;
         }

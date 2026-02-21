@@ -864,6 +864,14 @@ export default function CheckoutClient({
                   const deliveryConverted = isIndia ? deliveryCharge : calculatePriceSync(deliveryCharge, country);
                   const finalTotal = subtotalConverted + deliveryConverted;
 
+                  const isPaymentComplete = paymentMethod === "pre_payment"
+                    ? (transactionId.trim() !== "" && screenshotPreview !== null)
+                    : (customerId.trim() !== "" && customerIdImage !== null);
+
+                  const isCartValid = (cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0);
+
+                  const canSubmit = !hasError && !isProcessing && selectedAddressId > 0 && isCartValid && isPaymentComplete;
+
                   return (
                     <>
                       {/* Breakdown */}
@@ -898,6 +906,24 @@ export default function CheckoutClient({
                         <span className="text-5xl font-black text-white tracking-tighter leading-none shadow-text">{formatPrice(finalTotal, country)}</span>
                       </div>
 
+                      {!isCartValid && (
+                        <p className="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-4 text-center">
+                          Add at least one lens product to complete order
+                        </p>
+                      )}
+
+                      {!selectedAddressId && (
+                        <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-4 text-center">
+                          Please select a shipping address
+                        </p>
+                      )}
+
+                      {selectedAddressId > 0 && isCartValid && !isPaymentComplete && (
+                        <p className="text-[9px] font-black text-primary-400 uppercase tracking-widest mb-4 text-center animate-pulse">
+                          Please provide transaction ID and payment evidence
+                        </p>
+                      )}
+
                       {hasError && (
                         <div className="mt-6 p-6 bg-red-500/10 border border-red-500/20 rounded-lg animate-in fade-in slide-in-from-bottom-2 duration-700">
                           <div className="flex items-center gap-3 mb-2">
@@ -919,8 +945,8 @@ export default function CheckoutClient({
                       <form onSubmit={handleSubmit} className="mt-6">
                         <button
                           type="submit"
-                          disabled={hasError || isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))}
-                          className={`w-full h-20 rounded font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${hasError || isProcessing || !selectedAddressId || !((cartState.normalItems?.length > 0) || (cartState.offerItems?.length > 0))
+                          disabled={!canSubmit}
+                          className={`w-full h-20 rounded font-black text-xs uppercase tracking-[0.4em] transition-all duration-700 relative overflow-hidden group ${!canSubmit
                             ? "bg-white/5 text-white/20 cursor-not-allowed"
                             : "bg-primary-500 text-white shadow-[0_20px_40px_rgba(195,78,138,0.3)] hover:shadow-[0_25px_60px_rgba(195,78,138,0.5)] active:scale-[0.98]"
                             }`}
@@ -928,7 +954,7 @@ export default function CheckoutClient({
                           <div className="relative z-10">
                             {isProcessing ? "Processing Vault..." : "CONFIRM ORDER"}
                           </div>
-                          {!isProcessing && !hasError && selectedAddressId && (
+                          {canSubmit && (
                             <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-600 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                           )}
                         </button>
