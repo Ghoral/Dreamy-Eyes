@@ -6,16 +6,11 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-/**
- * Simple template engine to replace {{key}} with value from data object
- */
 function compileTemplate(template: string, data: Record<string, any>): string {
     if (!template) return "";
     return template.replace(/\{\{(.*?)\}\}/g, (match, key) => {
-        // Dig into nested objects if needed (e.g. {{user.name}})
         const keys = key.trim().split('.');
         let value: any = data;
-
         for (const k of keys) {
             if (value && typeof value === 'object' && k in value) {
                 value = value[k];
@@ -24,13 +19,34 @@ function compileTemplate(template: string, data: Record<string, any>): string {
                 break;
             }
         }
-
         return value !== undefined ? String(value) : match;
     });
 }
 
+/**
+ * Build applicators HTML section if order has applicators
+ */
+function buildApplicatorsSection(applicators: any[]): string {
+    if (!applicators || applicators.length === 0) return "";
+
+    const rows = applicators.map(a => `
+      <tr>
+        <td style="font-size:13px;font-weight:600;color:#2d0a1e;padding:11px 16px;border-bottom:1px solid #fde8f4;width:40%;">${a.name ?? 'Applicator'}</td>
+        <td style="font-size:13px;color:#333;padding:11px 16px;border-bottom:1px solid #fde8f4;">
+          Qty: ${a.quantity} &nbsp;·&nbsp; ${a.price}
+        </td>
+      </tr>`).join('');
+
+    return `
+  <p style="font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#e91e8c;margin-bottom:10px;">Applicators</p>
+  <div style="border:1px solid #f8c8e4;border-radius:8px;overflow:hidden;margin-bottom:20px;">
+    <table style="width:100%;border-collapse:collapse;">
+      ${rows}
+    </table>
+  </div>`;
+}
+
 serve(async (req: Request) => {
-    // Handle CORS preflight requests
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
     }
@@ -40,10 +56,9 @@ serve(async (req: Request) => {
         const { data, title, subject, html, sender, receiver } = payload
         console.log('data -> ', data);
 
-        // 1. Handle Subject (fallback to title)
         const rawSubject = subject || title || "New Notification";
 
-        // 2. Handle Receiver (could be string, array of strings, or array of objects)
+        // Build receiver string
         let to = "";
         if (Array.isArray(receiver)) {
             to = receiver.map(r => {
@@ -58,18 +73,25 @@ serve(async (req: Request) => {
         }
 
         if (!to || to === "") {
-            // If receiver is empty, check if we should default to admin or throw error
             throw new Error("Missing receiver email address.");
         }
 
-        // 3. Process dynamic data (Handle both root level and nested data)
-        // The user mentioned data format is {name: "lovish", ...}
         const templateData = data || {};
+
+        // Build applicators section and inject into templateData
+        const applicatorsSection = buildApplicatorsSection(templateData.applicators ?? []);
+        templateData.applicators_section = applicatorsSection;
+
+        // Format date nicely
+        if (templateData.created_at) {
+            templateData.created_at = new Date(templateData.created_at).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
 
         const finalHtml = compileTemplate(html, templateData);
         const finalSubject = compileTemplate(rawSubject, templateData);
 
-        // SMTP configuration from Supabase Secrets
         const transporter = nodemailer.createTransport({
             host: Deno.env.get('EMAIL_HOST'),
             port: Number(Deno.env.get('EMAIL_PORT')),
@@ -81,14 +103,13 @@ serve(async (req: Request) => {
         })
 
         const mailOptions = {
-            from: sender || Deno.env.get('EMAIL_FROM'),
+            from: sender,
             to,
             subject: finalSubject,
             html: finalHtml,
         }
 
         const info = await transporter.sendMail(mailOptions)
-        console.log('Message sent: %s', info.messageId)
 
         return new Response(
             JSON.stringify({ success: true, messageId: info.messageId }),
