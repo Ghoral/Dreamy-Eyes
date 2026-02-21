@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "inlineSourceMap": true,
+        "isolatedModules": true,
+        "lib": [
+            "ESNext",
+            "DOM"
+        ],
+        "module": "ESNext",
+        "strict": true,
+        "target": "ESNext",
+        "useDefineForClassFields": true,
+        "types": [
+            "https://raw.githubusercontent.com/denoland/deno/main/cli/tsc/dts/lib.deno.window.d.ts"
+        ]
+    },
+    "include": [
+        "./**/*.ts"
+    ]
+}
