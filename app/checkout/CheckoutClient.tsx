@@ -964,7 +964,6 @@ export default function CheckoutClient({
                 })()}
               </div>
             </div>
-
           </div>
         </div>
       </div>

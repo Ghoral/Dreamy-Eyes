@@ -73,7 +73,7 @@ serve(async (req: Request) => {
         const transporter = nodemailer.createTransport({
             host: Deno.env.get('EMAIL_HOST'),
             port: Number(Deno.env.get('EMAIL_PORT')),
-            secure: Deno.env.get('EMAIL_SECURE') === 'true',
+            secure: true,
             auth: {
                 user: Deno.env.get('EMAIL_USER'),
                 pass: Deno.env.get('EMAIL_PASS'),
